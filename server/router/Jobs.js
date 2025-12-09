@@ -70,9 +70,9 @@ router.post('/jobs-post', async (req, res) => {
 router.get('/jobs-get', async (req, res) => {
     try {
         const sql = `
-            SELECT id, title, company, location, type, salary, industry, 
+             SELECT id, title, company, location, type, salary, industry, 
             description, responsibilities, requirements, benefits, status, 
-            posted_date as "postedDate"
+            posted_date as "postedDate", url 
             FROM jobs 
             ORDER BY posted_date DESC
         `;

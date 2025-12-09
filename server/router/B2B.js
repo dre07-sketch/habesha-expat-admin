@@ -1,10 +1,28 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
 const { query, DB_TYPE } = require('../connection/db');
 
-router.post('/businesses-post', async (req, res) => {
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'upload/'); // folder where images will be saved
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        cb(null, Date.now() + ext); // unique name
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Route
+router.post('/businesses-post', upload.single('image'), async (req, res) => {
     try {
-        const { name, category, email, phone, address, mapPin, website, description, image } = req.body;
+        const { name, category, email, phone, address, mapPin, website, description } = req.body;
+
+        // Store relative path in DB
+        const imagePath = req.file ? `/upload/${req.file.filename}` : null;
 
         const sql = `
             INSERT INTO businesses 
@@ -14,14 +32,17 @@ router.post('/businesses-post', async (req, res) => {
             RETURNING id
         `;
 
-        const result = await query(sql, [name, category, email, phone, address, mapPin, website, description, image]);
+        const result = await query(sql, [
+            name, category, email, phone, address, mapPin, website, description, imagePath
+        ]);
 
-        res.status(201).json({ 
-            success: true, 
-            message: 'Business listing submitted', 
-            id: result.insertId 
+        res.status(201).json({
+            success: true,
+            message: 'Business listing submitted',
+            id: result.insertId
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -31,17 +52,26 @@ router.get('/businesses-get', async (req, res) => {
     try {
         const sql = `
             SELECT id, name, category, email, phone, address, 
-            map_pin as mapPin, website_url, description, image_url as image, 
-            status, rating 
+                   map_pin as mapPin, website_url, description, image_url as image, 
+                   status, rating 
             FROM businesses 
             ORDER BY created_at DESC
         `;
         const { rows } = await query(sql);
-        res.json(rows);
+
+        // Prepend host to image paths
+        const host = req.protocol + '://' + req.get('host');
+        const data = rows.map(b => ({
+            ...b,
+            image: b.image ? `${host}${b.image}` : null
+        }));
+
+        res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 router.put('/businesses/:id/status', async (req, res) => {
     try {

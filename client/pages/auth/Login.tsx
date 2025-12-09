@@ -1,25 +1,48 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, Lock, Mail, Loader2, Globe, Command, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Lock, Mail, Loader2, Globe, Command, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
-    // Simulate Login Delay
-    setTimeout(() => {
-        navigate('/dashboard');
-    }, 2000);
+    setError(null);
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/login/login-admins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Store token in localStorage
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Navigate to dashboard
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during login');
+      setIsLoggingIn(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex bg-[#020617] font-sans selection:bg-indigo-500/30 selection:text-indigo-200 relative overflow-hidden">
-        {/* Global CSS for Animations */}
+      {/* Global CSS for Animations */}
       <style>{`
         @keyframes blob {
           0% { transform: translate(0px, 0px) scale(1); }
@@ -76,7 +99,7 @@ const Login: React.FC = () => {
                 </div>
                  <div className="flex items-center px-5 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md hover:bg-white/10 transition-colors">
                      <ShieldCheck size={16} className="mr-2 text-blue-400" />
-                     <span className="text-sm font-medium text-slate-300">Secure Access</span>
+                     <span className="text-sm font-medium text-slate-300">Admin Access</span>
                 </div>
              </div>
          </div>
@@ -105,9 +128,17 @@ const Login: React.FC = () => {
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-500/20 to-indigo-500/20 border border-white/10 mb-4 text-blue-400">
                         <Command size={24} />
                     </div>
-                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2">Welcome Back</h2>
-                    <p className="text-slate-400 text-sm">Enter your credentials to access your account.</p>
+                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2">Admin Login</h2>
+                    <p className="text-slate-400 text-sm">Enter your credentials to access the admin panel.</p>
                  </div>
+
+                 {/* Error Display */}
+                 {error && (
+                   <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start">
+                     <AlertCircle className="text-red-400 mr-3 mt-0.5 flex-shrink-0" />
+                     <p className="text-red-300 text-sm">{error}</p>
+                   </div>
+                 )}
 
                  <form onSubmit={handleLogin} className="space-y-5">
                     <div className="space-y-1.5">
@@ -122,7 +153,7 @@ const Login: React.FC = () => {
                                 value={formData.email}
                                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                                 className="block w-full pl-11 pr-4 py-3.5 bg-slate-950/40 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all hover:bg-slate-950/60"
-                                placeholder="name@example.com"
+                                placeholder="admin@example.com"
                             />
                         </div>
                     </div>
@@ -176,7 +207,7 @@ const Login: React.FC = () => {
 
                  <div className="mt-8 pt-6 border-t border-white/5 text-center">
                      <p className="text-slate-500 text-sm">
-                        Don't have access? <a href="#" className="text-slate-300 hover:text-white font-medium transition-colors">Contact Administrator</a>
+                        Need admin access? <a href="#" className="text-slate-300 hover:text-white font-medium transition-colors">Contact System Administrator</a>
                      </p>
                  </div>
              </div>

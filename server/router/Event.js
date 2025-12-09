@@ -1,11 +1,27 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
 const { query, DB_TYPE } = require('../connection/db');
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'upload/'); 
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        cb(null, Date.now() + ext); 
+    }
+});
+const upload = multer({ storage: storage });
 
-router.post('/events-post', async (req, res) => {
+// THE ROUTE
+router.post('/events-post', upload.single('image'), async (req, res) => {
     try {
-        const { title, date, time, location, attendees, price, organizer, description, image } = req.body;
+        const { title, date, time, location, attendees, price, organizer, description } = req.body;
+        
+        // Handle image logic
+        const image_url = req.file ? req.file.filename : null;
 
         const sql = `
             INSERT INTO events 
@@ -15,27 +31,33 @@ router.post('/events-post', async (req, res) => {
             RETURNING id
         `;
 
+        // 2. USE YOUR CUSTOM QUERY FUNCTION
+        // Do NOT use pool.query here. Use query() which you imported.
         const result = await query(sql, [
             title,
             date,
             time,
             location,
-            attendees,
+            attendees || 0,
             price,
             organizer,
             description,
-            image
+            image_url
         ]);
 
+        // 3. SEND RESPONSE
+        // Your db.js returns { rows: [...], insertId: ... }
         res.status(201).json({
             success: true,
             message: 'Event created',
-            id: result.insertId
+            id: result.insertId // Using the helper property from your db.js
         });
+
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        
     }
 });
+
 
 router.get('/events-get', async (req, res) => {
     try {

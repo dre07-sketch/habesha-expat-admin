@@ -25,7 +25,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/forgot-password" element={<Forgot />} />
-        
+        <Route path="/login" element={<Login />} />
         {/* Protected Admin Routes */}
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/b2b" element={<Layout><B2B /></Layout>} />

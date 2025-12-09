@@ -1,25 +1,31 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const bodyParser = require('body-parser');
 const { DB_TYPE } = require('../server/connection/db');
-const ArticleRoutes = require('./route/Article');
-const B2BRoutes = require('./route/B2B');
-const JobRoutes = require('./route/Jobs');
-const NewsletterRoutes = require('./route/Newsletter');
-const EventRoutes = require('./route/Event');
-const AdRoutes = require('./route/Ad');
-const CategoryRoutes = require('./route/Category');
-const subscriberRoutes = require('./route/subscribers');
-const systemStatusRoutes = require('./route/system-status');
-const PodcastRoutes = require('./route/Podcast');
-const VideoRoutes = require('./route/Video');
+const ArticleRoutes = require('./router/Article');
+const B2BRoutes = require('./router/B2B');
+const JobRoutes = require('./router/Jobs');
+const NewsletterRoutes = require('./router/Newsletter');
+const EventRoutes = require('./router/Event');
+const AdRoutes = require('./router/Ad');
+const CategoryRoutes = require('./router/Category');
+const subscriberRoutes = require('./router/subscribers');
+const systemStatusRoutes = require('./router/system-status');
+const PodcastRoutes = require('./router/Podcast');
+const VideoRoutes = require('./router/Video');
 const LoginRoutes = require('./auth/login');
-const DashboardRoutes = require('./route/Dashboard');
+const DashboardRoutes = require('./router/dashboard');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/upload', express.static(path.join(__dirname, 'upload')));
+
+// JSON middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //-----------login route----------------
 app.use('/api/login', LoginRoutes);
@@ -37,18 +43,6 @@ app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/system', systemStatusRoutes);
 app.use('/api/podcasts', PodcastRoutes);
 app.use('/api/videos', VideoRoutes);
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

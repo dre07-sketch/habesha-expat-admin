@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Briefcase, MapPin, DollarSign, Building2, AlignLeft, List, CheckCircle, UploadCloud, Globe } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Building2, AlignLeft, List, CheckCircle, UploadCloud, Globe, Award, AlertCircle } from 'lucide-react';
 
 interface JobFormProps {
   onSubmit: (data: any) => void;
@@ -21,18 +21,41 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit, onCancel }) => {
     url: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error when user starts typing again
+    if (error) setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      onSubmit(formData);
+    setError(null);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/jobs/jobs-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to post job');
+      }
+
+      // Call the parent's onSubmit with the response data
+      onSubmit(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
       setIsSubmitting(false);
-    }, 2000);
+    }
   };
 
   const inputWrapperClass = "relative group";
@@ -54,6 +77,17 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit, onCancel }) => {
             </div>
             <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Publishing Job...</h3>
             <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Creating job listing</p>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start">
+          <AlertCircle className="text-red-500 mr-3 mt-0.5 flex-shrink-0" size={20} />
+          <div>
+            <h4 className="font-medium text-red-800 dark:text-red-200">Submission Error</h4>
+            <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</p>
+          </div>
         </div>
       )}
 
@@ -111,7 +145,16 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit, onCancel }) => {
             </div>
         </div>
 
-        {/* Wider URL field with more padding */}
+        {/* Industry Field */}
+        <div className={inputWrapperClass}>
+            <label className={labelClass}>Industry</label>
+            <div className="relative">
+                <Building2 className={iconClass} />
+                <input name="industry" onChange={handleChange} className={inputClass} placeholder="e.g. Technology, Healthcare, Finance" />
+            </div>
+        </div>
+
+        {/* Application URL Field */}
         <div className={inputWrapperClass}>
             <label className={labelClass}>Application URL</label>
             <div className="relative">
@@ -134,7 +177,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit, onCancel }) => {
             </div>
         </div>
 
-        {/* Wider text boxes with more padding */}
+        {/* Responsibilities and Requirements */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-3xl mx-auto">
             <div className={inputWrapperClass}>
                 <label className={labelClass}>Responsibilities (One per line)</label>
@@ -164,11 +207,26 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit, onCancel }) => {
             </div>
         </div>
 
+        {/* Benefits Field */}
+        <div className={inputWrapperClass}>
+            <label className={labelClass}>Benefits (One per line)</label>
+            <div className="relative">
+                <Award className={iconTextAreaClass} />
+                <textarea 
+                    name="benefits" 
+                    rows={4} 
+                    onChange={handleChange} 
+                    className={textAreaClass} 
+                    placeholder="- Health insurance&#10;- Flexible hours&#10;- Professional development"
+                ></textarea>
+            </div>
+        </div>
+
         <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
             <button type="button" onClick={onCancel} className="px-6 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 Cancel
             </button>
-            <button type="submit" className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center">
+            <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed">
                 <UploadCloud size={18} className="mr-2" /> Post Job
             </button>
         </div>

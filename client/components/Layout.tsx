@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -12,14 +10,24 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+interface User {
+  name: string;
+  role: string;
+  avatar_url: string;
+}
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  // Persist theme preference
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('habesha_theme');
     return saved !== null ? JSON.parse(saved) : true;
   });
+  
+  // State for user data
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem('habesha_theme', JSON.stringify(darkMode));
@@ -30,9 +38,42 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, [darkMode]);
 
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/login/user-fetch');
+        const data = await response.json();
+        
+        if (data.success && data.users.length > 0) {
+          // Use the first user from the array
+          setUser(data.users[0]);
+        } else {
+          setError('No user data available');
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError('Failed to fetch user data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   const handleLogout = () => {
-    navigate('/');
-  };
+  // 1. Remove auth token
+  localStorage.removeItem('auth_token');
+  
+  // 2. Clear user state
+  setUser(null);
+
+  // 3. Redirect to login and replace history so back button won't go back
+  navigate('/login', { replace: true });
+};
+
+
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -148,14 +189,49 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
+            {/* User Profile Section - Updated to use API data */}
             <div className="flex items-center space-x-4">
-              <div className="text-right hidden md:block">
-                <p className="text-sm font-semibold text-slate-800 dark:text-white">Admin User</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Super Admin</p>
-              </div>
-              <div className={`w-10 h-10 rounded-full border-2 overflow-hidden shadow-sm ${darkMode ? 'bg-slate-700 border-blue-900' : 'bg-slate-100 border-blue-100'}`}>
-                  <img src="https://picsum.photos/100/100" alt="Admin" className="w-full h-full object-cover" />
-              </div>
+              {loading ? (
+                // Loading state
+                <div className="flex items-center space-x-4">
+                  <div className="text-right hidden md:block">
+                    <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-1"></div>
+                    <div className="h-3 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+                </div>
+              ) : error ? (
+                // Error state
+                <div className="text-right hidden md:block">
+                  <p className="text-sm font-semibold text-red-500">Error</p>
+                  <p className="text-xs text-red-400">Failed to load</p>
+                </div>
+              ) : user ? (
+                // Success state with user data
+                <>
+                  <div className="text-right hidden md:block">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white">{user.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{user.role}</p>
+                  </div>
+                  <div className={`w-10 h-10 rounded-full border-2 overflow-hidden shadow-sm ${darkMode ? 'bg-slate-700 border-blue-900' : 'bg-slate-100 border-blue-100'}`}>
+                    <img 
+                      src={user.avatar_url} 
+                      alt={user.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails to load
+                        e.currentTarget.src = 'https://picsum.photos/100/100';
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                // Fallback state if no user data
+                <div className="text-right hidden md:block">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-white">Admin User</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Super Admin</p>
+                </div>
+              )}
             </div>
           </div>
         </header>

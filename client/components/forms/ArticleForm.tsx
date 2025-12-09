@@ -1,14 +1,23 @@
-
-import React, { useState } from 'react';
-import { Type, Link as LinkIcon, Image as ImageIcon, AlignLeft, User, Calendar, Tag, FileText, UploadCloud } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Type, Link as LinkIcon, Image as ImageIcon, AlignLeft, User, Calendar, Tag, FileText, UploadCloud, X } from 'lucide-react';
 
 interface ArticleFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }
 
+interface FormData {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  author: string;
+  publishDate: string;
+}
+
 const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     slug: '',
     excerpt: '',
@@ -18,18 +27,86 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
     publishDate: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Handle file selection and preview
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Remove selected image
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-        onSubmit(formData);
-        setIsSubmitting(false);
-    }, 2000);
+    setError(null);
+
+    try {
+      // Create FormData object to handle both file and text data
+      const formDataToSend = new FormData();
+      
+      // Append all form fields with explicit type casting
+      (Object.keys(formData) as Array<keyof FormData>).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+      
+      // Append image if exists
+      if (imageFile) {
+        formDataToSend.append('image', imageFile);
+      }
+
+      // Send data to server
+      const response = await fetch('http://localhost:5000/api/articles/articles-post', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to publish article');
+      }
+
+      const result = await response.json();
+      onSubmit(result);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while publishing the article');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputWrapperClass = "relative group";
@@ -41,6 +118,13 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
 
   return (
     <div className="relative">
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">
+          {error}
+        </div>
+      )}
+
       {/* Cool Loading Overlay */}
       {isSubmitting && (
         <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
@@ -145,9 +229,33 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
                     </div>
                     <div className="flex-1">
                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Upload Cover</p>
-                        <input type="file" accept="image/*" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"/>
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            ref={fileInputRef}
+                            onChange={handleImageChange}
+                            className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"
+                        />
                     </div>
                 </div>
+                
+                {/* Image Preview */}
+                {previewUrl && (
+                    <div className="mt-4 relative">
+                        <img 
+                            src={previewUrl} 
+                            alt="Preview" 
+                            className="max-w-full h-auto rounded-lg border border-slate-200 dark:border-slate-700"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
 

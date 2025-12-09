@@ -1,36 +1,88 @@
-
-
-import React, { useState } from 'react';
-import { Plus, Briefcase, MapPin, DollarSign, Clock, Search, Eye, Trash2, EyeOff, User, MoreHorizontal, FileText, CheckCircle, XCircle, Phone, Linkedin, Download, Mail } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Briefcase, MapPin, DollarSign, Clock, Search, Eye, Trash2, EyeOff, FileText, CheckCircle, XCircle, ExternalLink, AlertCircle } from 'lucide-react';
 import Modal from '../../components/Modal';
 import JobForm from '../../components/forms/JobForm';
-import { MOCK_JOBS, MOCK_APPLICANTS } from '../../constants';
-import { Job, JobApplicant } from '../../types';
+import { Job } from '../../types';
 
 const Jobs: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'jobs' | 'applicants'>('jobs');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [selectedApplicant, setSelectedApplicant] = useState<JobApplicant | null>(null);
-  const [jobs, setJobs] = useState<Job[]>(MOCK_JOBS);
-  const [applicants, setApplicants] = useState<JobApplicant[]>(MOCK_APPLICANTS);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleDeleteJob = (id: number, e: React.MouseEvent) => {
+  // Fetch jobs from API
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/jobs/jobs-get');
+        if (!response.ok) throw new Error('Failed to fetch jobs');
+        const data = await response.json();
+        setJobs(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  const handleDeleteJob = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this job listing?')) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/jobs/jobs-delete/${id}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete job');
+        
         setJobs(jobs.filter(j => j.id !== id));
-        // Close modal if deleting the selected job
         if (selectedJob?.id === id) setSelectedJob(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete job');
+      }
     }
   };
 
-  const handleToggleStatus = (job: Job, e?: React.MouseEvent) => {
+  const handleToggleStatus = async (job: Job, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const newStatus = job.status === 'visible' ? 'hidden' : 'visible';
-    const updatedJob = { ...job, status: newStatus } as Job;
-    setJobs(jobs.map(j => j.id === job.id ? updatedJob : j));
-    if (selectedJob?.id === job.id) setSelectedJob(updatedJob);
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/jobs/jobs/${job.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update status');
+      
+      const updatedJob = { ...job, status: newStatus } as Job;
+      setJobs(jobs.map(j => j.id === job.id ? updatedJob : j));
+      if (selectedJob?.id === job.id) setSelectedJob(updatedJob);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update job status');
+    }
+  };
+
+  const handleJobSubmit = async (data: any) => {
+    try {
+      // After successful submission, refetch jobs to get the updated list
+      const response = await fetch('/jobs-get');
+      if (!response.ok) throw new Error('Failed to fetch updated jobs');
+      const updatedJobs = await response.json();
+      setJobs(updatedJobs);
+      setIsFormOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to refresh jobs');
+    }
   };
 
   const filteredJobs = jobs.filter(job => 
@@ -38,24 +90,30 @@ const Jobs: React.FC = () => {
     job.company.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredApplicants = applicants.filter(app => 
-    app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    app.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="animate-in fade-in duration-500">
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start">
+          <AlertCircle className="text-red-500 mr-3 mt-0.5 flex-shrink-0" size={20} />
+          <div>
+            <h4 className="font-medium text-red-800 dark:text-red-200">Error</h4>
+            <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Jobs & Recruitment</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage listings and view incoming applications.</p>
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Job Listings</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your job postings.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
             <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 <input 
                     type="text" 
-                    placeholder={activeTab === 'jobs' ? "Search jobs..." : "Search applicants..."}
+                    placeholder="Search jobs..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
@@ -70,134 +128,69 @@ const Jobs: React.FC = () => {
         </div>
       </div>
 
-       {/* Navigation Tabs */}
-       <div className="flex space-x-1 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-xl mb-6 w-fit border border-slate-200 dark:border-slate-700/60">
-            <button 
-                onClick={() => setActiveTab('jobs')}
-                className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center ${activeTab === 'jobs' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-            >
-                <Briefcase size={16} className="mr-2" /> Job Listings
-            </button>
-            <button 
-                onClick={() => setActiveTab('applicants')}
-                className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center ${activeTab === 'applicants' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-            >
-                <User size={16} className="mr-2" /> Applicants
-            </button>
-      </div>
-
-      {activeTab === 'jobs' && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        {loading ? (
+          <div className="flex justify-center items-center p-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <>
             {filteredJobs.map(job => (
-                <div 
-                    key={job.id}
-                    onClick={() => setSelectedJob(job)}
-                    className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center gap-6 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
-                >
-                    {/* Status Bar */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${job.status === 'visible' ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
-                    
-                    <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-                        <Briefcase size={24} />
-                    </div>
-
-                    <div className="flex-1">
-                        <div className="flex justify-between items-start mb-1">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{job.title}</h3>
-                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border ${job.status === 'visible' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'}`}>
-                                {job.status}
-                            </span>
-                        </div>
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
-                            <span className="flex items-center"><Briefcase size={14} className="mr-1.5"/> {job.company}</span>
-                            <span className="flex items-center"><MapPin size={14} className="mr-1.5"/> {job.location}</span>
-                            <span className="flex items-center"><Clock size={14} className="mr-1.5"/> {job.postedDate}</span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0">
-                        <div className="text-right mr-4 hidden md:block">
-                            <div className="text-xs font-bold text-slate-400 uppercase">Applicants</div>
-                            <div className="text-lg font-bold text-slate-800 dark:text-white">12</div>
-                        </div>
-                        <button 
-                            onClick={(e) => handleDeleteJob(job.id, e)}
-                            className="p-2.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                        >
-                            <Trash2 size={18} />
-                        </button>
-                    </div>
+              <div 
+                key={job.id}
+                onClick={() => setSelectedJob(job)}
+                className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center gap-6 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
+              >
+                {/* Status Bar */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1 ${job.status === 'visible' ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
+                
+                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                  <Briefcase size={24} />
                 </div>
+
+                <div className="flex-1">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{job.title}</h3>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border ${job.status === 'visible' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'}`}>
+                      {job.status}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center"><Briefcase size={14} className="mr-1.5"/> {job.company}</span>
+                    <span className="flex items-center"><MapPin size={14} className="mr-1.5"/> {job.location}</span>
+                    <span className="flex items-center"><Clock size={14} className="mr-1.5"/> {job.postedDate}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0">
+                  <div className="text-right mr-4 hidden md:block">
+                    <div className="text-xs font-bold text-slate-400 uppercase">Applicants</div>
+                    <div className="text-lg font-bold text-slate-800 dark:text-white">12</div>
+                  </div>
+                  <button 
+                    onClick={(e) => handleDeleteJob(job.id, e)}
+                    className="p-2.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
             ))}
-             {filteredJobs.length === 0 && (
-                 <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-                    No job listings found.
-                </div>
+            {filteredJobs.length === 0 && (
+              <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                No job listings found.
+              </div>
             )}
-        </div>
-      )}
-
-      {activeTab === 'applicants' && (
-         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700/60">
-                    <thead className="bg-slate-50/50 dark:bg-slate-900/50">
-                        <tr>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Applicant</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Applying For</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Applied Date</th>
-                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60 bg-white dark:bg-slate-800/0">
-                        {filteredApplicants.map(app => {
-                            const jobTitle = jobs.find(j => j.id === app.jobId)?.title || 'Unknown Job';
-                            return (
-                                <tr 
-                                    key={app.id} 
-                                    className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors cursor-pointer"
-                                    onClick={() => setSelectedApplicant(app)}
-                                >
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <img className="h-10 w-10 rounded-full border border-slate-200 dark:border-slate-700" src={app.avatar} alt="" />
-                                            <div className="ml-4">
-                                                <div className="text-sm font-bold text-slate-900 dark:text-white">{app.name}</div>
-                                                <div className="text-xs text-slate-500 dark:text-slate-400">{app.email}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{jobTitle}</span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                                        {app.appliedDate}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <button className="text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
-                                            <Eye size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
-                 {filteredApplicants.length === 0 && (
-                     <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-                        No applicants found.
-                    </div>
-                 )}
-            </div>
-         </div>
-      )}
+          </>
+        )}
+      </div>
 
       {/* Create Job Modal */}
       <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title="Create Job Listing" maxWidth="max-w-4xl">
-        <JobForm onSubmit={() => setIsFormOpen(false)} onCancel={() => setIsFormOpen(false)} />
+        <JobForm onSubmit={handleJobSubmit} onCancel={() => setIsFormOpen(false)} />
       </Modal>
 
-      {/* Job Details Modal - Matching Image 1 Design */}
+      {/* Job Details Modal */}
       <Modal isOpen={!!selectedJob} onClose={() => setSelectedJob(null)} title="Job Details" maxWidth="max-w-5xl">
         {selectedJob && (
             <div className="bg-[#0f172a] text-slate-300 rounded-xl overflow-hidden flex flex-col">
@@ -257,6 +250,24 @@ const Jobs: React.FC = () => {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Application URL Section */}
+                        {selectedJob.url && (
+                            <div>
+                                <h3 className="text-white font-bold text-lg mb-3">Application Link</h3>
+                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+                                    <span className="text-blue-400 truncate max-w-xs">{selectedJob.url}</span>
+                                    <a 
+                                        href={selectedJob.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center transition-colors"
+                                    >
+                                        <ExternalLink size={16} className="mr-2" /> Apply Now
+                                    </a>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column: Summary Card */}
@@ -312,72 +323,6 @@ const Jobs: React.FC = () => {
                 </div>
             </div>
         )}
-      </Modal>
-
-      {/* Applicant Details Modal */}
-      <Modal isOpen={!!selectedApplicant} onClose={() => setSelectedApplicant(null)} title={`Application Details: ${selectedApplicant?.name}`} maxWidth="max-w-3xl">
-          {selectedApplicant && (
-              <div className="bg-[#0f172a] p-8 text-slate-200 rounded-xl space-y-6">
-                  <h2 className="text-2xl font-bold text-white mb-6 border-b border-slate-700 pb-4">
-                      Apply for {jobs.find(j => j.id === selectedApplicant.jobId)?.title || 'Job Position'}
-                      <span className="block text-sm text-slate-500 font-normal mt-1">at {jobs.find(j => j.id === selectedApplicant.jobId)?.company} • Remote (Europe/US)</span>
-                  </h2>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-400 uppercase">Full Name *</label>
-                          <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-200">
-                              {selectedApplicant.name}
-                          </div>
-                      </div>
-                       <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-400 uppercase">Email Address *</label>
-                          <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 flex items-center">
-                              <Mail size={16} className="mr-2 text-slate-500"/> {selectedApplicant.email}
-                          </div>
-                      </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-400 uppercase">Phone Number *</label>
-                          <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 flex items-center">
-                              <Phone size={16} className="mr-2 text-slate-500"/> {selectedApplicant.phone}
-                          </div>
-                      </div>
-                       <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-400 uppercase">LinkedIn Profile</label>
-                          <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-blue-400 flex items-center cursor-pointer hover:underline">
-                              <Linkedin size={16} className="mr-2"/> {selectedApplicant.linkedin || 'N/A'}
-                          </div>
-                      </div>
-                  </div>
-
-                  <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-400 uppercase">Resume/CV *</label>
-                      <div className="bg-slate-800/30 border border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center text-center">
-                          <FileText size={32} className="text-slate-500 mb-2" />
-                          <span className="text-slate-300 font-medium mb-1">Resume_File.pdf</span>
-                          <button className="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center mt-2">
-                              <Download size={12} className="mr-1.5" /> Download Resume
-                          </button>
-                      </div>
-                  </div>
-
-                  <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-400 uppercase">Cover Letter</label>
-                      <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-300 min-h-[120px] whitespace-pre-wrap leading-relaxed">
-                          {selectedApplicant.coverLetter || "No cover letter provided."}
-                      </div>
-                  </div>
-                  
-                  <div className="pt-4 flex justify-end">
-                       <button onClick={() => setSelectedApplicant(null)} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center">
-                           Close Application
-                       </button>
-                  </div>
-              </div>
-          )}
       </Modal>
     </div>
   );

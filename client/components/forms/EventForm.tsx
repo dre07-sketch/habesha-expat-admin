@@ -1,36 +1,97 @@
-
 import React, { useState } from 'react';
-import { MapPin, Calendar, Type, AlignLeft, Users, Image as ImageIcon, UploadCloud, Clock, DollarSign, User as UserIcon } from 'lucide-react';
+import { MapPin, Calendar, Type, AlignLeft, Users, Image as ImageIcon, UploadCloud, Clock, DollarSign, User as UserIcon, X } from 'lucide-react';
 
 interface EventFormProps {
-  onSubmit: (data: any) => void;
   onCancel: () => void;
+  // We updated this signature because the fetch happens inside now, 
+  // or you can pass the response data up after success.
+  onSuccess?: (response: any) => void; 
 }
 
-const EventForm: React.FC<EventFormProps> = ({ onSubmit, onCancel }) => {
+const EventForm: React.FC<EventFormProps> = ({ onCancel, onSuccess }) => {
   const [formData, setFormData] = useState({
     title: '',
     date: '',
     time: '',
     location: '',
-    attendees: 0,
+    attendees: '', // Changed to string to handle empty input easier
     price: '',
     organizer: '',
     description: ''
   });
+  
+  // New state for the file
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string>('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Specific handler for file input
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedImage(file);
+      // Create a local preview URL
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setPreviewUrl(null);
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      onSubmit(formData);
-      setIsSubmitting(false);
-    }, 2000);
+    setError('');
+
+    // 1. Create FormData object (Required for Multer)
+    const data = new FormData();
+    
+    // 2. Append text fields
+    Object.keys(formData).forEach(key => {
+        // @ts-ignore
+        data.append(key, formData[key]);
+    });
+
+    // 3. Append the file
+    // 'image' must match the backend upload.single('image')
+    if (selectedImage) {
+        data.append('image', selectedImage); 
+    }
+
+    try {
+        // 4. Send Request
+        const response = await fetch('http://localhost:5000/api/events/events-post', { // Update with your actual API Port
+            method: 'POST',
+            // Note: Do NOT set 'Content-Type': 'multipart/form-data'. 
+            // The browser sets this automatically with the correct boundary.
+            body: data, 
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to create event');
+        }
+
+        // Success simulation delay just for the UI effect
+        setTimeout(() => {
+            setIsSubmitting(false);
+            if (onSuccess) onSuccess(result);
+            alert('Event created successfully!');
+            onCancel(); // Close form
+        }, 1500);
+
+    } catch (err: any) {
+        setIsSubmitting(false);
+        setError(err.message);
+    }
   };
 
   const inputWrapperClass = "relative group";
@@ -42,7 +103,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, onCancel }) => {
 
   return (
     <div className="relative">
-      {/* Cool Loading Overlay */}
+      {/* Loading Overlay */}
       {isSubmitting && (
         <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
             <div className="relative mb-6">
@@ -51,7 +112,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, onCancel }) => {
                 <Calendar className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={24} />
             </div>
             <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Creating Event...</h3>
-            <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Setting up tickets and location</p>
+            <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Uploading data to server</p>
         </div>
       )}
 
@@ -62,6 +123,12 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, onCancel }) => {
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">Basic information about the gathering.</p>
         </div>
+
+        {error && (
+            <div className="p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
+                {error}
+            </div>
+        )}
 
         <div className={inputWrapperClass}>
             <label className={labelClass}>Event Title</label>
@@ -122,14 +189,36 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, onCancel }) => {
 
         <div>
             <label className={labelClass}>Event Banner</label>
-            <div className="mt-1 flex items-center px-4 py-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
-                <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-4 group-hover:scale-110 transition-transform">
-                    <ImageIcon size={24} />
-                </div>
-                <div className="flex-1">
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Upload Image</p>
-                    <input type="file" accept="image/*" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"/>
-                </div>
+            <div className={`mt-1 flex items-center px-4 py-4 border-2 border-dashed ${selectedImage ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900'} rounded-xl transition-colors relative`}>
+                
+                {previewUrl ? (
+                    <div className="flex items-center w-full">
+                        <img src={previewUrl} alt="Preview" className="h-16 w-16 object-cover rounded-lg border border-slate-300 shadow-sm" />
+                        <div className="ml-4 flex-1">
+                            <p className="text-sm font-bold text-slate-700 dark:text-white truncate">{selectedImage?.name}</p>
+                            <p className="text-xs text-blue-500">Image selected</p>
+                        </div>
+                        <button type="button" onClick={removeImage} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-500">
+                            <X size={20} />
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-4">
+                            <ImageIcon size={24} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Upload Image</p>
+                            <input 
+                                type="file" 
+                                name="image" 
+                                accept="image/*" 
+                                onChange={handleFileChange}
+                                className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"
+                            />
+                        </div>
+                    </>
+                )}
             </div>
         </div>
 
@@ -145,8 +234,9 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit, onCancel }) => {
             <button type="button" onClick={onCancel} className="px-6 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 Cancel
             </button>
-            <button type="submit" className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center">
-                <UploadCloud size={18} className="mr-2" /> Create Event
+            <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed">
+                <UploadCloud size={18} className="mr-2" /> 
+                {isSubmitting ? 'Uploading...' : 'Create Event'}
             </button>
         </div>
       </form>
