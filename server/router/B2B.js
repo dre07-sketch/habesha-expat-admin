@@ -101,4 +101,95 @@ router.put('/businesses/:id/status', async (req, res) => {
 });
 
 
+
+router.get('/business-rating-comment/:id', async (req, res) => {
+    try {
+        const businessId = req.params.id;
+
+        // 1. GET BUSINESS
+        const businessSql = `
+            SELECT id, name, category, email, phone, address, map_pin,
+                   website_url, description, image_url, status, created_at
+            FROM businesses
+            WHERE id = $1
+        `;
+        const businessResult = await query(businessSql, [businessId]);
+
+        if (businessResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Business not found"
+            });
+        }
+
+        const business = businessResult.rows[0];
+
+        // 2. AVERAGE RATING
+        const avgRatingSql = `
+            SELECT AVG(rating)::numeric(3,2) AS average_rating,
+                   COUNT(*) AS total_reviews
+            FROM business_reviews
+            WHERE business_id = $1
+        `;
+        const ratingResult = await query(avgRatingSql, [businessId]);
+
+        const averageRating = ratingResult.rows[0].average_rating || 0;
+        const totalReviews = ratingResult.rows[0].total_reviews || 0;
+
+        // 3. COMMENTS WITH USER DETAILS
+        const commentsSql = `
+            SELECT br.id, br.rating, br.comment, br.created_at,
+                   u.id AS user_id, u.name AS user_name, 
+                   u.avatar_url AS user_avatar
+            FROM business_reviews br
+            LEFT JOIN users u ON br.user_id = u.id
+            WHERE br.business_id = $1
+            ORDER BY br.created_at DESC
+        `;
+
+        const commentsResult = await query(commentsSql, [businessId]);
+
+        return res.json({
+            success: true,
+            business,
+            averageRating,
+            totalReviews,
+            comments: commentsResult.rows
+        });
+
+    } catch (error) {
+        console.error("Error fetching business details:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+});
+
+router.get('/businesses-catagories', async (req, res) => {
+    try {
+        
+        const sql = "SELECT name FROM categories WHERE type = $1";
+        const params = ['businesses'];
+
+        const result = await query(sql, params);
+
+        const rows = result.rows || result;
+
+        res.status(200).json({
+            success: true,
+            data: rows
+        });
+
+    } catch (error) {
+        console.error('Error fetching businesses:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        });
+    }
+});
+
+
 module.exports = router;

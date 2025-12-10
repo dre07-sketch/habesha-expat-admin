@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, Calendar, User, Tag, Clock, Eye, ChevronRight, 
-  Share2, Bookmark, EyeOff, Heart, MessageCircle, 
-  BarChart2, Search 
+import {
+  Plus, Calendar, User, Tag, Clock, Eye, ChevronRight,
+  Share2, Bookmark, EyeOff, Heart, MessageCircle,
+  BarChart2, Search
 } from 'lucide-react';
 import Modal from '../../components/Modal';
 import ArticleForm from '../../components/forms/ArticleForm';
@@ -18,33 +18,31 @@ const Articles: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'content' | 'engagement'>('content');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusUpdateError, setStatusUpdateError] = useState<string | null>(null);
 
   // --- Helper: Fetch Data Logic ---
   const loadArticles = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/articles/articles-get`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch articles');
       }
-      
-      const data = await response.json();
-      console.log('Fetched articles:', data); 
 
-      // Map API response to match TypeScript Interface if aliases weren't enough
-      // Or simply pass data if API aliases are correct.
-      // We also ensure defaults for missing counts.
+      const data = await response.json();
+      console.log('Fetched articles:', data);
+
       const mappedArticles: Article[] = data.map((item: any) => ({
         ...item,
-        // Fallbacks if API names don't match exactly
-        author: item.author || item.author_name || 'Unknown', 
+        author: item.author || item.author_name || 'Unknown',
         publishDate: item.publishDate || item.publish_date,
         image: item.image || null,
         likes: item.likes || 0,
         comments: item.comments || 0,
-        likedBy: [], // Default empty array as API doesn't seem to send this yet
-        commentList: [] // Default empty array
+        likedBy: [],
+        commentList: []
       }));
 
       setArticles(mappedArticles);
@@ -64,44 +62,52 @@ const Articles: React.FC = () => {
   // --- 2. Handle Form Submit (Refresh list) ---
   const handleFormSubmit = () => {
     setIsFormOpen(false);
-    loadArticles(); // Re-use the fetch logic
+    loadArticles();
   };
 
-  const handleToggleStatus = async () => {
-    if (selectedArticle) {
-      try {
-        const newStatus: 'draft' | 'published' = selectedArticle.status === 'published' ? 'draft' : 'published';
-        
-        // Update status in the database
-        const response = await fetch(`${API_BASE_URL}/api/articles/${selectedArticle.id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: newStatus }),
-        });
+  // --- 3. Handle Status Update (Publish/Unpublish) ---
+  const handleStatusUpdate = async (articleId: string, newStatus: 'published' | 'draft') => {
+    if (!selectedArticle) return;
 
-        if (!response.ok) {
-            throw new Error('Failed to update article status');
-        }
+    setIsUpdatingStatus(true);
+    setStatusUpdateError(null);
 
-        const updatedArticle: Article = { ...selectedArticle, status: newStatus };
-        
-        // Update selected article view
-        setSelectedArticle(updatedArticle);
-        
-        // Update list view locally to avoid full re-fetch
-        setArticles(articles.map(a => a.id === updatedArticle.id ? updatedArticle : a));
-      } catch (err: any) {
-        console.error('Error updating article status:', err);
-        alert(`Error: ${err.message}`);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles/toggle-status/${articleId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${newStatus === 'published' ? 'publish' : 'unpublish'} article`);
       }
+
+      const data = await response.json();
+      const updatedArticle = data.article;
+
+      // Update the article in the articles list
+      setArticles(prevArticles =>
+        prevArticles.map(article =>
+          article.id === articleId ? updatedArticle : article
+        )
+      );
+
+      // Update the selectedArticle
+      setSelectedArticle(updatedArticle);
+    } catch (err: any) {
+      setStatusUpdateError(err.message || `An error occurred while ${newStatus === 'published' ? 'publishing' : 'unpublishing'} the article`);
+      console.error('Error updating article status:', err);
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
   const handleOpenArticle = (article: Article) => {
     setSelectedArticle(article);
-    setActiveTab('content'); // Reset tab to content on open
+    setActiveTab('content');
+    setStatusUpdateError(null);
   };
 
   const filteredArticles = articles.filter(article =>
@@ -119,11 +125,11 @@ const Articles: React.FC = () => {
 
   // Image component with error handling
   const ArticleImage = ({ src, alt, className }: { src: string | null; alt: string; className?: string }) => {
-    const placeholder = '/placeholder-image.jpg'; // Ensure this exists in public folder
+    const placeholder = '/placeholder-image.jpg';
     const [imgSrc, setImgSrc] = useState(src || placeholder);
 
     useEffect(() => {
-        setImgSrc(src || placeholder);
+      setImgSrc(src || placeholder);
     }, [src]);
 
     const handleError = () => {
@@ -134,9 +140,9 @@ const Articles: React.FC = () => {
     };
 
     return (
-      <img 
-        src={imgSrc} 
-        alt={alt} 
+      <img
+        src={imgSrc}
+        alt={alt}
         className={className}
         onError={handleError}
       />
@@ -182,8 +188,8 @@ const Articles: React.FC = () => {
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
           <h3 className="text-lg font-bold text-red-700 dark:text-red-300 mb-2">Error Loading Articles</h3>
           <p className="text-red-600 dark:text-red-400">{error}</p>
-          <button 
-            onClick={loadArticles} 
+          <button
+            onClick={loadArticles}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             Try Again
@@ -195,17 +201,17 @@ const Articles: React.FC = () => {
       {!loading && !error && (
         <div className="space-y-3">
           {filteredArticles.map((article) => (
-            <div 
-              key={article.id} 
-              className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-6 hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all cursor-pointer group" 
+            <div
+              key={article.id}
+              className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-6 hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all cursor-pointer group"
               onClick={() => handleOpenArticle(article)}
             >
               {/* Thumbnail */}
               <div className="relative w-full md:w-64 h-40 shrink-0 rounded-xl overflow-hidden">
-                <ArticleImage 
-                  src={article.image} 
-                  alt={article.title} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                <ArticleImage
+                  src={article.image}
+                  alt={article.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-2 left-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-slate-800 dark:text-white shadow-sm flex items-center">
                   <Tag size={10} className="mr-1 text-blue-500" /> {article.category}
@@ -221,6 +227,14 @@ const Articles: React.FC = () => {
                       {article.status}
                     </span>
                   </div>
+
+                  {/* explicit author and date display */}
+                  {/* <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 mb-2 font-medium">
+                    <span className="flex items-center text-blue-600 dark:text-blue-400"><User size={12} className="mr-1" /> {article.author}</span>
+                    <span className="text-slate-300 dark:text-slate-600">•</span>
+                    <span className="flex items-center"><Calendar size={12} className="mr-1" /> {formatDate(article.publishDate)}</span>
+                  </div> */}
+
                   <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm line-clamp-2 leading-relaxed">{article.excerpt}</p>
                 </div>
 
@@ -258,13 +272,13 @@ const Articles: React.FC = () => {
             <div className="min-h-[60vh]">
               {/* Hero Header */}
               <div className="relative h-80 w-full rounded-t-xl md:rounded-xl overflow-hidden mb-0 group">
-                <ArticleImage 
-                  src={selectedArticle.image} 
-                  alt={selectedArticle.title} 
-                  className="w-full h-full object-cover" 
+                <ArticleImage
+                  src={selectedArticle.image}
+                  alt={selectedArticle.title}
+                  className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent opacity-95"></div>
-                
+
                 <div className="absolute bottom-0 left-0 w-full p-8 md:p-10">
                   <div className="max-w-4xl">
                     <div className="flex flex-wrap gap-3 mb-4">
@@ -276,7 +290,7 @@ const Articles: React.FC = () => {
                       </span>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight shadow-black drop-shadow-lg">{selectedArticle.title}</h1>
-                    
+
                     <div className="flex items-center space-x-6 text-slate-200 text-sm font-medium">
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center mr-3 backdrop-blur-sm border border-white/20">
@@ -298,13 +312,13 @@ const Articles: React.FC = () => {
               {/* Navigation Tabs */}
               <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
                 <div className="flex w-full">
-                  <button 
+                  <button
                     onClick={() => setActiveTab('content')}
                     className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'content' ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
                   >
                     Article Content
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveTab('engagement')}
                     className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'engagement' ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
                   >
@@ -314,7 +328,7 @@ const Articles: React.FC = () => {
               </div>
 
               <div className="px-4 md:px-12 max-w-5xl mx-auto py-10">
-                
+
                 {/* TAB 1: CONTENT */}
                 {activeTab === 'content' && (
                   <div className="animate-in slide-in-from-bottom-2 fade-in duration-300">
@@ -330,11 +344,7 @@ const Articles: React.FC = () => {
                     {/* Article Footer */}
                     <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
                       <div className="flex space-x-2">
-                        {['#business', '#ethiopia', '#investment'].map(tag => (
-                          <span key={tag} className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">
-                            {tag}
-                          </span>
-                        ))}
+
                       </div>
                       <div className="flex space-x-2">
                         <button className="p-2 rounded-full text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -388,7 +398,7 @@ const Articles: React.FC = () => {
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
                           <MessageCircle className="mr-2 text-blue-500" size={20} /> Discussion ({selectedArticle.comments || 0})
                         </h3>
-                        
+
                         <div className="space-y-6">
                           {selectedArticle.commentList && selectedArticle.commentList.length > 0 ? (
                             selectedArticle.commentList.map(comment => (
@@ -423,7 +433,7 @@ const Articles: React.FC = () => {
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
                           <Heart className="mr-2 text-rose-500" size={20} /> Recent Likes
                         </h3>
-                        
+
                         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                           {selectedArticle.likedBy && selectedArticle.likedBy.length > 0 ? (
                             <div className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -467,24 +477,55 @@ const Articles: React.FC = () => {
                   {selectedArticle.status}
                 </span>
               </div>
-              
+
               <div className="flex space-x-3 w-full sm:w-auto">
                 {selectedArticle.status === 'published' ? (
-                  <button 
-                    onClick={handleToggleStatus}
+                  <button
+                    onClick={() => handleStatusUpdate(selectedArticle.id, 'draft')}
+                    disabled={isUpdatingStatus}
                     className="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-800 text-red-600 dark:text-red-400 border border-slate-300 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all"
                   >
-                    <EyeOff size={18} className="mr-2" /> Unpublish
+                    {isUpdatingStatus ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Unpublishing...
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff size={18} className="mr-2" /> Unpublish
+                      </>
+                    )}
                   </button>
                 ) : (
-                  <button 
-                    onClick={handleToggleStatus}
-                    className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all shadow-lg shadow-emerald-600/20"
+                  <button
+                    onClick={() => handleStatusUpdate(selectedArticle.id, 'published')}
+                    disabled={isUpdatingStatus}
+                    className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Eye size={18} className="mr-2" /> Publish Now
+                    {isUpdatingStatus ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <Eye size={18} className="mr-2" /> Publish Now
+                      </>
+                    )}
                   </button>
                 )}
               </div>
+
+              {/* Display status update error if any */}
+              {statusUpdateError && (
+                <div className="text-red-500 text-sm mt-2 w-full text-center">{statusUpdateError}</div>
+              )}
             </div>
           </div>
         )}

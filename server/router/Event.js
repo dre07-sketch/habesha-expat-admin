@@ -6,11 +6,11 @@ const { query, DB_TYPE } = require('../connection/db');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'upload/'); 
+        cb(null, 'upload/');
     },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
-        cb(null, Date.now() + ext); 
+        cb(null, Date.now() + ext);
     }
 });
 const upload = multer({ storage: storage });
@@ -19,9 +19,9 @@ const upload = multer({ storage: storage });
 router.post('/events-post', upload.single('image'), async (req, res) => {
     try {
         const { title, date, time, location, attendees, price, organizer, description } = req.body;
-        
+
         // Handle image logic
-        const image_url = req.file ? req.file.filename : null;
+        const image_url = req.file ? `/upload/${req.file.filename}` : null;
 
         const sql = `
             INSERT INTO events 
@@ -31,8 +31,6 @@ router.post('/events-post', upload.single('image'), async (req, res) => {
             RETURNING id
         `;
 
-        // 2. USE YOUR CUSTOM QUERY FUNCTION
-        // Do NOT use pool.query here. Use query() which you imported.
         const result = await query(sql, [
             title,
             date,
@@ -45,22 +43,27 @@ router.post('/events-post', upload.single('image'), async (req, res) => {
             image_url
         ]);
 
-        // 3. SEND RESPONSE
-        // Your db.js returns { rows: [...], insertId: ... }
         res.status(201).json({
             success: true,
             message: 'Event created',
-            id: result.insertId // Using the helper property from your db.js
+            id: result.insertId
         });
 
     } catch (err) {
-        
+        res.status(500).json({
+            success: false,
+            message: "Error creating event",
+            error: err.message
+        });
     }
 });
 
 
+
 router.get('/events-get', async (req, res) => {
     try {
+        const baseURL = `${req.protocol}://${req.get("host")}`;
+
         const sql = `
             SELECT id, title, date, time, location, 
             attendees_count as attendees, price, organizer, description, 
@@ -69,7 +72,28 @@ router.get('/events-get', async (req, res) => {
             ORDER BY date ASC
         `;
         const { rows } = await query(sql);
-        res.json(rows);
+
+        const formatted = rows.map(event => {
+            let finalImage = null;
+            if (event.image) {
+                // 1. Replace Windows backslashes (\) with forward slashes (/)
+                // 2. Remove any double leading slashes just in case
+                let cleanPath = event.image.replace(/\\/g, '/').replace(/^\/+/, '');
+
+                // 3. Fix potential mismatch between 'uploads' (DB) and 'upload' (server folder)
+                if (cleanPath.startsWith('uploads/')) {
+                    cleanPath = cleanPath.replace('uploads/', 'upload/');
+                } else if (!cleanPath.startsWith('upload/')) {
+                    // If it doesn't have a folder prefix, assume it belongs in upload/
+                    cleanPath = `upload/${cleanPath}`;
+                }
+
+                finalImage = `${baseURL}/${cleanPath}`;
+            }
+            return { ...event, image: finalImage };
+        });
+
+        res.json(formatted);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

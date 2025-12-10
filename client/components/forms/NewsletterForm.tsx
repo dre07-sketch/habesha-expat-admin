@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Mail, Type, Users, Image as ImageIcon, Send, AlignLeft } from 'lucide-react';
+import { Mail, Type, Image as ImageIcon, Send, AlignLeft } from 'lucide-react';
 
 interface NewsletterFormProps {
   onSubmit: (data: any) => void;
@@ -10,12 +9,11 @@ interface NewsletterFormProps {
 const NewsletterForm: React.FC<NewsletterFormProps> = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     subject: '',
-    subscribers: 'all',
     content: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -56,29 +54,14 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ onSubmit, onCancel }) =
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
                 <Mail className="mr-2 text-blue-500" size={20} /> Campaign Details
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Compose your newsletter to reach your audience.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Compose your newsletter to reach all subscribers.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className={inputWrapperClass}>
-                <label className={labelClass}>Subject Line</label>
-                <div className="relative">
-                    <Type className={iconClass} />
-                    <input required name="subject" onChange={handleChange} className={inputClass} placeholder="e.g. Weekly Digest: Top News" />
-                </div>
-            </div>
-
-            <div className={inputWrapperClass}>
-                <label className={labelClass}>Target Audience</label>
-                <div className="relative">
-                    <Users className={iconClass} />
-                    <select name="subscribers" onChange={handleChange} className={`${inputClass} appearance-none`}>
-                        <option value="all">All Subscribers (8,745)</option>
-                        <option value="active">Active Users (5,230)</option>
-                        <option value="new">New Joiners (Last 30 Days)</option>
-                        <option value="premium">Premium Members Only</option>
-                    </select>
-                </div>
+        <div className={inputWrapperClass}>
+            <label className={labelClass}>Subject Line</label>
+            <div className="relative">
+                <Type className={iconClass} />
+                <input required name="subject" onChange={handleChange} className={inputClass} placeholder="e.g. Weekly Digest: Top News" />
             </div>
         </div>
 
@@ -108,7 +91,7 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ onSubmit, onCancel }) =
                 Cancel
             </button>
             <button type="submit" className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center">
-                <Send size={18} className="mr-2" /> Send Campaign
+                <Send size={18} className="mr-2" /> Send to All Subscribers
             </button>
         </div>
       </form>

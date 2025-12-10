@@ -1,11 +1,22 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
 const { query, DB_TYPE } = require('../connection/db');
 
+const storage = multer.diskStorage({
+    destination: "upload/",
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "-" + file.originalname);
+    }
+});
+const upload = multer({ storage });
 
-router.post('/ads-post', async (req, res) => {
+router.post('/ads-post', upload.single('mediaFile'), async (req, res) => {
     try {
-        const { title, type, placement, url, durationValue, mediaFile } = req.body;
+        const { title, type, placement, url, durationValue } = req.body;
+
+        const mediaFile = req.file ? `/upload/${req.file.filename}` : null;
 
         const sql = `
             INSERT INTO ads 
@@ -15,20 +26,23 @@ router.post('/ads-post', async (req, res) => {
             RETURNING id
         `;
 
-        const result = await query(sql, [
+        const values = [
             title,
             type,
             placement,
             url,
             durationValue,
             mediaFile
-        ]);
+        ];
+
+        const result = await query(sql, values);
 
         res.status(201).json({
             success: true,
             message: 'Ad campaign active',
-            id: result.insertId
+            id: result.rows[0].id
         });
+
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -37,15 +51,38 @@ router.post('/ads-post', async (req, res) => {
 
 router.get('/ads-get', async (req, res) => {
     try {
+        const baseURL = `${req.protocol}://${req.get("host")}`;
         const sql = `
             SELECT id, title, type, placement, 
-            destination_url as url, duration_days as durationDays, 
-            media_file_url as mediaFile, status 
+            destination_url as url, duration_days as "durationDays", 
+            media_file_url as "mediaFile", status 
             FROM ads 
             ORDER BY created_at DESC
         `;
         const { rows } = await query(sql);
-        res.json(rows);
+
+        const formattedRows = rows.map(row => {
+            let mediaFile = row.mediaFile;
+            if (mediaFile && !mediaFile.startsWith('http')) {
+                // Normalize path: clean potentially double slashes or leading slashes
+                let cleanPath = mediaFile.replace(/\\/g, '/').replace(/^\/+/, '');
+
+                // Ensure it targets the 'upload/' directory (singular)
+                if (cleanPath.startsWith('uploads/')) {
+                    cleanPath = cleanPath.replace('uploads/', 'upload/');
+                } else if (!cleanPath.startsWith('upload/')) {
+                    cleanPath = `upload/${cleanPath}`;
+                }
+
+                mediaFile = `${baseURL}/${cleanPath}`;
+            }
+            return {
+                ...row,
+                mediaFile
+            };
+        });
+
+        res.json(formattedRows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

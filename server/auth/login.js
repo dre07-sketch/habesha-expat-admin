@@ -4,6 +4,23 @@ const { query, DB_TYPE } = require('../connection/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken'); // ✅ CommonJS
 
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+        return res.status(401).json({ error: "Authentication token required" });
+    }
+    
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: "Invalid or expired token" });
+        }
+        req.user = user;
+        next();
+    });
+}
+
 
 router.post('/login-admins', async (req, res) => {
     try {
@@ -58,10 +75,18 @@ router.post('/login-admins', async (req, res) => {
 });
 
 
-router.get('/user-fetch', async (req, res) => {
+router.get('/user-fetch', authenticateToken, async (req, res) => {
     try {
+        // Only allow Super Admins to fetch all users
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ 
+                success: false, 
+                error: "Access denied. Only administrators can view user data." 
+            });
+        }
+
         const result = await query(
-            "SELECT name, role, avatar_url FROM administrators"
+            "SELECT id, name, email, role, avatar_url, status FROM administrators"
         );
 
         res.status(200).json({
@@ -75,12 +100,12 @@ router.get('/user-fetch', async (req, res) => {
 });
 
 
-router.put('/settings/account', async (req, res) => {
+router.put('/settings/account', authenticateToken, async (req, res) => {
     try {
-        const { id, email, password } = req.body;
+        const { email, password } = req.body;
         
-        // In a real app, user ID should come from session/auth token
-        const userId = id || 1;
+        // Get admin ID from the authenticated request
+        const adminId = req.user.id;
 
         let sql, params;
 
@@ -88,12 +113,12 @@ router.put('/settings/account', async (req, res) => {
             // Update both email and password
             const salt = await bcrypt.genSalt(10);
             const passwordHash = await bcrypt.hash(password, salt);
-            sql = `UPDATE users SET email = $1, password_hash = $2 WHERE id = $3`;
-            params = [email, passwordHash, userId];
+            sql = `UPDATE administrators SET email = $1, password_hash = $2 WHERE id = $3`;
+            params = [email, passwordHash, adminId];
         } else {
             // Update only email
-            sql = `UPDATE users SET email = $1 WHERE id = $2`;
-            params = [email, userId];
+            sql = `UPDATE administrators SET email = $1 WHERE id = $2`;
+            params = [email, adminId];
         }
 
         await query(sql, params);
@@ -103,5 +128,30 @@ router.put('/settings/account', async (req, res) => {
     }
 });
 
+router.get("/me", authenticateToken, async (req, res) => {
+  try {
+    // Get admin ID from the authenticated request (added by authenticateToken middleware)
+    const adminId = req.user.id;
+
+    const sql = `
+      SELECT id, name, email, role, avatar_url, status, created_at
+      FROM administrators
+      WHERE id = $1
+      LIMIT 1
+    `;
+
+    const { rows } = await query(sql, [adminId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    res.json(rows[0]);
+
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;

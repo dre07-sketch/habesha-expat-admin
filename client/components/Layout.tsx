@@ -11,9 +11,12 @@ interface LayoutProps {
 }
 
 interface User {
+  id: number;
   name: string;
+  email: string;
   role: string;
   avatar_url: string;
+  status: string;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -38,42 +41,60 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, [darkMode]);
 
-  // Fetch user data
+  // Fetch current user data
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/login/user-fetch');
-        const data = await response.json();
-        
-        if (data.success && data.users.length > 0) {
-          // Use the first user from the array
-          setUser(data.users[0]);
-        } else {
-          setError('No user data available');
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          throw new Error('No authentication token found');
         }
+
+        const response = await fetch('http://localhost:5000/api/login/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            // Token is invalid or expired, redirect to login
+            localStorage.removeItem('authToken');
+            navigate('/login', { replace: true });
+            return;
+          }
+          throw new Error('Failed to fetch user data');
+        }
+        
+        const userData = await response.json();
+        setUser(userData);
       } catch (err) {
         console.error("Error fetching user data:", err);
-        setError('Failed to fetch user data');
+        setError(err.message || 'Failed to fetch user data');
+        
+        // If authentication error, redirect to login
+        if (err.message.includes('token') || err.message.includes('authentication')) {
+          localStorage.removeItem('authToken');
+          navigate('/login', { replace: true });
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserData();
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
-  // 1. Remove auth token
-  localStorage.removeItem('auth_token');
-  
-  // 2. Clear user state
-  setUser(null);
+    // Remove auth token
+    localStorage.removeItem('authToken');
+    
+    // Clear user state
+    setUser(null);
 
-  // 3. Redirect to login and replace history so back button won't go back
-  navigate('/login', { replace: true });
-};
-
-
+    // Redirect to login and replace history so back button won't go back
+    navigate('/login', { replace: true });
+  };
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -215,12 +236,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </div>
                   <div className={`w-10 h-10 rounded-full border-2 overflow-hidden shadow-sm ${darkMode ? 'bg-slate-700 border-blue-900' : 'bg-slate-100 border-blue-100'}`}>
                     <img 
-                      src={user.avatar_url} 
+                      src={user.avatar_url || 'https://picsum.photos/seed/user/100/100'} 
                       alt={user.name} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         // Fallback to placeholder if image fails to load
-                        e.currentTarget.src = 'https://picsum.photos/100/100';
+                        e.currentTarget.src = 'https://picsum.photos/seed/user/100/100';
                       }}
                     />
                   </div>

@@ -17,6 +17,7 @@ const PodcastRoutes = require('./router/Podcast');
 const VideoRoutes = require('./router/Video');
 const LoginRoutes = require('./auth/login');
 const DashboardRoutes = require('./router/dashboard');
+const UserRoutes = require('./router/user');
 
 const app = express();
 app.use(cors());
@@ -43,6 +44,7 @@ app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/system', systemStatusRoutes);
 app.use('/api/podcasts', PodcastRoutes);
 app.use('/api/videos', VideoRoutes);
+app.use('/api/users', UserRoutes);
 
 
 

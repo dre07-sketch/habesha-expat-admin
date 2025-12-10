@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Mail, Phone, MapPin, Globe, AlignLeft, Image as ImageIcon, UploadCloud, Map, Type, Tag, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 interface B2BFormProps {
@@ -23,6 +23,37 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
   const [submitMessage, setSubmitMessage] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  
+  // New states for categories
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        const response = await fetch('http://localhost:5000/api/b2b/businesses-catagories');
+        const result = await response.json();
+        
+        if (result.success) {
+          // Extract category names from the response
+          const categoryNames = result.data.map((item: any) => item.name);
+          setCategories(categoryNames);
+        } else {
+          setCategoriesError('Failed to load categories');
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setCategoriesError('Error loading categories');
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -260,18 +291,29 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
                       value={formData.category} 
                       onChange={handleChange} 
                       className={`${inputClass('category')} appearance-none`}
+                      disabled={isLoadingCategories}
                     >
                         <option value="">Select Category</option>
-                        <option value="Food & Drink">Food & Drink</option>
-                        <option value="Technology">Technology</option>
-                        <option value="Professional Services">Professional Services</option>
-                        <option value="Retail">Retail</option>
+                        {isLoadingCategories ? (
+                          <option disabled>Loading categories...</option>
+                        ) : categoriesError ? (
+                          <option disabled>Error loading categories</option>
+                        ) : (
+                          categories.map((category) => (
+                            <option key={category} value={category}>{category}</option>
+                          ))
+                        )}
                     </select>
                 </div>
                 {fieldErrors.category && (
                   <div className={errorClass}>
                     <AlertCircle size={12} className="mr-1" />
                     {fieldErrors.category}
+                  </div>
+                )}
+                {categoriesError && (
+                  <div className="text-xs text-red-500 dark:text-red-400 mt-1">
+                    {categoriesError}
                   </div>
                 )}
             </div>

@@ -13,6 +13,24 @@ const B2B: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  
+  // New states for ratings and comments
+  const [businessDetails, setBusinessDetails] = useState<{
+    business: Business;
+    averageRating: number;
+    totalReviews: number;
+    comments: Array<{
+      id: number;
+      rating: number;
+      comment: string;
+      created_at: string;
+      user_id: number;
+      user_name: string;
+      user_avatar: string;
+    }>;
+  } | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   // API base URL
   const API_BASE_URL = 'http://localhost:5000/api/b2b';
@@ -42,6 +60,53 @@ const B2B: React.FC = () => {
 
     fetchBusinesses();
   }, []);
+
+  // Fetch business details including ratings and comments
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (selectedBusiness) {
+      const fetchBusinessDetails = async () => {
+        setDetailsLoading(true);
+        setDetailsError(null);
+        try {
+          const response = await axios.get(`${API_BASE_URL}/business-rating-comment/${selectedBusiness.id}`);
+          
+          if (isMounted) {
+            if (response.data.success) {
+              // Convert averageRating to a number and handle potential null/undefined
+              const avgRating = response.data.averageRating ? parseFloat(response.data.averageRating) : 0;
+              const totalReviews = response.data.totalReviews ? parseInt(response.data.totalReviews) : 0;
+              
+              setBusinessDetails({
+                business: response.data.business,
+                averageRating: isNaN(avgRating) ? 0 : avgRating,
+                totalReviews: isNaN(totalReviews) ? 0 : totalReviews,
+                comments: response.data.comments || []
+              });
+            } else {
+              setDetailsError(response.data.message || 'Failed to fetch business details');
+            }
+          }
+        } catch (err) {
+          if (isMounted) {
+            console.error('Failed to fetch business details:', err);
+            setDetailsError('Failed to fetch business details');
+          }
+        } finally {
+          if (isMounted) {
+            setDetailsLoading(false);
+          }
+        }
+      };
+
+      fetchBusinessDetails();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedBusiness]);
 
   // Update business status
   const updateBusinessStatus = async (id: number, status: 'approved' | 'rejected' | 'pending') => {
@@ -189,6 +254,14 @@ const B2B: React.FC = () => {
     }
   };
 
+  // Close modal and reset details
+  const closeModal = () => {
+    setSelectedBusiness(null);
+    setBusinessDetails(null);
+    setDetailsLoading(false);
+    setDetailsError(null);
+  };
+
   // Filter businesses based on search term
   const filteredBusinesses = businesses.filter(biz => 
     biz.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -196,9 +269,31 @@ const B2B: React.FC = () => {
     biz.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Calculate rating distribution
+  const calculateRatingDistribution = () => {
+    if (!businessDetails || businessDetails.comments.length === 0) {
+      return [0, 0, 0, 0, 0]; // Default distribution for 5-1 stars
+    }
+
+    const ratingCounts = [0, 0, 0, 0, 0]; // Index 0: 1-star, index 4: 5-star
+    
+    businessDetails.comments.forEach(comment => {
+      const rating = Math.floor(comment.rating);
+      if (rating >= 1 && rating <= 5) {
+        ratingCounts[rating - 1]++;
+      }
+    });
+
+    // Reverse so that index 0 is 5 stars, index 1 is 4 stars, etc.
+    const reversedRatingCounts = [...ratingCounts].reverse();
+    const total = businessDetails.totalReviews || 1; // Avoid division by zero
+    
+    return reversedRatingCounts.map(count => Math.round((count / total) * 100));
+  };
+
   return (
     <div className="animate-in fade-in duration-500">
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0% {
             transform: translateY(0) translateX(0);
@@ -357,7 +452,7 @@ const B2B: React.FC = () => {
       </Modal>
 
       {/* Details Popup */}
-      <Modal isOpen={!!selectedBusiness} onClose={() => setSelectedBusiness(null)} title="Business Profile" maxWidth="max-w-5xl">
+      <Modal isOpen={!!selectedBusiness} onClose={closeModal} title="Business Profile" maxWidth="max-w-5xl">
         {selectedBusiness && (
           <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden flex flex-col">
             {/* Hero Section */}
@@ -383,11 +478,13 @@ const B2B: React.FC = () => {
                       <Calendar size={14} className="mr-1.5" /> Added on Oct 24, 2025
                     </div>
                   </div>
-                  {selectedBusiness.rating && (
+                  {businessDetails && (
                     <div className="hidden sm:flex bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl flex-col items-center">
                       <div className="flex items-center space-x-1">
                         <Star className="text-yellow-400 fill-yellow-400" size={24} />
-                        <span className="text-3xl font-bold text-white">{selectedBusiness.rating}</span>
+                        <span className="text-3xl font-bold text-white">
+                          {Number(businessDetails.averageRating || 0).toFixed(1)}
+                        </span>
                       </div>
                       <span className="text-xs text-white/80 font-medium">Overall Rating</span>
                     </div>
@@ -455,9 +552,6 @@ const B2B: React.FC = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Metadata Card */}
-                
                 </div>
 
                 {/* Right Column: Location & Map */}
@@ -610,81 +704,133 @@ const B2B: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
-                  {/* Left: Summary Stats */}
-                  <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 text-center">
-                      <div className="text-5xl font-extrabold text-slate-800 dark:text-white mb-2">{selectedBusiness.rating || '0.0'}</div>
-                      <div className="flex justify-center space-x-1 mb-2">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star key={s} size={20} className={s <= Math.round(selectedBusiness.rating || 0) ? "text-yellow-400 fill-yellow-400" : "text-slate-300 dark:text-slate-600"} />
-                        ))}
-                      </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Based on {selectedBusiness.reviews?.length || 0} reviews</p>
-                    </div>
-
-                    <div className="space-y-3">
-                      {[5, 4, 3, 2, 1].map((stars, i) => {
-                        const percent = stars === 5 ? 70 : stars === 4 ? 20 : 5; 
-                        return (
-                          <div key={stars} className="flex items-center text-sm">
-                            <span className="w-8 font-bold text-slate-600 dark:text-slate-400 flex items-center">{stars} <Star size={10} className="ml-0.5 text-slate-400" /></span>
-                            <div className="flex-1 mx-3 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                              <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${percent}%` }}></div>
-                            </div>
-                            <span className="w-8 text-right text-slate-400 text-xs">{percent}%</span>
-                          </div>
-                        )
-                      })}
-                    </div>
+                {detailsLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                   </div>
+                ) : detailsError ? (
+                  <div className="text-center py-12">
+                    <div className="text-red-500 text-lg font-medium mb-2">Error Loading Reviews</div>
+                    <p className="text-slate-500 dark:text-slate-400">{detailsError}</p>
+                  </div>
+                ) : businessDetails ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+                    {/* Left: Summary Stats */}
+                    <div className="lg:col-span-1 space-y-6">
+                      <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 text-center">
+                        <div className="text-5xl font-extrabold text-slate-800 dark:text-white mb-2">
+                          {Number(businessDetails.averageRating || 0).toFixed(1)}
+                        </div>
+                        <div className="flex justify-center space-x-1 mb-2">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star 
+                              key={s} 
+                              size={20} 
+                              className={s <= Math.round(Number(businessDetails.averageRating || 0)) 
+                                ? "text-yellow-400 fill-yellow-400" 
+                                : "text-slate-300 dark:text-slate-600"} 
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                          Based on {businessDetails.totalReviews} reviews
+                        </p>
+                      </div>
 
-                  {/* Right: Reviews List */}
-                  <div className="lg:col-span-2">
-                    <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Latest Feedback</h4>
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                      {selectedBusiness.reviews && selectedBusiness.reviews.length > 0 ? (
-                        selectedBusiness.reviews.map((review) => (
-                          <div key={review.id} className="p-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="flex items-center">
-                                <img 
-                                  src={review.avatar || '/placeholder-avatar.jpg'} 
-                                  alt={review.user} 
-                                  className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600" 
-                                />
-                                <div className="ml-3">
-                                  <div className="font-bold text-slate-800 dark:text-white text-sm">{review.user}</div>
-                                  <div className="text-xs text-slate-500 dark:text-slate-400">{review.date}</div>
+                      <div className="space-y-3">
+                        {[5, 4, 3, 2, 1].map((stars, index) => {
+                          const ratingPercentages = calculateRatingDistribution();
+                          const percent = ratingPercentages[index] || 0;
+                          return (
+                            <div key={stars} className="flex items-center text-sm">
+                              <span className="w-8 font-bold text-slate-600 dark:text-slate-400 flex items-center">
+                                {stars} <Star size={10} className="ml-0.5 text-slate-400" />
+                              </span>
+                              <div className="flex-1 mx-3 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-yellow-400 rounded-full" 
+                                  style={{ width: `${percent}%` }}
+                                ></div>
+                              </div>
+                              <span className="w-8 text-right text-slate-400 text-xs">{percent}%</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Right: Reviews List */}
+                    <div className="lg:col-span-2">
+                      <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
+                        Latest Feedback
+                      </h4>
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                        {businessDetails.comments.length > 0 ? (
+                          businessDetails.comments.map((comment) => {
+                            const review = {
+                              id: comment.id,
+                              user: comment.user_name || `User ${comment.user_id}`,
+                              avatar: comment.user_avatar || '/placeholder-avatar.jpg',
+                              date: new Date(comment.created_at).toLocaleDateString(),
+                              rating: comment.rating,
+                              comment: comment.comment
+                            };
+                            
+                            return (
+                              <div key={review.id} className="p-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                <div className="flex justify-between items-start mb-3">
+                                  <div className="flex items-center">
+                                    <img 
+                                      src={review.avatar} 
+                                      alt={review.user} 
+                                      className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600" 
+                                    />
+                                    <div className="ml-3">
+                                      <div className="font-bold text-slate-800 dark:text-white text-sm">{review.user}</div>
+                                      <div className="text-xs text-slate-500 dark:text-slate-400">{review.date}</div>
+                                    </div>
+                                  </div>
+                                  <div className="flex bg-yellow-50 dark:bg-yellow-900/10 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                                    {[1, 2, 3, 4, 5].map((s) => (
+                                      <Star 
+                                        key={s} 
+                                        size={12} 
+                                        className={s <= review.rating 
+                                          ? "text-yellow-500 fill-yellow-500" 
+                                          : "text-slate-300 dark:text-slate-600"} 
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-3">
+                                  {review.comment}
+                                </p>
+                                <div className="flex items-center space-x-4">
+                                  <button className="flex items-center text-xs text-slate-400 hover:text-blue-500 transition-colors font-medium">
+                                    <ThumbsUp size={12} className="mr-1" /> Helpful
+                                  </button>
+                                  <button className="flex items-center text-xs text-slate-400 hover:text-blue-500 transition-colors font-medium">
+                                    <MessageSquare size={12} className="mr-1" /> Reply
+                                  </button>
                                 </div>
                               </div>
-                              <div className="flex bg-yellow-50 dark:bg-yellow-900/10 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
-                                {[1, 2, 3, 4, 5].map((s) => (
-                                  <Star key={s} size={12} className={s <= review.rating ? "text-yellow-500 fill-yellow-500" : "text-slate-300 dark:text-slate-600"} />
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-3">{review.comment}</p>
-                            <div className="flex items-center space-x-4">
-                              <button className="flex items-center text-xs text-slate-400 hover:text-blue-500 transition-colors font-medium">
-                                <ThumbsUp size={12} className="mr-1" /> Helpful
-                              </button>
-                              <button className="flex items-center text-xs text-slate-400 hover:text-blue-500 transition-colors font-medium">
-                                <MessageSquare size={12} className="mr-1" /> Reply
-                              </button>
-                            </div>
+                            );
+                          })
+                        ) : (
+                          <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                            <Star size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">No reviews yet.</p>
+                            <p className="text-xs text-slate-400 mt-1">Be the first to leave a review!</p>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                          <Star size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-                          <p className="text-slate-500 dark:text-slate-400 font-medium">No reviews yet.</p>
-                          <p className="text-xs text-slate-400 mt-1">Be the first to leave a review!</p>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-slate-500 dark:text-slate-400">No rating data available.</p>
+                  </div>
+                )}
               </div>
             </div>
 

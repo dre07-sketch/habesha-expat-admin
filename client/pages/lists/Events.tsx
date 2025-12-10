@@ -16,6 +16,59 @@ const Events: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'details' | 'guests'>('details');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Helper function to format date and time
+  const formatDateTime = (dateString: string, timeString?: string) => {
+    if (!dateString) return 'Date TBD';
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    
+    // Format date part
+    const dateOptions: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    const formattedDate = date.toLocaleDateString(undefined, dateOptions);
+    
+    // Format time part if available
+    if (timeString) {
+      const [hours, minutes] = timeString.split(':');
+      if (hours && minutes) {
+        const timeDate = new Date(date);
+        timeDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+        
+        const timeOptions: Intl.DateTimeFormatOptions = { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        };
+        const formattedTime = timeDate.toLocaleTimeString(undefined, timeOptions);
+        return `${formattedDate} at ${formattedTime}`;
+      }
+    }
+    
+    return formattedDate;
+  };
+
+  // Helper function to format time only
+  const formatTime = (timeString?: string) => {
+    if (!timeString) return 'TBA';
+    
+    const [hours, minutes] = timeString.split(':');
+    if (!hours || !minutes) return timeString;
+    
+    const date = new Date();
+    date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+    
+    return date.toLocaleTimeString(undefined, { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
   // 2. Helper function to construct the full image URL
   const getImageUrl = (imagePath: string | undefined | null) => {
     if (!imagePath) {
@@ -179,7 +232,7 @@ const Events: React.FC = () => {
                         </div>
                         <div className="flex flex-col space-y-1.5">
                             <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                                <Clock size={14} className="mr-2 text-blue-500" /> {evt.time || 'TBA'}
+                                <Clock size={14} className="mr-2 text-blue-500" /> {formatTime(evt.time)}
                             </div>
                             <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
                                 <MapPin size={14} className="mr-2 text-red-500" /> {evt.location}
@@ -274,10 +327,7 @@ const Events: React.FC = () => {
                                         <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Date & Time</h4>
                                         <div className="flex items-center text-slate-800 dark:text-white font-medium">
                                             <Calendar size={18} className="mr-2 text-blue-500" />
-                                            {selectedEvent.date}
-                                        </div>
-                                        <div className="flex items-center text-slate-600 dark:text-slate-300 text-sm mt-1 ml-6">
-                                            {selectedEvent.time || 'Time TBD'}
+                                            {formatDateTime(selectedEvent.date, selectedEvent.time)}
                                         </div>
                                     </div>
                                     <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
