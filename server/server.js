@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
-const { DB_TYPE } = require('../server/connection/db');
+const { DB_TYPE, closePool } = require('./connection/db');
 const ArticleRoutes = require('./router/Article');
 const B2BRoutes = require('./router/B2B');
 const JobRoutes = require('./router/Jobs');
@@ -18,6 +18,7 @@ const VideoRoutes = require('./router/Video');
 const LoginRoutes = require('./auth/login');
 const DashboardRoutes = require('./router/dashboard');
 const UserRoutes = require('./router/user');
+const TravelDestinationsRoutes = require('./router/travelDestinations.js');
 
 const app = express();
 app.use(cors());
@@ -45,6 +46,7 @@ app.use('/api/system', systemStatusRoutes);
 app.use('/api/podcasts', PodcastRoutes);
 app.use('/api/videos', VideoRoutes);
 app.use('/api/users', UserRoutes);
+app.use('/api/travel-destinations', TravelDestinationsRoutes);
 
 
 
@@ -54,3 +56,16 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Connected to ${DB_TYPE === 'mysql' ? 'MySQL' : 'PostgreSQL'} database.`);
 });
+
+// Graceful shutdown
+const sanitizeShutdown = async () => {
+    console.log('Closing server...');
+    if (closePool) {
+        await closePool();
+        console.log('Database pool closed.');
+    }
+    process.exit(0);
+};
+
+process.on('SIGINT', sanitizeShutdown);
+process.on('SIGTERM', sanitizeShutdown);

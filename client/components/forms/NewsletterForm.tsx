@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Mail, Type, Image as ImageIcon, Send, AlignLeft } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Mail, Type, Image as ImageIcon, Send, AlignLeft, Upload, X } from 'lucide-react';
 
 interface NewsletterFormProps {
   onSubmit: (data: any) => void;
@@ -11,20 +11,73 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ onSubmit, onCancel }) =
     subject: '',
     content: ''
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate network request
-    setTimeout(() => {
-      onSubmit(formData);
+    setError(null);
+
+    try {
+      // Create FormData to handle file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append('subject', formData.subject);
+      formDataToSend.append('content', formData.content);
+      
+      if (selectedFile) {
+        formDataToSend.append('imageUrl', selectedFile);
+      }
+
+      // Send to backend
+      const response = await fetch('http://localhost:5000/api/newsletters/send-newsletters', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to send newsletter');
+      }
+
+      // Call onSubmit with the response data
+      onSubmit(result);
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
       setIsSubmitting(false);
-    }, 2000);
+    }
   };
 
   const inputWrapperClass = "relative group";
@@ -36,6 +89,19 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ onSubmit, onCancel }) =
 
   return (
     <div className="relative">
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">
+          <div className="flex items-start">
+            <X className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium">Error sending newsletter</h3>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cool Loading Overlay */}
       {isSubmitting && (
         <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
@@ -61,28 +127,72 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ onSubmit, onCancel }) =
             <label className={labelClass}>Subject Line</label>
             <div className="relative">
                 <Type className={iconClass} />
-                <input required name="subject" onChange={handleChange} className={inputClass} placeholder="e.g. Weekly Digest: Top News" />
+                <input 
+                  required 
+                  name="subject" 
+                  onChange={handleChange} 
+                  className={inputClass} 
+                  placeholder="e.g. Weekly Digest: Top News" 
+                  value={formData.subject}
+                />
             </div>
         </div>
 
         <div>
             <label className={labelClass}>Featured Image</label>
-            <div className="mt-1 flex items-center px-4 py-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
+            
+            {previewUrl ? (
+              <div className="mt-1 relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                <img 
+                  src={previewUrl} 
+                  alt="Preview" 
+                  className="w-full h-48 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={removeFile}
+                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="mt-1 flex items-center px-4 py-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
                 <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-4 group-hover:scale-110 transition-transform">
                     <ImageIcon size={24} />
                 </div>
                 <div className="flex-1">
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Upload Banner</p>
-                    <input type="file" accept="image/*" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"/>
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Upload Banner</p>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"
+                      onChange={handleFileChange}
+                      ref={fileInputRef}
+                    />
                 </div>
             </div>
+            )}
+            
+            {selectedFile && (
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+              </p>
+            )}
         </div>
 
         <div className={inputWrapperClass}>
             <label className={labelClass}>Email Content (HTML Supported)</label>
             <div className="relative">
                 <AlignLeft className={iconTextAreaClass} />
-                <textarea name="content" rows={8} onChange={handleChange} className={textAreaClass} placeholder="Dear Subscriber..."></textarea>
+                <textarea 
+                  name="content" 
+                  rows={8} 
+                  onChange={handleChange} 
+                  className={textAreaClass} 
+                  placeholder="Dear Subscriber..."
+                  value={formData.content}
+                ></textarea>
             </div>
         </div>
 

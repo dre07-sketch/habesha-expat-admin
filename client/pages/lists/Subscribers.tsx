@@ -1,28 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Mail, Calendar, Zap, Search, Filter, MoreHorizontal, ArrowUpRight, Users, BarChart2, CheckCircle, Clock, MousePointer, Eye, User } from 'lucide-react';
+import { Send, Mail, Calendar, Zap, Search, Filter, MoreHorizontal, ArrowUpRight, Users, BarChart2, CheckCircle, Clock, MousePointer, Eye, User, Monitor } from 'lucide-react';
 import Modal from '../../components/Modal';
 import NewsletterForm from '../../components/forms/NewsletterForm';
-import { MOCK_NEWSLETTERS } from '../../constants';
 import { Subscriber, Newsletter } from '../../types';
 
 const Subscribers: React.FC = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
-    const [newsletters, setNewsletters] = useState<Newsletter[]>(MOCK_NEWSLETTERS);
+    const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
     const [activeTab, setActiveTab] = useState<'subscribers' | 'campaigns'>('subscribers');
     const [selectedNewsletter, setSelectedNewsletter] = useState<Newsletter | null>(null);
     const [loading, setLoading] = useState(true);
+    const [newslettersLoading, setNewslettersLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [newslettersError, setNewslettersError] = useState<string | null>(null);
 
     const [subSearch, setSubSearch] = useState('');
     const [newsSearch, setNewsSearch] = useState('');
+
+    // Define API Base URL
+    const API_BASE_URL = 'http://localhost:5000';
 
     // Fetch subscribers from API
     useEffect(() => {
         const fetchSubscribers = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:5000/api/subscribers/subscribers-get');
+                const response = await fetch(`${API_BASE_URL}/api/subscribers/subscribers-get`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch subscribers');
                 }
@@ -38,6 +42,27 @@ const Subscribers: React.FC = () => {
         fetchSubscribers();
     }, []);
 
+    // Fetch newsletters from API
+    useEffect(() => {
+        const fetchNewsletters = async () => {
+            try {
+                setNewslettersLoading(true);
+                const response = await fetch(`${API_BASE_URL}/api/newsletters/newsletters-get`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch newsletters');
+                }
+                const data = await response.json();
+                setNewsletters(data);
+            } catch (err) {
+                setNewslettersError(err instanceof Error ? err.message : 'An unknown error occurred');
+            } finally {
+                setNewslettersLoading(false);
+            }
+        };
+
+        fetchNewsletters();
+    }, []);
+
     const filteredSubscribers = subscribers.filter(sub =>
         (sub.name?.toLowerCase().includes(subSearch.toLowerCase()) || '') ||
         sub.email.toLowerCase().includes(subSearch.toLowerCase())
@@ -47,6 +72,13 @@ const Subscribers: React.FC = () => {
         news.subject.toLowerCase().includes(newsSearch.toLowerCase()) ||
         news.status.toLowerCase().includes(newsSearch.toLowerCase())
     );
+
+    // Helper to construct image URL
+    const getImageUrl = (imagePath: string | undefined) => {
+        if (!imagePath) return null;
+        // If the path from DB is like "/upload/123.jpg", prepend the localhost URL
+        return `${API_BASE_URL}${imagePath}`;
+    };
 
     return (
         <div className="animate-in fade-in duration-500">
@@ -149,8 +181,8 @@ const Subscribers: React.FC = () => {
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold border ${sub.plan === 'Premium'
-                                                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                                                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                                                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                                                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                                                                 }`}>
                                                                 {sub.plan === 'Premium' && <Zap size={10} className="mr-1 fill-current" />}
                                                                 {sub.plan || 'Free'}
@@ -167,10 +199,10 @@ const Subscribers: React.FC = () => {
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold capitalize ${sub.status === 'active'
-                                                                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
-                                                                    : sub.status === 'bounced'
-                                                                        ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
-                                                                        : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                                                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+                                                                : sub.status === 'bounced'
+                                                                    ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                                                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                                                                 }`}>
                                                                 <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${sub.status === 'active' ? 'bg-emerald-500' : sub.status === 'bounced' ? 'bg-red-500' : 'bg-slate-500'
                                                                     }`}></span>
@@ -226,53 +258,69 @@ const Subscribers: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
-                        {filteredNewsletters.map((news) => (
-                            <div
-                                key={news.id}
-                                onClick={() => setSelectedNewsletter(news)}
-                                className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start md:items-center"
-                            >
-                                {/* Icon Status Box */}
-                                <div className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center ${news.status === 'Sent' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                        {newslettersLoading ? (
+                            <div className="p-8 text-center">
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                                <p className="mt-2 text-slate-500 dark:text-slate-400">Loading newsletters...</p>
+                            </div>
+                        ) : newslettersError ? (
+                            <div className="p-8 text-center">
+                                <p className="text-red-500 dark:text-red-400">Error: {newslettersError}</p>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        ) : filteredNewsletters.length > 0 ? (
+                            filteredNewsletters.map((news) => (
+                                <div
+                                    key={news.id}
+                                    onClick={() => setSelectedNewsletter(news)}
+                                    className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer group flex flex-col md:flex-row gap-6 items-start md:items-center"
+                                >
+                                    {/* Icon Status Box */}
+                                    <div className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center ${news.status === 'Sent' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' :
                                         news.status === 'Scheduled' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
                                             'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                                    }`}>
-                                    {news.status === 'Sent' ? <CheckCircle size={24} /> : news.status === 'Scheduled' ? <Clock size={24} /> : <Mail size={24} />}
-                                </div>
+                                        }`}>
+                                        {news.status === 'Sent' ? <CheckCircle size={24} /> : news.status === 'Scheduled' ? <Clock size={24} /> : <Mail size={24} />}
+                                    </div>
 
-                                {/* Info */}
-                                <div className="flex-1">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">{news.subject}</h3>
-                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide w-fit mt-2 md:mt-0 ${news.status === 'Sent' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                                    {/* Info */}
+                                    <div className="flex-1">
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">{news.subject}</h3>
+                                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide w-fit mt-2 md:mt-0 ${news.status === 'Sent' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' :
                                                 news.status === 'Scheduled' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' :
                                                     'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                                            }`}>
-                                            {news.status}
-                                        </span>
+                                                }`}>
+                                                {news.status}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 space-x-4">
+                                            <span className="flex items-center"><Calendar size={14} className="mr-1.5" /> {news.sentDate}</span>
+                                            <span className="flex items-center"><Users size={14} className="mr-1.5" /> {news.segment}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 space-x-4">
-                                        <span className="flex items-center"><Calendar size={14} className="mr-1.5" /> {news.sentDate}</span>
-                                        <span className="flex items-center"><Users size={14} className="mr-1.5" /> {news.segment}</span>
-                                    </div>
-                                </div>
 
-                                {/* Quick Stats (Only for Sent) */}
-                                {news.status === 'Sent' && (
-                                    <div className="flex space-x-6 border-l border-slate-100 dark:border-slate-700 pl-6 py-1">
-                                        <div>
-                                            <div className="text-2xl font-bold text-slate-800 dark:text-white">{news.openRate}</div>
-                                            <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center"><Eye size={10} className="mr-1" /> Open Rate</div>
+                                    {/* Quick Stats (Only for Sent) */}
+                                    {news.status === 'Sent' && (
+                                        <div className="flex space-x-6 border-l border-slate-100 dark:border-slate-700 pl-6 py-1">
+                                            <div>
+                                                <div className="text-2xl font-bold text-slate-800 dark:text-white">{news.openRate}</div>
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center"><Eye size={10} className="mr-1" /> Open Rate</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-slate-800 dark:text-white">{news.clickRate}</div>
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center"><MousePointer size={10} className="mr-1" /> Clicks</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="text-2xl font-bold text-slate-800 dark:text-white">{news.clickRate}</div>
-                                            <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center"><MousePointer size={10} className="mr-1" /> Clicks</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        {filteredNewsletters.length === 0 && (
+                                    )}
+                                </div>
+                            ))
+                        ) : (
                             <div className="p-8 text-center text-slate-500 dark:text-slate-400">
                                 No newsletters found.
                             </div>
@@ -286,103 +334,106 @@ const Subscribers: React.FC = () => {
             </Modal>
 
             {/* Campaign Details Modal */}
-            <Modal isOpen={!!selectedNewsletter} onClose={() => setSelectedNewsletter(null)} title="Campaign Report" maxWidth="max-w-5xl">
+            <Modal isOpen={!!selectedNewsletter} onClose={() => setSelectedNewsletter(null)} title="" maxWidth="max-w-6xl">
                 {selectedNewsletter && (
-                    <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden flex flex-col lg:flex-row">
-
-                        {/* Left: Email Preview */}
-                        <div className="w-full lg:w-3/5 bg-slate-100 dark:bg-black border-r border-slate-200 dark:border-slate-800 p-6 lg:p-8 overflow-y-auto max-h-[80vh]">
-                            <div className="bg-white rounded-lg shadow-2xl max-w-xl mx-auto overflow-hidden">
-                                {/* Fake Email Header */}
-                                <div className="bg-slate-50 border-b border-slate-100 p-4">
-                                    <h3 className="font-bold text-lg text-slate-800 mb-1">{selectedNewsletter.subject}</h3>
-                                    <div className="flex items-center text-xs text-slate-500">
-                                        <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mr-2">H</div>
-                                        <span className="font-bold text-slate-700 mr-1">Habesha Expat</span>
-                                        <span>&lt;admin@habeshaexpat.com&gt;</span>
-                                    </div>
-                                </div>
-                                {/* Preview Image */}
-                                {selectedNewsletter.image && (
-                                    <img src={selectedNewsletter.image} alt="Banner" className="w-full h-auto" />
-                                )}
-                                {/* Content Body */}
-                                <div className="p-6 text-slate-700 leading-relaxed whitespace-pre-line text-sm font-serif">
-                                    {selectedNewsletter.content || "No content preview available for this draft."}
-                                </div>
-                                <div className="bg-slate-50 p-4 text-center text-xs text-slate-400 border-t border-slate-100">
-                                    You received this email because you subscribed to our newsletter. <br />
-                                    <a href="#" className="underline">Unsubscribe</a>
-                                </div>
+                    <div className="flex flex-col h-[85vh] bg-slate-50 dark:bg-slate-900">
+                        {/* 1. HEADER SECTION (Simplified - No Buttons) */}
+                        <div className="px-8 py-5 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex flex-col justify-center shrink-0">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className={`flex h-2.5 w-2.5 rounded-full ${selectedNewsletter.status === 'Sent' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                                    selectedNewsletter.status === 'Scheduled' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
+                                        'bg-slate-400'
+                                    }`}></span>
+                                <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">
+                                    {selectedNewsletter.status}
+                                </span>
                             </div>
+                            <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight line-clamp-1">
+                                {selectedNewsletter.subject}
+                            </h2>
                         </div>
 
-                        {/* Right: Analytics Dashboard */}
-                        <div className="w-full lg:w-2/5 p-6 lg:p-8 bg-white dark:bg-slate-900 overflow-y-auto max-h-[80vh]">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1 block">Status</span>
-                                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold uppercase ${selectedNewsletter.status === 'Sent' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                                            selectedNewsletter.status === 'Scheduled' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                                                'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                                        }`}>
-                                        {selectedNewsletter.status}
+                        {/* 2. MAIN CONTENT AREA (Full Width) */}
+                        <div className="flex-1 w-full bg-slate-200 dark:bg-slate-950/50 overflow-hidden flex flex-col">
+
+                            {/* Mock Browser Toolbar */}
+                            <div className="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-center shrink-0">
+                                <div className="w-full max-w-4xl flex items-center justify-between">
+                                    <div className="flex gap-1.5">
+                                        <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+                                        <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+                                        <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
                                     </div>
-                                </div>
-                                <div>
-                                    <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1 block">Sent On</span>
-                                    <div className="text-slate-800 dark:text-white font-bold text-sm">{selectedNewsletter.sentDate}</div>
+                                    <div className="bg-white dark:bg-slate-800 px-6 py-1 rounded-md text-xs text-slate-400 font-mono flex items-center shadow-sm border border-slate-200 dark:border-slate-700">
+                                        <span className="text-emerald-500 mr-2">🔒</span> habeshaexpat.com/newsletter/{selectedNewsletter.id}
+                                    </div>
+                                    <div className="w-8"></div> {/* Spacer for balance */}
                                 </div>
                             </div>
 
-                            <div className="space-y-6">
-                                <div className="bg-blue-50 dark:bg-slate-800/50 p-5 rounded-xl border border-blue-100 dark:border-slate-700">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase">Recipients</span>
-                                        <Users size={16} className="text-blue-500" />
+                            {/* SCROLLABLE ARTICLE AREA */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 flex justify-center">
+                                <div className="bg-white dark:bg-slate-800 w-full max-w-4xl shadow-2xl rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-700 min-h-fit h-fit">
+
+                                    {/* Hero Image - UPDATED SRC */}
+                                    {selectedNewsletter.image && (
+                                        <div className="w-full h-72 sm:h-96 overflow-hidden relative group">
+                                            <img
+                                                src={getImageUrl(selectedNewsletter.image) || ''}
+                                                alt="Header"
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
+                                        </div>
+                                    )}
+
+                                    {/* Email Body */}
+                                    <div className="px-8 py-10 sm:px-16 sm:py-14">
+                                        <div className="mb-10 border-b border-slate-100 dark:border-slate-700 pb-8 text-center">
+                                            <h1 className="text-3xl sm:text-5xl font-serif font-bold text-slate-900 dark:text-white mb-6 leading-tight">
+                                                {selectedNewsletter.subject}
+                                            </h1>
+                                            <div className="flex items-center justify-center text-sm text-slate-500 dark:text-slate-400 font-sans">
+                                                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-bold mr-3">H</div>
+                                                <span>By <span className="text-slate-800 dark:text-slate-200 font-semibold">Habesha Expat Team</span></span>
+                                                <span className="mx-3">•</span>
+                                                <span>{selectedNewsletter.sentDate || "Draft"}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* THE FORMATTED CONTENT */}
+                                        <div
+                                            className="prose prose-lg dark:prose-invert max-w-none text-slate-700 dark:text-slate-300"
+                                            dangerouslySetInnerHTML={{
+                                                __html: (() => {
+                                                    // TEXT FORMATTER LOGIC
+                                                    const text = selectedNewsletter.content || "";
+                                                    if (!text) return '<p class="text-slate-400 italic text-center">No content available.</p>';
+
+                                                    return text
+                                                        .split(/\n\s*\n/) // Split by empty lines
+                                                        .map(paragraph => {
+                                                            const cleanText = paragraph.trim();
+                                                            if (!cleanText) return '';
+                                                            // Styled Paragraph with spacing
+                                                            return `<p style="margin-bottom: 28px; font-family: 'Georgia', 'Times New Roman', serif; font-size: 19px; line-height: 1.8; color: inherit;">${cleanText}</p>`;
+                                                        })
+                                                        .join('');
+                                                })()
+                                            }}
+                                        />
+
+                                        {/* Footer */}
+                                        <div className="mt-16 pt-10 border-t border-slate-100 dark:border-slate-700 text-center">
+                                            <p className="text-slate-400 text-sm mb-4">© 2024 Habesha Expat. All rights reserved.</p>
+                                            <div className="flex justify-center gap-4 text-xs text-blue-500">
+                                                <span className="cursor-pointer hover:underline">Unsubscribe</span>
+                                                <span>•</span>
+                                                <span className="cursor-pointer hover:underline">View in Browser</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="text-3xl font-bold text-slate-900 dark:text-white">{selectedNewsletter.recipientCount.toLocaleString()}</div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Segment: <span className="font-bold text-blue-600 dark:text-blue-400">{selectedNewsletter.segment}</span></div>
                                 </div>
-
-                                {selectedNewsletter.status === 'Sent' ? (
-                                    <>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="bg-emerald-50 dark:bg-slate-800/50 p-5 rounded-xl border border-emerald-100 dark:border-slate-700">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase">Open Rate</span>
-                                                    <Eye size={16} className="text-emerald-500" />
-                                                </div>
-                                                <div className="text-2xl font-bold text-slate-900 dark:text-white">{selectedNewsletter.openRate}</div>
-                                            </div>
-                                            <div className="bg-indigo-50 dark:bg-slate-800/50 p-5 rounded-xl border border-indigo-100 dark:border-slate-700">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase">Click Rate</span>
-                                                    <MousePointer size={16} className="text-indigo-500" />
-                                                </div>
-                                                <div className="text-2xl font-bold text-slate-900 dark:text-white">{selectedNewsletter.clickRate}</div>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                                            <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-4">Performance Over Time</h4>
-                                            <div className="h-32 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-end justify-between p-2 px-4">
-                                                {/* Fake Bar Chart */}
-                                                {[40, 65, 85, 55, 45, 30, 20].map((h, i) => (
-                                                    <div key={i} className="w-8 bg-blue-500 rounded-t-sm opacity-80 hover:opacity-100 transition-opacity" style={{ height: `${h}%` }}></div>
-                                                ))}
-                                            </div>
-                                            <div className="flex justify-between text-xs text-slate-400 mt-2 font-medium px-2">
-                                                <span>0h</span>
-                                                <span>24h</span>
-                                            </div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="p-6 text-center text-slate-500 dark:text-slate-400 text-sm bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                                        Analytics will appear here once the campaign is sent.
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>

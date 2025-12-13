@@ -1,24 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Tag, Layers, Trash2, Hash, FileText, Mic, Video, Briefcase, LayoutGrid, FolderOpen, ChevronRight, BarChart3, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plus, Tag, Layers, Trash2, Hash, FileText, Mic, Video, Briefcase, ChevronRight, BarChart3, AlertCircle, RefreshCw } from 'lucide-react';
 import Modal from '../../components/Modal';
 import CategoryForm from '../../components/forms/CategoryForm';
 import { Category } from '../../types';
 
-// Define a type for category counts
-interface CategoryCount {
-  category_name: string;
-  category_type: string;
-  business_count: number;
-  article_count: number;
-  podcast_count: number;
-  video_count: number;
+// Define a type for category usage
+interface CategoryUsage {
+  name: string;
+  count: number;
+  source: 'articles' | 'podcasts' | 'videos' | 'businesses';
 }
 
 const Categories: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoryCounts, setCategoryCounts] = useState<CategoryCount[]>([]);
+  const [categoryUsage, setCategoryUsage] = useState<CategoryUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteInProgress, setDeleteInProgress] = useState<number | null>(null);
@@ -39,15 +36,15 @@ const Categories: React.FC = () => {
       const categoriesData = await categoriesResponse.json();
       setCategories(categoriesData);
       
-      // Fetch category counts
-      const countsResponse = await fetch('http://localhost:5000/api/categories/category-counts');
+      // Fetch category usage
+      const usageResponse = await fetch('http://localhost:5000/api/categories/categories/usage');
       
-      if (!countsResponse.ok) {
-        throw new Error('Failed to fetch category counts');
+      if (!usageResponse.ok) {
+        throw new Error('Failed to fetch category usage');
       }
       
-      const countsData = await countsResponse.json();
-      setCategoryCounts(countsData.data || []);
+      const usageData = await usageResponse.json();
+      setCategoryUsage(usageData.usedCategories || []);
       
     } catch (err: any) {
       setError(err.message || 'An error occurred while fetching categories');
@@ -88,30 +85,19 @@ const Categories: React.FC = () => {
     }
   };
 
-  // Get count for a specific category
-  const getCategoryCount = (categoryName: string) => {
-    const countData = categoryCounts.find(c => c.category_name === categoryName);
-    if (!countData) return 0;
-    
-    // Sum all counts
-    return countData.business_count + 
-           countData.article_count + 
-           countData.podcast_count + 
-           countData.video_count;
+  // Get total count for a specific category
+  const getCategoryTotalCount = (categoryName: string) => {
+    return categoryUsage
+      .filter(item => item.name === categoryName)
+      .reduce((total, item) => total + item.count, 0);
   };
 
   // Get count for a specific type within a category
   const getCategoryTypeCount = (categoryName: string, type: string) => {
-    const countData = categoryCounts.find(c => c.category_name === categoryName);
-    if (!countData) return 0;
-    
-    switch (type) {
-      case 'businesses': return countData.business_count;
-      case 'articles': return countData.article_count;
-      case 'podcasts': return countData.podcast_count;
-      case 'videos': return countData.video_count;
-      default: return 0;
-    }
+    const usageItem = categoryUsage.find(item => 
+      item.name === categoryName && item.source === type
+    );
+    return usageItem ? usageItem.count : 0;
   };
 
   // Helper to get icon and color based on type
@@ -192,7 +178,7 @@ const Categories: React.FC = () => {
             {categories.map((cat) => {
               const style = getTypeConfig(cat.type);
               const Icon = style.icon;
-              const totalCount = getCategoryCount(cat.name);
+              const totalCount = getCategoryTotalCount(cat.name);
               
               return (
                 <div 
@@ -293,14 +279,14 @@ const Categories: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                   <Layers className="text-blue-500 mb-2" size={24} />
-                  <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryCount(selectedCategory.name)}</span>
+                  <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTotalCount(selectedCategory.name)}</span>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Total Items</span>
                 </div>
                 
                 {selectedCategory.type === 'Article' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                     <FileText className="text-indigo-500 mb-2" size={24} />
-                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'Article')}</span>
+                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'articles')}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Articles</span>
                   </div>
                 )}
@@ -308,7 +294,7 @@ const Categories: React.FC = () => {
                 {selectedCategory.type === 'Podcast' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                     <Mic className="text-rose-500 mb-2" size={24} />
-                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'Podcast')}</span>
+                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'podcasts')}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Podcasts</span>
                   </div>
                 )}
@@ -316,7 +302,7 @@ const Categories: React.FC = () => {
                 {selectedCategory.type === 'Video' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                     <Video className="text-sky-500 mb-2" size={24} />
-                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'Video')}</span>
+                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'videos')}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Videos</span>
                   </div>
                 )}
@@ -324,7 +310,7 @@ const Categories: React.FC = () => {
                 {selectedCategory.type === 'Business' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                     <Briefcase className="text-emerald-500 mb-2" size={24} />
-                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'Business')}</span>
+                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'businesses')}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Businesses</span>
                   </div>
                 )}
@@ -333,39 +319,6 @@ const Categories: React.FC = () => {
                   <BarChart3 className="text-emerald-500 mb-2" size={24} />
                   <span className="text-2xl font-bold text-slate-800 dark:text-white">12.5k</span>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Monthly Views</span>
-                </div>
-              </div>
-
-              {/* SEO & Metadata */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 mb-8">
-                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 flex items-center">
-                  SEO Preview
-                </h3>
-                <div className="flex items-center bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 font-mono text-sm text-slate-600 dark:text-slate-300">
-                  <span className="text-slate-400 select-none">habeshaexpat.com/category/</span>
-                  <span className="text-blue-600 dark:text-blue-400 font-bold">{selectedCategory.name.toLowerCase().replace(/\s+/g, '-')}</span>
-                </div>
-              </div>
-
-              {/* Recent Items Preview */}
-              <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-slate-800 dark:text-white flex items-center">
-                    <LayoutGrid size={18} className="mr-2 text-slate-400" /> Recent {selectedCategory.type}s
-                  </h3>
-                  <button className="text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline">View All Content</button>
-                </div>
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700 group">
-                      <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-700 mr-4 flex items-center justify-center text-slate-400 text-xs font-bold group-hover:bg-white dark:group-hover:bg-slate-600 transition-colors shadow-sm">IMG</div>
-                      <div className="flex-1">
-                        <div className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Sample Content Title {i}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Published 2 days ago • 1.2k views</div>
-                      </div>
-                      <ChevronRight size={16} className="text-slate-300 dark:text-slate-600 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>

@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
-import { 
-  ShieldBan, 
-  Database, 
-  Cpu, 
+import {
+  ShieldBan,
+  Database,
+  Cpu,
   Globe,
   Lock
 } from 'lucide-react';
@@ -13,7 +12,7 @@ const AdminPanelShutdown: React.FC = () => {
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [hexStream, setHexStream] = useState<string[]>([]);
   const [glitch, setGlitch] = useState(false);
-  
+
   // Random Glitch Effect
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,7 +70,7 @@ const AdminPanelShutdown: React.FC = () => {
 
   return (
     <div className={`min-h-screen bg-black text-red-600 font-mono overflow-hidden relative selection:bg-red-900 selection:text-white transition-transform duration-75 ${glitch ? 'translate-x-[2px] skew-x-1' : ''}`}>
-      
+
       {/* CSS for scanlines and CRT flicker */}
       <style>{`
         @keyframes scanline {
@@ -102,11 +101,11 @@ const AdminPanelShutdown: React.FC = () => {
       {/* Background Elements */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
         {/* Hex Grid Pattern */}
-        <div className="absolute inset-0" 
-             style={{ 
-               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%237f1d1d' stroke-width='1'/%3E%3C/svg%3E")`,
-               backgroundSize: '60px 60px'
-             }}>
+        <div className="absolute inset-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%237f1d1d' stroke-width='1'/%3E%3C/svg%3E")`,
+            backgroundSize: '60px 60px'
+          }}>
         </div>
         {/* Radar Sweep */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-900/20 to-transparent animate-spin-slow origin-bottom-right opacity-50"></div>
@@ -118,11 +117,11 @@ const AdminPanelShutdown: React.FC = () => {
 
       {/* Main Container */}
       <div className="relative z-10 w-full min-h-screen flex flex-col p-4 md:p-8 lg:p-12">
-        
+
         {/* Top Header Bar */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-red-800 pb-6 mb-8 relative">
           <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-500 animate-pulse"></div>
-          
+
           <div className="flex items-center gap-4 mb-4 md:mb-0">
             <div className="relative">
               <ShieldBan className="w-12 h-12 text-red-500 animate-pulse" />
@@ -139,23 +138,23 @@ const AdminPanelShutdown: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
-             <div className="flex flex-col items-end">
-                <span className="text-xs text-red-500/70 uppercase tracking-widest">Security Level</span>
-                <span className="text-xl font-bold text-white bg-red-600 px-3 py-1 rounded-sm shadow-[0_0_15px_rgba(220,38,38,0.5)] animate-pulse">
-                  DEFCON 1
-                </span>
-             </div>
-             <div className="hidden lg:block w-px h-12 bg-red-900/50"></div>
-             <div className="hidden lg:flex flex-col items-end text-xs text-red-400/60 font-mono">
-               <span>LAT: 9.005401 N</span>
-               <span>LNG: 38.763611 E</span>
-             </div>
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-red-500/70 uppercase tracking-widest">Security Level</span>
+              <span className="text-xl font-bold text-white bg-red-600 px-3 py-1 rounded-sm shadow-[0_0_15px_rgba(220,38,38,0.5)] animate-pulse">
+                DEFCON 1
+              </span>
+            </div>
+            <div className="hidden lg:block w-px h-12 bg-red-900/50"></div>
+            <div className="hidden lg:flex flex-col items-end text-xs text-red-400/60 font-mono">
+              <span>LAT: 9.005401 N</span>
+              <span>LNG: 38.763611 E</span>
+            </div>
           </div>
         </header>
 
         {/* Dashboard Grid */}
         <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          
+
           {/* Left Column: Diagnostics */}
           <div className="lg:col-span-3 flex flex-col gap-4">
             {/* Status Box */}
@@ -171,8 +170,8 @@ const AdminPanelShutdown: React.FC = () => {
             </div>
 
             <div className="bg-black/80 border-2 border-red-900/50 p-4 relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-1 bg-red-900/50 text-[10px] text-white">MIGRATE</div>
-               <div className="flex items-end justify-between mb-2 mt-2">
+              <div className="absolute top-0 right-0 p-1 bg-red-900/50 text-[10px] text-white">MIGRATE</div>
+              <div className="flex items-end justify-between mb-2 mt-2">
                 <Database className="text-red-500" size={20} />
                 <span className="text-2xl font-bold text-white">{Math.floor(progress)}%</span>
               </div>
@@ -182,35 +181,35 @@ const AdminPanelShutdown: React.FC = () => {
             </div>
 
             <div className="bg-black/80 border-2 border-red-900/50 p-4 flex-1 flex flex-col relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-1 bg-red-900/50 text-[10px] text-white">NET_TOPOLOGY</div>
-               <div className="flex-1 flex items-center justify-center relative my-4">
-                  <Globe className="text-red-900 animate-spin-slow w-32 h-32 opacity-50 absolute" />
-                  <div className="grid grid-cols-2 gap-2 relative z-10 w-full">
-                     <div className="text-center">
-                       <div className="text-[10px] text-red-500">ADDIS</div>
-                       <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping"></div>
-                     </div>
-                     <div className="text-center">
-                       <div className="text-[10px] text-red-500">DUBAI</div>
-                       <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.2s' }}></div>
-                     </div>
-                     <div className="text-center">
-                       <div className="text-[10px] text-red-500">LONDON</div>
-                       <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.5s' }}></div>
-                     </div>
-                     <div className="text-center">
-                       <div className="text-[10px] text-red-500">DC</div>
-                       <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.8s' }}></div>
-                     </div>
+              <div className="absolute top-0 right-0 p-1 bg-red-900/50 text-[10px] text-white">NET_TOPOLOGY</div>
+              <div className="flex-1 flex items-center justify-center relative my-4">
+                <Globe className="text-red-900 animate-spin-slow w-32 h-32 opacity-50 absolute" />
+                <div className="grid grid-cols-2 gap-2 relative z-10 w-full">
+                  <div className="text-center">
+                    <div className="text-[10px] text-red-500">ADDIS</div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping"></div>
                   </div>
-               </div>
-               <div className="text-center text-xs text-red-500 font-bold bg-red-950/30 py-1">GLOBAL NODES: UNSTABLE</div>
+                  <div className="text-center">
+                    <div className="text-[10px] text-red-500">DUBAI</div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[10px] text-red-500">LONDON</div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.5s' }}></div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[10px] text-red-500">DC</div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.8s' }}></div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center text-xs text-red-500 font-bold bg-red-950/30 py-1">GLOBAL NODES: UNSTABLE</div>
             </div>
           </div>
 
           {/* Center Column: Lockdown Visual */}
           <div className="lg:col-span-6 flex flex-col items-center justify-center relative py-12 lg:py-0 border-x-0 lg:border-x border-red-900/30 bg-red-900/5">
-            
+
             {/* Warning Tape */}
             <div className="absolute top-4 left-0 w-full h-8 hazard-stripe opacity-20 transform -rotate-2"></div>
             <div className="absolute bottom-4 left-0 w-full h-8 hazard-stripe opacity-20 transform rotate-2"></div>
@@ -219,9 +218,9 @@ const AdminPanelShutdown: React.FC = () => {
               {/* Spinning Lock Rings */}
               <div className="absolute inset-0 rounded-full border-4 border-dashed border-red-800 animate-spin-slow opacity-50"></div>
               <div className="absolute inset-4 rounded-full border-2 border-red-600 animate-spin opacity-30" style={{ animationDirection: 'reverse', animationDuration: '4s' }}></div>
-              
+
               <div className="relative z-10 w-48 h-48 md:w-64 md:h-64 flex items-center justify-center bg-black rounded-full border-4 border-red-600 shadow-[0_0_50px_rgba(220,38,38,0.4)]">
-                 <Lock className="w-24 h-24 text-red-500 animate-pulse" />
+                <Lock className="w-24 h-24 text-red-500 animate-pulse" />
               </div>
 
               {/* Eclipse Shadow */}
@@ -241,7 +240,7 @@ const AdminPanelShutdown: React.FC = () => {
 
           {/* Right Column: Terminal & Hex */}
           <div className="lg:col-span-3 flex flex-col gap-6">
-            
+
             {/* Terminal Window */}
             <div className="bg-black border-2 border-red-900 flex-1 p-4 font-mono text-xs overflow-hidden relative">
               <div className="absolute top-0 left-0 right-0 bg-red-900/20 p-1 text-[10px] text-center font-bold text-red-300">
@@ -268,50 +267,20 @@ const AdminPanelShutdown: React.FC = () => {
         </main>
 
         {/* Footer: Powered by Tech 5 Ethiopia */}
-        <footer className="mt-8 flex flex-col items-center justify-center border-t border-red-900/30 pt-8 opacity-70 hover:opacity-100 transition-opacity">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-red-500/60 mb-4">Powered By</span>
-            <div className="flex items-center gap-4 text-red-600">
-               {/* Recreated Logo SVG */}
-               <svg className="w-12 h-12" viewBox="0 0 100 100" fill="currentColor">
-                  {/* Diamond Pattern Nodes - Military Style */}
-                  <g className="origin-center rotate-45 transform translate-x-3 translate-y-3">
-                    {/* Top Row */}
-                    <circle cx="35" cy="20" r="5" />
-                    <circle cx="65" cy="20" r="5" />
-                    
-                    {/* Mid 1 */}
-                    <circle cx="20" cy="35" r="5" />
-                    <circle cx="50" cy="35" r="5" />
-                    <circle cx="80" cy="35" r="5" />
+        <footer className="mt-8 flex flex-col items-center justify-center border-t border-red-900/30 pt-8 opacity-70 hover:opacity-100 transition-opacity w-full">
+          <span className="text-[10px] uppercase tracking-[0.25em] text-red-500/60 mb-4">Powered By</span>
+          <div className="flex items-center gap-4 text-red-600">
+            {/* New Logo Image - Increased size */}
+            <img
+              src="https://z-cdn-media.chatglm.cn/files/51571057-558e-44fe-a0a5-d9d5077e1c23.png?auth_key=1865625128-62826a3d984944dcbe1e0f6b825c175e-0-c3820b12ac381571e517f52bad06691d"
+              alt="t'ch Ethiopia Logo"
+              className="w-20 h-30"
+            />
 
-                    {/* Mid 2 */}
-                    <circle cx="20" cy="65" r="5" />
-                    <circle cx="50" cy="65" r="5" />
-                    <circle cx="80" cy="65" r="5" />
-
-                    {/* Bottom Row */}
-                    <circle cx="35" cy="80" r="5" />
-                    <circle cx="65" cy="80" r="5" />
-
-                    {/* Connecting Lines */}
-                    <path d="M35 20 L20 35 M35 20 L50 35 M65 20 L50 35 M65 20 L80 35" stroke="currentColor" strokeWidth="2" />
-                    <path d="M20 35 L20 65 M50 35 L50 65 M80 35 L80 65" stroke="currentColor" strokeWidth="2" />
-                    <path d="M20 35 L35 20 M50 35 L35 20 M50 35 L65 20 M80 35 L65 20" stroke="currentColor" strokeWidth="2" strokeOpacity="0.5" />
-                    <path d="M20 65 L35 80 M50 65 L35 80 M50 65 L65 80 M80 65 L65 80" stroke="currentColor" strokeWidth="2" />
-                  </g>
-               </svg>
-               <div className="flex flex-col justify-center">
-                 <div className="flex items-center font-serif text-2xl text-red-500 leading-none">
-                   <span>t</span>
-                   <span className="mx-0.5 font-sans font-bold text-xl mt-1">ች</span>
-                   <span>ch</span>
-                 </div>
-                 <span className="text-sm font-serif text-red-700 tracking-wider">Ethiopia</span>
-               </div>
-            </div>
-            <div className="mt-4 text-[9px] text-red-900/50">
-                SYSTEM ID: HEX-092-ADDIS // UNAUTHORIZED ACCESS IS PROHIBITED
-            </div>
+          </div>
+          <div className="mt-4 text-[13px] text-white">
+            Developer by Tech 5 Ethiopia © 2025
+          </div>
         </footer>
 
       </div>

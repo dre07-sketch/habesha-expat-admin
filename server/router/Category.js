@@ -163,5 +163,67 @@ router.get("/category/:name/insight", async (req, res) => {
 });
 
 
+router.get('/categories/usage', async (req, res) => {
+  try {
+    const sql = `
+      WITH valid AS (
+        SELECT name FROM categories
+      ),
+
+      article_counts AS (
+        SELECT a.category AS name, COUNT(*) AS count
+        FROM articles a
+        INNER JOIN valid v ON v.name = a.category
+        GROUP BY a.category
+      ),
+
+      podcast_counts AS (
+        SELECT p.category AS name, COUNT(*) AS count
+        FROM podcasts p
+        INNER JOIN valid v ON v.name = p.category
+        GROUP BY p.category
+      ),
+
+      video_counts AS (
+        SELECT v.category AS name, COUNT(*) AS count
+        FROM videos v
+        INNER JOIN valid c ON c.name = v.category
+        GROUP BY v.category
+      ),
+
+      business_counts AS (
+        SELECT b.category AS name, COUNT(*) AS count
+        FROM businesses b
+        INNER JOIN valid v ON v.name = b.category
+        GROUP BY b.category
+      )
+
+      SELECT name, count, 'articles' AS source FROM article_counts
+      UNION ALL
+      SELECT name, count, 'podcasts' AS source FROM podcast_counts
+      UNION ALL
+      SELECT name, count, 'videos' AS source FROM video_counts
+      UNION ALL
+      SELECT name, count, 'businesses' AS source FROM business_counts;
+    `;
+
+    const { rows } = await query(sql);
+
+    res.json({
+      success: true,
+      usedCategories: rows
+    });
+
+  } catch (error) {
+    console.error('Error checking category usage:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch category usage',
+      error: error.message
+    });
+  }
+});
+
+
 
 module.exports = router;
