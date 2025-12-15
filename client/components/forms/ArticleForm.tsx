@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Type, Link as LinkIcon, Image as ImageIcon, AlignLeft, User, Calendar, Tag, FileText, UploadCloud, X } from 'lucide-react';
+import { Type, Link as LinkIcon, Image as ImageIcon, Video, AlignLeft, User, Calendar, Tag, FileText, UploadCloud, X } from 'lucide-react';
 
 interface ArticleFormProps {
   onSubmit: (data: any) => void;
@@ -12,8 +12,12 @@ interface FormData {
   excerpt: string;
   content: string;
   category: string;
-  author: string;
-  publishDate: string;
+  author_name: string;
+  publish_date: string;
+  status: string;
+  tags: string[];
+  url?: string;
+  video_url?: string;
 }
 
 const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
@@ -23,16 +27,25 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
     excerpt: '',
     content: '',
     category: '',
-    author: '',
-    publishDate: ''
+    author_name: '',
+    publish_date: '',
+    status: 'draft',
+    tags: [],
+    url: '',
+    video_url: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [videoOption, setVideoOption] = useState<'file' | 'url'>('file');
   const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>(['Business', 'Culture', 'Tech', 'News']); // Fallback categories
+  const [categories, setCategories] = useState<string[]>(['Business', 'Culture', 'Tech', 'News']);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [currentTag, setCurrentTag] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch categories from server
   useEffect(() => {
@@ -48,7 +61,6 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
         }
       } catch (err) {
         console.error('Error fetching categories:', err);
-        // Fallback to default categories already set in state
       } finally {
         setIsLoadingCategories(false);
       }
@@ -63,10 +75,23 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
       const file = e.target.files[0];
       setImageFile(file);
 
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle video file selection and preview
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setVideoFile(file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setVideoPreviewUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -81,18 +106,94 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
     }
   };
 
-  // Clean up preview URL when component unmounts
+  // Remove selected video
+  const handleRemoveVideo = () => {
+    setVideoFile(null);
+    setVideoPreviewUrl(null);
+    if (videoInputRef.current) {
+      videoInputRef.current.value = '';
+    }
+    // Also clear video URL if it exists
+    setFormData(prev => ({ ...prev, video_url: '' }));
+  };
+
+  // Clean up preview URLs when component unmounts
   useEffect(() => {
     return () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
+      if (videoPreviewUrl) {
+        URL.revokeObjectURL(videoPreviewUrl);
+      }
     };
-  }, [previewUrl]);
+  }, [previewUrl, videoPreviewUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle tag input with automatic # prefix
+  const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    
+    // Automatically add # at the beginning if not present
+    if (value && !value.startsWith('#')) {
+      value = '#' + value;
+    }
+    
+    setCurrentTag(value);
+  };
+
+  // Add tag when Enter or comma is pressed
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag();
+    } else if (e.key === 'Backspace' && currentTag === '#' && formData.tags.length > 0) {
+      // Remove last tag if input is just # and backspace is pressed
+      const newTags = [...formData.tags];
+      newTags.pop();
+      setFormData(prev => ({ ...prev, tags: newTags }));
+    }
+  };
+
+  // Add tag to the list
+  const addTag = () => {
+    if (currentTag.trim() !== '' && currentTag !== '#') {
+      // Ensure tag starts with #
+      let tagToAdd = currentTag.trim();
+      if (!tagToAdd.startsWith('#')) {
+        tagToAdd = '#' + tagToAdd;
+      }
+      
+      const newTags = [...formData.tags, tagToAdd];
+      setFormData(prev => ({ ...prev, tags: newTags }));
+      setCurrentTag('#'); // Reset to # for next tag
+    }
+  };
+
+  // Remove a specific tag
+  const removeTag = (index: number) => {
+    const newTags = [...formData.tags];
+    newTags.splice(index, 1);
+    setFormData(prev => ({ ...prev, tags: newTags }));
+  };
+
+  // Handle video option change
+  const handleVideoOptionChange = (option: 'file' | 'url') => {
+    setVideoOption(option);
+    // Clear existing video data when switching options
+    if (option === 'file') {
+      setFormData(prev => ({ ...prev, video_url: '' }));
+    } else {
+      setVideoFile(null);
+      setVideoPreviewUrl(null);
+      if (videoInputRef.current) {
+        videoInputRef.current.value = '';
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,17 +202,28 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
     setError(null);
 
     try {
-      // Create FormData object to handle both file and text data
       const formDataToSend = new FormData();
 
       // Append all form fields with explicit type casting
       (Object.keys(formData) as Array<keyof FormData>).forEach(key => {
-        formDataToSend.append(key, formData[key]);
+        if (key === 'tags') {
+          // Convert tags array to comma-separated string
+          formDataToSend.append('tags', formData[key].join(','));
+        } else {
+          formDataToSend.append(key, formData[key] || '');
+        }
       });
 
       // Append image if exists
       if (imageFile) {
         formDataToSend.append('image', imageFile);
+      }
+
+      // Append video if exists (either file or URL)
+      if (videoOption === 'file' && videoFile) {
+        formDataToSend.append('video', videoFile);
+      } else if (videoOption === 'url' && formData.video_url) {
+        formDataToSend.append('video_url', formData.video_url);
       }
 
       // Send data to server
@@ -215,6 +327,24 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
             </div>
           </div>
 
+          {/* Article URL Field */}
+          <div className={inputWrapperClass}>
+            <label className={labelClass}>Article URL</label>
+            <div className="relative">
+              <LinkIcon className={iconClass} />
+              <input
+                name="url"
+                value={formData.url || ''}
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="https://example.com/article"
+              />
+            </div>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              External URL for this article (optional)
+            </p>
+          </div>
+
           <div className={inputWrapperClass}>
             <label className={labelClass}>Category</label>
             <div className="relative">
@@ -238,11 +368,48 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
             </div>
           </div>
 
+          {/* Tags Input with automatic # */}
+          <div className={inputWrapperClass}>
+            <label className={labelClass}>Tags</label>
+            <div className="relative">
+              <Tag className={iconClass} />
+              <input
+                type="text"
+                value={currentTag}
+                onChange={handleTagChange}
+                onKeyDown={handleTagKeyDown}
+                onBlur={addTag}
+                className={inputClass}
+                placeholder="Add tags (press Enter or comma to add)"
+              />
+            </div>
+            {/* Display tags as chips */}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.tags.map((tag, index) => (
+                <div key={index} className="flex items-center bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(index)}
+                    className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className={inputWrapperClass}>
             <label className={labelClass}>Author</label>
             <div className="relative">
               <User className={iconClass} />
-              <input name="author" onChange={handleChange} className={inputClass} placeholder="Author Name" />
+              <input 
+                name="author_name"
+                onChange={handleChange} 
+                className={inputClass} 
+                placeholder="Author Name" 
+              />
             </div>
           </div>
 
@@ -250,8 +417,96 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
             <label className={labelClass}>Publish Date</label>
             <div className="relative">
               <Calendar className={iconClass} />
-              <input type="datetime-local" name="publishDate" onChange={handleChange} className={inputClass} />
+              <input 
+                type="datetime-local" 
+                name="publish_date"
+                onChange={handleChange} 
+                className={inputClass} 
+              />
             </div>
+          </div>
+
+          {/* Video Section with Upload or URL Options */}
+          <div>
+            <label className={labelClass}>Featured Video</label>
+            <div className="flex space-x-2 mb-3">
+              <button
+                type="button"
+                onClick={() => handleVideoOptionChange('file')}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center ${
+                  videoOption === 'file'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <UploadCloud size={14} className="mr-1" /> Upload Video
+              </button>
+              <button
+                type="button"
+                onClick={() => handleVideoOptionChange('url')}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center ${
+                  videoOption === 'url'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <LinkIcon size={14} className="mr-1" /> Video URL
+              </button>
+            </div>
+
+            {videoOption === 'file' ? (
+              <div>
+                <div className="mt-1 flex items-center px-4 py-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
+                  <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-4 group-hover:scale-110 transition-transform">
+                    <Video size={24} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Upload Video</p>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      ref={videoInputRef}
+                      onChange={handleVideoFileChange}
+                      className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Video Preview */}
+                {videoPreviewUrl && (
+                  <div className="mt-4 relative">
+                    <video
+                      src={videoPreviewUrl}
+                      controls
+                      className="max-w-full h-auto rounded-lg border border-slate-200 dark:border-slate-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveVideo}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={inputWrapperClass}>
+                <div className="relative">
+                  <Video className={iconClass} />
+                  <input
+                    name="video_url"
+                    value={formData.video_url || ''}
+                    onChange={handleChange}
+                    className={inputClass}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Enter a YouTube, Vimeo, or other video URL
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Image Upload */}

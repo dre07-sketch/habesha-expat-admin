@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { UploadCloud, Mic, FileAudio, Image as ImageIcon, Type, Link as LinkIcon, Tag } from 'lucide-react';
+import { UploadCloud, Mic, FileAudio, Image as ImageIcon, Type, Link as LinkIcon, Tag, X } from 'lucide-react';
 
 interface PodcastFormProps {
   onSubmit: (data: any) => void;
@@ -13,11 +12,71 @@ const PodcastForm: React.FC<PodcastFormProps> = ({ onSubmit, onCancel }) => {
     host: '',
     slug: '',
     category: '',
+    tags: [] as string[],
   });
+  const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTagInput(value);
+    
+    // Auto-add hash to words when space is pressed
+    if (value.endsWith(' ')) {
+      const words = value.trim().split(' ');
+      const lastWord = words[words.length - 1];
+      
+      if (lastWord && !lastWord.startsWith('#')) {
+        const newTag = `#${lastWord}`;
+        if (!formData.tags.includes(newTag)) {
+          setFormData({
+            ...formData,
+            tags: [...formData.tags, newTag]
+          });
+        }
+        setTagInput('');
+      }
+    }
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const words = tagInput.trim().split(/[\s,]+/);
+      const lastWord = words[words.length - 1];
+      
+      if (lastWord) {
+        const newTag = lastWord.startsWith('#') ? lastWord : `#${lastWord}`;
+        if (!formData.tags.includes(newTag)) {
+          setFormData({
+            ...formData,
+            tags: [...formData.tags, newTag]
+          });
+        }
+        setTagInput('');
+      }
+    } else if (e.key === 'Backspace' && tagInput === '' && formData.tags.length > 0) {
+      // Remove last tag when backspace is pressed on empty input
+      const newTags = [...formData.tags];
+      newTags.pop();
+      setFormData({
+        ...formData,
+        tags: newTags
+      });
+    }
+  };
+
+  const removeTag = (index: number) => {
+    const newTags = [...formData.tags];
+    newTags.splice(index, 1);
+    setFormData({
+      ...formData,
+      tags: newTags
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -99,6 +158,38 @@ const PodcastForm: React.FC<PodcastFormProps> = ({ onSubmit, onCancel }) => {
                         <input required name="slug" onChange={handleChange} className={inputClass} placeholder="the-future-of-tech" />
                     </div>
                 </div>
+            </div>
+
+            {/* Tags Field */}
+            <div className={inputWrapperClass}>
+                <label className={labelClass}>Tags</label>
+                <div className="relative">
+                    <Tag className={iconClass} />
+                    <input
+                        type="text"
+                        value={tagInput}
+                        onChange={handleTagInputChange}
+                        onKeyDown={handleTagKeyDown}
+                        className={inputClass}
+                        placeholder="Type words and press space to add #tags"
+                    />
+                </div>
+                {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                        {formData.tags.map((tag, index) => (
+                            <div key={index} className="flex items-center bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full">
+                                <span>{tag}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => removeTag(index)}
+                                    className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
 

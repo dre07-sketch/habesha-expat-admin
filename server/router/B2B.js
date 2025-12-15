@@ -6,23 +6,36 @@ const { query, DB_TYPE } = require('../connection/db');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'upload/'); // folder where images will be saved
+        cb(null, 'upload/');
     },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
-        cb(null, Date.now() + ext); // unique name
+        cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + ext);
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 // Route
-router.post('/businesses-post', upload.single('image'), async (req, res) => {
+router.post('/businesses-post', upload.any(), async (req, res) => {
     try {
-        const { name, category, email, phone, address, mapPin, website, description } = req.body;
+        const {
+            name,
+            category,
+            email,
+            phone,
+            address,
+            mapPin,
+            website,
+            description
+        } = req.body;
 
-        // Store relative path in DB
-        const imagePath = req.file ? `/upload/${req.file.filename}` : null;
+        // Convert uploaded files to array of paths
+        // Since we use upload.any(), req.files contains all files. 
+        // We filter for those that start with 'image_' which is how the client sends them.
+        const imagePaths = req.files
+            ? req.files.filter(f => f.fieldname.startsWith('image_')).map(file => `/upload/${file.filename}`)
+            : [];
 
         const sql = `
             INSERT INTO businesses 
@@ -33,14 +46,24 @@ router.post('/businesses-post', upload.single('image'), async (req, res) => {
         `;
 
         const result = await query(sql, [
-            name, category, email, phone, address, mapPin, website, description, imagePath
+            name,
+            category,
+            email,
+            phone,
+            address,
+            mapPin,
+            website,
+            description,
+            JSON.stringify(imagePaths) // Store as JSON string in image_url column
         ]);
 
         res.status(201).json({
             success: true,
             message: 'Business listing submitted',
-            id: result.insertId
+            id: result.rows[0].id,
+            images: imagePaths
         });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, error: err.message });
@@ -50,9 +73,10 @@ router.post('/businesses-post', upload.single('image'), async (req, res) => {
 
 router.get('/businesses-get', async (req, res) => {
     try {
+        // Fetch image_url which now might contain a JSON array of paths
         const sql = `
             SELECT id, name, category, email, phone, address, 
-                   map_pin as mapPin, website_url, description, image_url as image, 
+                   map_pin as mapPin, website_url, description, image_url, 
                    status, rating 
             FROM businesses 
             ORDER BY created_at DESC
@@ -61,10 +85,36 @@ router.get('/businesses-get', async (req, res) => {
 
         // Prepend host to image paths
         const host = req.protocol + '://' + req.get('host');
-        const data = rows.map(b => ({
-            ...b,
-            image: b.image ? `${host}${b.image}` : null
-        }));
+
+        const data = rows.map(b => {
+            let images = [];
+            let mainImage = null;
+
+            if (b.image_url) {
+                try {
+                    // Try parsing as JSON array
+                    const parsed = JSON.parse(b.image_url);
+                    if (Array.isArray(parsed)) {
+                        images = parsed.map(path => `${host}${path}`);
+                        mainImage = images[0] || null;
+                    } else {
+                        // Fallback if it's a single string (legacy data)
+                        mainImage = `${host}${b.image_url}`;
+                        images = [mainImage];
+                    }
+                } catch (e) {
+                    // Not JSON, assume simple string path (legacy data)
+                    mainImage = `${host}${b.image_url}`;
+                    images = [mainImage];
+                }
+            }
+
+            return {
+                ...b,
+                image: mainImage, // Keep backwards compatibility for list view
+                images: images    // Provide full array
+            };
+        });
 
         res.json(data);
     } catch (err) {
@@ -169,7 +219,7 @@ router.get('/business-rating-comment/:id', async (req, res) => {
 
 router.get('/businesses-catagories', async (req, res) => {
     try {
-        
+
         const sql = "SELECT name FROM categories WHERE type = $1";
         const params = ['businesses'];
 

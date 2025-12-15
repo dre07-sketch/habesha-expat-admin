@@ -1,61 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, MapPin, Star, Users, Clock, Edit3, Trash2, Eye, MoreHorizontal, Globe, X, CalendarCheck } from 'lucide-react';
+import { Plus, MapPin, Star, Users, Clock, Trash2, Eye, MoreHorizontal, Globe, X, CalendarCheck, EyeOff } from 'lucide-react';
 import TravelForm from '../../components/forms/TravelForm';
 
-// Mock Data
-const MOCK_DESTINATIONS = [
-    {
-        id: 1,
-        slug: 'simien-mountains-trek',
-        name: 'Simien Mountains',
-        title: 'Roof of Africa Expedition',
-        description: 'Experience the breathtaking landscapes of the Simien Mountains, home to the Gelada baboons and Walia ibex. A trekking experience like no other in the horn of Africa.',
-        price: '$1,200',
-        rating: 4.8,
-        reviews: 124,
-        hero_image: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80',
-        location: 'Amhara Region, Ethiopia',
-        duration: '4 Days',
-        group_size: '10 Max',
-        languages: 'Eng, Amh',
-        highlights: ['Gelada Baboons', 'Ras Dashen', 'Camping under stars', 'Walia Ibex sighting'],
-        itinerary: [
-            { day: 1, title: 'Arrival in Gondar', description: 'Fly to Gondar, meet the team and drive to Sankaber.' },
-            { day: 2, title: 'Sankaber to Geech', description: 'Trek along the escarpment with stunning views.' },
-            { day: 3, title: 'Geech to Chenek', description: 'The most spectacular day, spotting Walia Ibex.' },
-            { day: 4, title: 'Chenek to Gondar', description: 'Drive back to Gondar for farewell dinner.' }
-        ],
-        gallery: [
-            'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80',
-            'https://images.unsplash.com/photo-1523539385317-0985c49b6d85?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80'
-        ]
-    },
-    {
-        id: 2,
-        slug: 'lalibela-churches',
-        name: 'Lalibela',
-        title: 'The New Jerusalem',
-        description: 'Walk through the rock-hewn churches of Lalibela, a UNESCO World Heritage site and a marvel of engineering.',
-        price: '$850',
-        rating: 4.9,
-        reviews: 312,
-        hero_image: 'https://images.unsplash.com/photo-1523539385317-0985c49b6d85?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80',
-        location: 'Lalibela, Ethiopia',
-        duration: '3 Days',
-        group_size: '15 Max',
-        languages: 'Eng, Fra',
-        highlights: ['St. George Church', 'Underground Tunnels', 'Traditional Coffee Ceremony'],
-        itinerary: [
-            { day: 1, title: 'Northern Group', description: 'Visit the first group of churches.' },
-            { day: 2, title: 'Southern Group & St. George', description: 'Visit the famous cross-shaped church.' }
-        ],
-        gallery: []
-    }
-];
+const API_BASE_URL = 'http://localhost:5000';
 
 // --- Internal Detail Modal Component ---
-const DetailModal = ({ destination, onClose }) => {
+const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) => {
     if (!destination) return null;
 
     return createPortal(
@@ -83,6 +34,10 @@ const DetailModal = ({ destination, onClose }) => {
                             <div className="flex items-center text-yellow-500 gap-1 text-[11px] font-bold">
                                 <Star size={12} fill="currentColor" /> {destination.rating}
                             </div>
+                            {/* Status Badge */}
+                            <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${destination.status === 'visible' ? 'bg-green-600' : 'bg-gray-600'}`}>
+                                {destination.status === 'visible' ? 'Visible' : 'Hidden'}
+                            </span>
                         </div>
 
                         {/* Title & Location */}
@@ -162,8 +117,41 @@ const DetailModal = ({ destination, onClose }) => {
                                     </div>
                                     <div className="flex items-center justify-between text-xs">
                                         <span className="flex items-center text-slate-500 dark:text-slate-400 gap-2"><CalendarCheck size={14} className="text-slate-400" /> Created</span>
-                                        <span className="text-slate-700 dark:text-slate-200 font-medium">{new Date().toLocaleDateString()}</span>
+                                        <span className="text-slate-700 dark:text-slate-200 font-medium">{new Date(destination.created_at).toLocaleDateString()}</span>
                                     </div>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="flex items-center text-slate-500 dark:text-slate-400 gap-2">
+                                            {destination.status === 'visible' ? <Eye size={14} className="text-green-500" /> : <EyeOff size={14} className="text-gray-500" />}
+                                            Status
+                                        </span>
+                                        <span className={`font-medium ${destination.status === 'visible' ? 'text-green-600' : 'text-gray-500'}`}>
+                                            {destination.status === 'visible' ? 'Visible' : 'Hidden'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Status Toggle Button */}
+                                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <button
+                                        onClick={() => onToggleVisibility(destination.id)}
+                                        disabled={isUpdating}
+                                        className={`w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${destination.status === 'visible'
+                                                ? 'bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200'
+                                                : 'bg-green-600 hover:bg-green-500 text-white'
+                                            } ${isUpdating ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    >
+                                        {isUpdating ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                Updating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                {destination.status === 'visible' ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                {destination.status === 'visible' ? 'Hide Destination' : 'Show Destination'}
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
 
@@ -191,23 +179,41 @@ const DetailModal = ({ destination, onClose }) => {
     );
 };
 
-
 // --- Main Page Component ---
-
 export default function TravelPage() {
-    const [destinations, setDestinations] = useState(MOCK_DESTINATIONS);
+    const [destinations, setDestinations] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [selectedDetail, setSelectedDetail] = useState(null); // For detail popup
+    const [selectedDetail, setSelectedDetail] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [updatingStatus, setUpdatingStatus] = useState(null); // Track which destination is being updated
+
+    // Fetch destinations from API
+    useEffect(() => {
+        const fetchDestinations = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(`${API_BASE_URL}/api/travel-destinations/travel-destinations-get`);
+                const result = await response.json();
+
+                if (result.success) {
+                    setDestinations(result.data);
+                } else {
+                    setError(result.message || 'Failed to fetch destinations');
+                }
+            } catch (err) {
+                setError('Network error: ' + err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDestinations();
+    }, []);
 
     const handleOpenCreate = () => {
         setEditingItem(null);
-        setIsFormOpen(true);
-    };
-
-    const handleEdit = (item, e) => {
-        e.stopPropagation();
-        setEditingItem(item);
         setIsFormOpen(true);
     };
 
@@ -219,7 +225,7 @@ export default function TravelPage() {
         if (editingItem) {
             setDestinations(prev => prev.map(d => d.id === editingItem.id ? { ...data, id: editingItem.id } : d));
         } else {
-            setDestinations(prev => [{ ...data, id: Date.now(), created_at: new Date().toISOString() }, ...prev]);
+            setDestinations(prev => [{ ...data, id: Date.now(), created_at: new Date().toISOString(), status: 'visible' }, ...prev]);
         }
         setIsFormOpen(false);
     };
@@ -231,9 +237,59 @@ export default function TravelPage() {
         }
     };
 
+    const handleToggleVisibility = async (id) => {
+        try {
+            setUpdatingStatus(id);
+
+            // Find the destination to get its current status
+            const destination = destinations.find(d => d.id === id);
+            if (!destination) return;
+
+            // Determine the new status
+            const newStatus = destination.status === 'visible' ? 'hidden' : 'visible';
+
+            // Make API call to update status - using the correct endpoint path
+            const response = await fetch(`${API_BASE_URL}/api/travel-destinations/travel-destinations-status/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            // Check if response is ok before parsing JSON
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Server responded with ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Update local state with the new status
+                setDestinations(prev =>
+                    prev.map(dest =>
+                        dest.id === id ? { ...dest, status: newStatus } : dest
+                    )
+                );
+
+                // Update the selected detail if it's open
+                if (selectedDetail && selectedDetail.id === id) {
+                    setSelectedDetail({ ...selectedDetail, status: newStatus });
+                }
+            } else {
+                alert(`Failed to update status: ${result.message || 'Unknown error'}`);
+            }
+        } catch (err) {
+            console.error('Error updating visibility status:', err);
+            alert(`Error updating status: ${err.message}`);
+        } finally {
+            setUpdatingStatus(null);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-white dark:bg-slate-950 p-8">
-
             {/* Header Section */}
             <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -261,84 +317,106 @@ export default function TravelPage() {
                                 <th className="p-4 font-medium">Price</th>
                                 <th className="p-4 font-medium">Duration</th>
                                 <th className="p-4 font-medium">Rating</th>
+                                <th className="p-4 font-medium">Status</th>
                                 <th className="p-4 font-medium text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                            {destinations.map((dest) => (
-                                <tr
-                                    key={dest.id}
-                                    onClick={() => handleViewDetail(dest)}
-                                    className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
-                                >
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
-                                                <img src={dest.hero_image} alt="" className="w-full h-full object-cover" />
-                                            </div>
-                                            <div>
-                                                <div className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{dest.name}</div>
-                                                <div className="text-xs text-slate-500 truncate max-w-[200px]">{dest.title}</div>
-                                            </div>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="7" className="p-10 text-center text-slate-500">
+                                        <div className="flex justify-center">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                                         </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
-                                            <MapPin size={14} className="mr-2 text-slate-400 dark:text-slate-500" />
-                                            {dest.location}
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className="font-medium text-slate-900 dark:text-slate-200">{dest.price}</span>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                                            <Clock size={14} className="mr-2" />
-                                            {dest.duration}
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                                            <span className="text-sm font-medium text-slate-900 dark:text-slate-200">{dest.rating}</span>
-                                            <span className="text-xs text-slate-500">({dest.reviews})</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleViewDetail(dest); }}
-                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                                                title="View Details"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                            <button
-                                                onClick={(e) => handleEdit(dest, e)}
-                                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-slate-800 rounded-lg transition-colors"
-                                                title="Edit"
-                                            >
-                                                <Edit3 size={18} />
-                                            </button>
-                                            <button
-                                                onClick={(e) => handleDelete(dest.id, e)}
-                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
+                                        <p className="mt-2">Loading destinations...</p>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : error ? (
+                                <tr>
+                                    <td colSpan="7" className="p-10 text-center text-red-500">
+                                        Error: {error}
+                                    </td>
+                                </tr>
+                            ) : destinations.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="p-10 text-center text-slate-500">
+                                        No destinations found. Add one to get started.
+                                    </td>
+                                </tr>
+                            ) : (
+                                destinations.map((dest) => (
+                                    <tr
+                                        key={dest.id}
+                                        onClick={() => handleViewDetail(dest)}
+                                        className={`group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${dest.status !== 'visible' ? 'opacity-60' : ''}`}
+                                    >
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
+                                                    <img src={dest.hero_image} alt="" className="w-full h-full object-cover" />
+                                                </div>
+                                                <div>
+                                                    <div className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{dest.name}</div>
+                                                    <div className="text-xs text-slate-500 truncate max-w-[200px]">{dest.title}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
+                                                <MapPin size={14} className="mr-2 text-slate-400 dark:text-slate-500" />
+                                                {dest.location}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="font-medium text-slate-900 dark:text-slate-200">{dest.price}</span>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                                                <Clock size={14} className="mr-2" />
+                                                {dest.duration}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                                                <span className="text-sm font-medium text-slate-900 dark:text-slate-200">{dest.rating}</span>
+                                                <span className="text-xs text-slate-500">({dest.reviews})</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center">
+                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${dest.status === 'visible'
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                                                    }`}>
+                                                    {dest.status === 'visible' ? <Eye size={12} /> : <EyeOff size={12} />}
+                                                    {dest.status === 'visible' ? 'Visible' : 'Hidden'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleViewDetail(dest); }}
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                                    title="View Details"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleDelete(dest.id, e)}
+                                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
-
-                    {destinations.length === 0 && (
-                        <div className="p-10 text-center text-slate-500">
-                            No destinations found. Add one to get started.
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -354,8 +432,9 @@ export default function TravelPage() {
             <DetailModal
                 destination={selectedDetail}
                 onClose={() => setSelectedDetail(null)}
+                onToggleVisibility={handleToggleVisibility}
+                isUpdating={updatingStatus === selectedDetail?.id}
             />
-
         </div>
     );
 }

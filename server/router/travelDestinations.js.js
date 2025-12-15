@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per image
+    limits: { fileSize: 5 * 1024 * 1024 }, 
 });
 
 
@@ -141,9 +141,7 @@ router.post('/travel-destinations-post', upload.any(), async (req, res) => {
   }
 });
 
-/* =====================================================
-   GET: Fetch All Travel Destinations
-===================================================== */
+
 router.get('/travel-destinations-get', async (req, res) => {
   try {
     const sql = `
@@ -154,12 +152,26 @@ router.get('/travel-destinations-get', async (req, res) => {
 
     const result = await query(sql);
 
-    // Parse JSON fields for each row
+    const BASE_URL = `${req.protocol}://${req.get('host')}`;
+
     const data = result.rows.map(row => ({
       ...row,
-      highlights: row.highlights ? JSON.parse(row.highlights) : [],
-      itinerary: row.itinerary ? JSON.parse(row.itinerary) : [],
-      gallery: row.gallery || []
+
+      // ✅ jsonb fields (already objects)
+      highlights: row.highlights || [],
+      itinerary: row.itinerary || [],
+
+      // ✅ hero image (convert to full URL)
+      hero_image: row.hero_image
+        ? `${BASE_URL}${row.hero_image}`
+        : null,
+
+      // ✅ gallery text[] → full URLs
+      gallery: Array.isArray(row.gallery)
+        ? row.gallery.map(img => `${BASE_URL}${img}`)
+        : [],
+
+      // created_at & status included automatically
     }));
 
     res.status(200).json({
@@ -170,11 +182,52 @@ router.get('/travel-destinations-get', async (req, res) => {
 
   } catch (error) {
     console.error('Fetch travel destinations error:', error);
-
     res.status(500).json({
       success: false,
       message: 'Server error',
       error: error.message
+    });
+  }
+});
+
+
+router.put('/travel-destinations-status/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['visible', 'hidden'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status'
+      });
+    }
+
+    const sql = `
+      UPDATE travel_destinations
+      SET status = $1
+      WHERE id = $2
+      RETURNING id, status;
+    `;
+
+    const result = await query(sql, [status, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Destination not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result.rows[0]
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
     });
   }
 });

@@ -6,6 +6,7 @@ const { query, DB_TYPE } = require('../connection/db');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../upload');
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
@@ -16,148 +17,179 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 500 * 1024 * 1024 }, // Increased to 50MB for videos
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype);
+    // Regex for images
+    const imageAllowed = /jpeg|jpg|png|webp/;
+    // Regex for videos
+    const videoAllowed = /mp4|webm|ogg|mov/;
 
-    if (ext && mime) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
+    const ext = path.extname(file.originalname).toLowerCase();
+
+    // Check based on fieldname
+    if (file.fieldname === 'image') {
+      const isImage = imageAllowed.test(ext);
+      // Optional: check mimetype as well
+      if (isImage) return cb(null, true);
+      cb(new Error('Only image files are allowed for the image field'));
+    } else if (file.fieldname === 'video') {
+      const isVideo = videoAllowed.test(ext);
+      if (isVideo) return cb(null, true);
+      cb(new Error('Only video files (mp4, webm, ogg, mov) are allowed for the video field'));
+    } else {
+      cb(new Error('Unexpected field'));
+    }
+  }
+});
+const buildMediaURL = (path, baseURL) => {
+  if (!path) return null;
+
+  // already full URL (YouTube, Vimeo, CDN, etc.)
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  let cleanPath = path.replace(/\\/g, '/').replace(/^\/+/, '');
+
+  if (cleanPath.startsWith('uploads/')) {
+    cleanPath = cleanPath.replace('uploads/', 'upload/');
+  } else if (!cleanPath.startsWith('upload/')) {
+    cleanPath = `upload/${cleanPath}`;
+  }
+
+  return `${baseURL}/${cleanPath}`;
+};
+
+
+// Configure for multiple fields: 'image' and 'video'
+router.post('/articles-post', upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const {
+      title,
+      slug,
+      excerpt,
+      content,
+      category,
+      author_name,
+      publish_date,
+      status,
+      tags,
+      url,
+      video_url
+    } = req.body;
+
+    /* =========================
+       Ensure Unique Slug
+    ========================== */
+    let finalSlug = slug;
+    let counter = 1;
+
+    // Simple loop to find a unique slug
+    // Check if the provided slug already exists
+    while (true) {
+      const slugCheck = await query('SELECT id FROM articles WHERE slug = $1', [finalSlug]);
+      if (slugCheck.rows.length === 0) {
+        break; // Slug is unique
+      }
+      // Conflict found, append counter
+      finalSlug = `${slug}-${counter}`;
+      counter++;
+    }
+
+    /* =========================
+       Parse tags safely
+    ========================== */
+    let parsedTags = [];
+
+    if (tags) {
+      if (Array.isArray(tags)) {
+        parsedTags = tags;
+      } else if (typeof tags === 'string') {
+        parsedTags = tags
+          .split(',')
+          .map(t => t.trim())
+          .filter(Boolean);
+      }
+    }
+
+    // req.files is now an object because of upload.fields()
+    // e.g. req.files['image'] -> [fileObject], req.files['video'] -> [fileObject]
+
+    let imagePath = null;
+    if (req.files && req.files['image'] && req.files['image'][0]) {
+      imagePath = `/upload/${req.files['image'][0].filename}`;
+    }
+
+    let uploadedVideoPath = null;
+    if (req.files && req.files['video'] && req.files['video'][0]) {
+      uploadedVideoPath = `/upload/${req.files['video'][0].filename}`;
+    }
+
+    // If an actual video file is uploaded, it takes precedence over the video_url string
+    // OR you might want to store both. But usually one "video source" is enough.
+    // Let's assume video_url is what gets stored in the DB column 'video_url',
+    // so if we have a file, we overwrite whatever text URL might have been sent.
+    const finalVideoUrl = uploadedVideoPath || video_url || null;
+
+    const sql = `
+      INSERT INTO articles (
+        title,
+        slug,
+        excerpt,
+        content,
+        image_url,
+        category,
+        author_name,
+        publish_date,
+        status,
+        tags,
+        url,
+        video_url
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,
+        $6,$7,$8,$9,$10,
+        $11,$12
+      )
+      RETURNING *;
+    `;
+
+    const values = [
+      title,
+      finalSlug,
+      excerpt || null,
+      content || null,
+      imagePath,
+      category || null,
+      author_name || null,
+      publish_date || null,
+      status || 'draft',
+      parsedTags,
+      url || null,
+      finalVideoUrl
+    ];
+
+    const result = await query(sql, values);
+
+    res.status(201).json({
+      success: true,
+      message: 'Article created successfully',
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Create article error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database error',
+      error: error.message
+    });
   }
 });
 
-/* =====================================================
-   POST: Create Travel Destination
-   - hero_image (single)
-   - gallery (multiple)
-===================================================== */
-router.post(
-  '/travel-destinations',
-  upload.fields([
-    { name: 'hero_image', maxCount: 1 },
-    { name: 'gallery', maxCount: 15 }
-  ]),
-  async (req, res) => {
-    try {
-      const {
-        slug,
-        name,
-        title,
-        description,
-        price,
-        rating,
-        location,
-        duration,
-        group_size,
-        languages,
-        highlights,
-        itinerary,
-        status
-      } = req.body;
-
-      /* =========================
-         Validation
-      ========================== */
-      if (!slug || !name) {
-        return res.status(400).json({
-          success: false,
-          message: 'slug and name are required'
-        });
-      }
-
-      /* =========================
-         Files
-      ========================== */
-      const heroImage =
-        req.files?.hero_image?.[0]
-          ? `/upload/${req.files.hero_image[0].filename}`
-          : null;
-
-      const galleryImages =
-        req.files?.gallery
-          ? req.files.gallery.map(file => `/upload/${file.filename}`)
-          : [];
-
-      /* =========================
-         Parse JSON fields
-      ========================== */
-      const parsedHighlights =
-        highlights
-          ? (typeof highlights === 'string' ? JSON.parse(highlights) : highlights)
-          : [];
-
-      const parsedItinerary =
-        itinerary
-          ? (typeof itinerary === 'string' ? JSON.parse(itinerary) : itinerary)
-          : [];
-
-      /* =========================
-         SQL Insert
-      ========================== */
-      const sql = `
-        INSERT INTO travel_destinations (
-          slug,
-          name,
-          title,
-          description,
-          price,
-          rating,
-          hero_image,
-          location,
-          duration,
-          group_size,
-          languages,
-          highlights,
-          itinerary,
-          gallery,
-          status
-        )
-        VALUES (
-          $1,$2,$3,$4,$5,
-          $6,$7,$8,$9,$10,
-          $11,$12,$13,$14,$15
-        )
-        RETURNING *;
-      `;
-
-      const values = [
-        slug,
-        name,
-        title || null,
-        description || null,
-        price || null,
-        rating || null,
-        heroImage,
-        location || null,
-        duration || null,
-        group_size || null,
-        languages || null,
-        JSON.stringify(parsedHighlights),
-        JSON.stringify(parsedItinerary),
-        galleryImages,
-        status || 'active'
-      ];
-
-      const result = await query(sql, values);
-
-      res.status(201).json({
-        success: true,
-        message: 'Travel destination created successfully',
-        data: result.rows[0]
-      });
-
-    } catch (error) {
-      console.error('Create travel destination error:', error);
-
-      res.status(500).json({
-        success: false,
-        message: 'Database error',
-        error: error.message
-      });
-    }
-  }
-);
 
 
 
@@ -179,7 +211,10 @@ router.get("/articles-get", async (req, res) => {
         status,
         views,
         publish_date,
-        created_at
+        created_at,
+        tags,
+        url,
+        video_url
       FROM articles
       ORDER BY publish_date DESC;
     `;
@@ -187,37 +222,39 @@ router.get("/articles-get", async (req, res) => {
     const { rows } = await query(sql);
 
     const formatted = rows.map(article => {
-      let finalImage = null;
-
-      if (article.image_url) {
-        // 1. Replace Windows backslashes (\) with forward slashes (/)
-        // 2. Remove any double leading slashes just in case
-        let cleanPath = article.image_url.replace(/\\/g, '/').replace(/^\/+/, '');
-
-        // 3. Fix potential mismatch between 'uploads' (DB) and 'upload' (server folder)
-        if (cleanPath.startsWith('uploads/')) {
-          cleanPath = cleanPath.replace('uploads/', 'upload/');
-        } else if (!cleanPath.startsWith('upload/')) {
-          // If it doesn't have a folder prefix, assume it belongs in upload/
-          cleanPath = `upload/${cleanPath}`;
-        }
-
-        // 4. Construct the full URL
-        finalImage = `${baseURL}/${cleanPath}`;
-      }
-
       return {
-        ...article,
-        image: finalImage
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        content: article.content,
+        category: article.category,
+        author_name: article.author_name,
+        status: article.status,
+        views: article.views,
+        publish_date: article.publish_date,
+        created_at: article.created_at,
+        tags: article.tags || [],
+        url: article.url || null,
+        image: buildMediaURL(article.image_url, baseURL),
+        video_url: buildMediaURL(article.video_url, baseURL)
       };
     });
 
-    res.json(formatted);
+    res.json({
+      success: true,
+      count: formatted.length,
+      data: formatted
+    });
+
   } catch (error) {
     console.error("Error fetching articles:", error);
     res.status(500).json({ message: "Failed to fetch articles." });
   }
 });
+
+
+
 
 
 
@@ -309,10 +346,10 @@ router.get('/articles-catagories', async (req, res) => {
 });
 
 router.get('/articles/:id/comments', async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const sql = `
+    const sql = `
             SELECT 
                 c.id,
                 c.content,
@@ -324,27 +361,27 @@ router.get('/articles/:id/comments', async (req, res) => {
             ORDER BY c.created_at DESC
         `;
 
-        const result = await query(sql, [id]);
+    const result = await query(sql, [id]);
 
-        return res.json({
-            success: true,
-            comments: result.rows
-        });
+    return res.json({
+      success: true,
+      comments: result.rows
+    });
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch article comments"
-        });
-    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch article comments"
+    });
+  }
 });
 
 router.get('/articles/:id/likes', async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const sql = `
+    const sql = `
             SELECT 
                 l.id,
                 l.created_at,
@@ -355,34 +392,34 @@ router.get('/articles/:id/likes', async (req, res) => {
             ORDER BY l.created_at DESC
         `;
 
-        const result = await query(sql, [id]);
+    const result = await query(sql, [id]);
 
-        return res.json({
-            success: true,
-            likes: result.rows
-        });
+    return res.json({
+      success: true,
+      likes: result.rows
+    });
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch article likes"
-        });
-    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch article likes"
+    });
+  }
 });
 
 router.get('/articles/:id/full', async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const articleSql = `
+    const articleSql = `
             SELECT id, title, slug, excerpt, content, image_url, 
                    category, author_name, status, views, publish_date 
             FROM articles 
             WHERE id = $1
         `;
 
-        const commentsSql = `
+    const commentsSql = `
             SELECT 
                 c.id,
                 c.content,
@@ -394,7 +431,7 @@ router.get('/articles/:id/full', async (req, res) => {
             ORDER BY c.created_at DESC
         `;
 
-        const likesSql = `
+    const likesSql = `
             SELECT 
                 l.id,
                 l.created_at,
@@ -405,26 +442,26 @@ router.get('/articles/:id/full', async (req, res) => {
             ORDER BY l.created_at DESC
         `;
 
-        const article = await query(articleSql, [id]);
-        const comments = await query(commentsSql, [id]);
-        const likes = await query(likesSql, [id]);
+    const article = await query(articleSql, [id]);
+    const comments = await query(commentsSql, [id]);
+    const likes = await query(likesSql, [id]);
 
-        return res.json({
-            success: true,
-            article: article.rows[0],
-            comments: comments.rows,
-            likes: likes.rows,
-            likesCount: likes.rowCount,
-            commentsCount: comments.rowCount
-        });
+    return res.json({
+      success: true,
+      article: article.rows[0],
+      comments: comments.rows,
+      likes: likes.rows,
+      likesCount: likes.rowCount,
+      commentsCount: comments.rowCount
+    });
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch article data"
-        });
-    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch article data"
+    });
+  }
 });
 
 

@@ -26,6 +26,24 @@ const Articles: React.FC = () => {
   const [likes, setLikes] = useState<any[]>([]);
   const [engagementLoading, setEngagementLoading] = useState(false);
 
+  // Helper function to resolve full URLs
+  const getFullUrl = (url: string | null) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${API_BASE_URL}/${url.replace(/^\/+/, '')}`;
+  };
+
+  // Helper functions for video handling
+  const isYouTubeUrl = (url: string) => {
+    return url.includes('youtube.com') || url.includes('youtu.be');
+  };
+
+  const getYouTubeVideoId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
   // --- Helper: Fetch Articles List Logic ---
   const loadArticles = async () => {
     try {
@@ -36,15 +54,27 @@ const Articles: React.FC = () => {
         throw new Error('Failed to fetch articles');
       }
 
-      const data = await response.json();
+      const jsonResponse = await response.json();
+      const articlesData = jsonResponse.data || [];
 
-      const mappedArticles: Article[] = data.map((item: any) => ({
-        ...item,
-        author: item.author || item.author_name || 'Unknown',
-        publishDate: item.publishDate || item.publish_date,
-        image: item.image || item.image_url || null,
-        likes: item.likes || 0,
-        comments: item.comments || 0,
+      const mappedArticles: Article[] = articlesData.map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        slug: item.slug,
+        excerpt: item.excerpt,
+        content: item.content,
+        category: item.category,
+        author: item.author_name || 'Unknown',
+        status: item.status,
+        views: item.views || 0,
+        publishDate: item.publish_date,
+        created_at: item.created_at,
+        tags: Array.isArray(item.tags) ? item.tags : (item.tags ? item.tags.split(',').map(tag => tag.trim()) : []),
+        url: item.url || null,
+        video_url: item.video_url || null,
+        image: item.image,
+        likes: 0,
+        comments: 0,
         likedBy: [],
         commentList: []
       }));
@@ -68,6 +98,7 @@ const Articles: React.FC = () => {
       const data = await response.json();
       if (data.success) {
         setComments(data.comments);
+        setSelectedArticle(prev => prev ? { ...prev, comments: data.comments.length } : null);
       }
     } catch (err: any) {
       console.error('Error fetching comments:', err);
@@ -84,27 +115,10 @@ const Articles: React.FC = () => {
       const data = await response.json();
       if (data.success) {
         setLikes(data.likes);
+        setSelectedArticle(prev => prev ? { ...prev, likes: data.likes.length } : null);
       }
     } catch (err: any) {
       console.error('Error fetching likes:', err);
-    }
-  };
-  
-  // --- Fetch full article data (optional, for completeness) ---
-  const fetchFullArticle = async (articleId: string) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/articles/${articleId}/full`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch full article data');
-      }
-      const data = await response.json();
-      if (data.success) {
-        // You could use this to update the selectedArticle with the most complete data
-        // For now, we rely on the individual fetches for comments/likes
-        console.log("Full article data fetched:", data);
-      }
-    } catch (err: any) {
-      console.error('Error fetching full article:', err);
     }
   };
 
@@ -160,15 +174,12 @@ const Articles: React.FC = () => {
     setSelectedArticle(article);
     setActiveTab('content');
     setStatusUpdateError(null);
-    // Reset engagement data for the new article
     setComments([]);
     setLikes([]);
-    // Fetch engagement data using all provided APIs
     setEngagementLoading(true);
     Promise.all([
-      fetchComments(article.id.toString()), // FIX: Convert number to string
-      fetchLikes(article.id.toString()),    // FIX: Convert number to string
-      fetchFullArticle(article.id.toString()) // FIX: Convert number to string
+      fetchComments(article.id.toString()),
+      fetchLikes(article.id.toString()),
     ]).finally(() => {
       setEngagementLoading(false);
     });
@@ -196,7 +207,6 @@ const Articles: React.FC = () => {
 
     const handleError = () => {
       if (imgSrc !== placeholder) {
-        console.warn('Image failed to load, switching to placeholder:', imgSrc);
         setImgSrc(placeholder);
       }
     };
@@ -308,6 +318,15 @@ const Articles: React.FC = () => {
                     <div className="flex flex-wrap gap-3 mb-4">
                       <span className="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg shadow-blue-900/20 uppercase tracking-wide">{selectedArticle.category}</span>
                       <span className={`inline-block text-xs font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wide ${selectedArticle.status === 'published' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}`}>{selectedArticle.status}</span>
+                      {selectedArticle.tags && selectedArticle.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedArticle.tags.map((tag, index) => (
+                            <span key={index} className="inline-block bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wide">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <h1 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight shadow-black drop-shadow-lg">{selectedArticle.title}</h1>
                     <div className="flex items-center space-x-6 text-slate-200 text-sm font-medium">
@@ -334,14 +353,41 @@ const Articles: React.FC = () => {
                   <div className="animate-in slide-in-from-bottom-2 fade-in duration-300">
                     <div className="prose prose-lg dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-loose">
                       <p className="lead text-xl text-slate-500 dark:text-slate-400 font-serif italic border-l-4 border-blue-500 pl-4 mb-8">{selectedArticle.excerpt}</p>
+                      
+                      {/* Video Player */}
+                      {selectedArticle.video_url && (
+                        <div className="my-8 rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700">
+                          {isYouTubeUrl(selectedArticle.video_url) ? (
+                            // YouTube video
+                            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                              <iframe
+                                className="absolute top-0 left-0 w-full h-full"
+                                src={`https://www.youtube.com/embed/${getYouTubeVideoId(selectedArticle.video_url)}`}
+                                title={selectedArticle.title}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              ></iframe>
+                            </div>
+                          ) : (
+                            // Local video or other direct video link
+                            <video 
+                              controls 
+                              className="w-full max-h-[500px]"
+                              poster={selectedArticle.image || undefined}
+                              preload="metadata"
+                            >
+                              <source src={getFullUrl(selectedArticle.video_url)} />
+                              Your browser does not support the video tag.
+                            </video>
+                          )}
+                          <div className="p-3 bg-slate-50 dark:bg-slate-800 text-center text-sm text-slate-500 dark:text-slate-400">
+                            Video: {selectedArticle.title}
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="whitespace-pre-line font-serif text-lg">{selectedArticle.content}</div>
-                    </div>
-                    <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                      <div className="flex space-x-2"></div>
-                      <div className="flex space-x-2">
-                        <button className="p-2 rounded-full text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><Share2 size={20} /></button>
-                        <button className="p-2 rounded-full text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><Bookmark size={20} /></button>
-                      </div>
                     </div>
                   </div>
                 )}

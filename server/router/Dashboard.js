@@ -116,79 +116,83 @@ router.get('/growth', async (req, res) => {
 
 
 
-// ------------------------
-//  MEMBERSHIP DISTRIBUTION
-// ------------------------
+
 router.get('/membership', async (req, res) => {
     try {
-        // Get membership counts
-        const members = await query(`
-      SELECT
-        COUNT(*) FILTER (WHERE role ILIKE 'premium') AS premium,
-        COUNT(*) FILTER (WHERE role ILIKE 'member' OR role IS NULL) AS free,
-        COUNT(*) AS total
-      FROM users
-    `);
+        // 1. Get total users count
+        const totalResult = await query('SELECT COUNT(*) FROM users');
+        const totalUsers = parseInt(totalResult.rows[0].count);
 
-        // Get subscriber counts by plan
-        const subs = await query(`
-      SELECT plan, COUNT(*) AS count
-      FROM subscribers
-      GROUP BY plan
-    `);
+        // 2. Get counts grouped by location (Top 5) for Pie Chart
+        const locationResult = await query(`
+            SELECT 
+                COALESCE(NULLIF(location, ''), 'Unknown') as location_name, 
+                COUNT(*) as count
+            FROM users
+            GROUP BY location_name
+            ORDER BY count DESC
+        `);
 
-        // Calculate percentages
-        const freeCount = members.rows[0].free;
-        const premiumCount = members.rows[0].premium;
-        const totalCount = members.rows[0].total;
-        
-        const freePercentage = totalCount > 0 ? Math.round((freeCount / totalCount) * 100) : 0;
-        const premiumPercentage = totalCount > 0 ? Math.round((premiumCount / totalCount) * 100) : 0;
+        // 3. Get counts specific to Roles (Free, Member, Author)
+        // Adjust logic: assuming 'free' is default/null, and specific roles for others
+        const rolesResult = await query(`
+            SELECT
+                COUNT(*) FILTER (WHERE role ILIKE 'member') AS member_count,
+                COUNT(*) FILTER (WHERE role ILIKE 'author') AS author_count,
+                COUNT(*) FILTER (WHERE role IS NULL OR role = '' OR role ILIKE 'free' OR role ILIKE 'user') AS free_count
+            FROM users
+        `);
 
-        // Define metrics objects
-        const freeMetrics = {
-            avg_activity: "3.2/week",
-            retention: 42,
-            conversion: 5.8
-        };
+        const { member_count, author_count, free_count } = rolesResult.rows[0];
 
-        const premiumMetrics = {
-            avg_activity: "8.7/week",
-            retention: 87,
-            revenue: "$24.8K"
-        };
+        // 4. Process Location Data (Top 4 + Others)
+        let distribution = [];
+        let processedCount = 0;
+        const topLimit = 4;
+        const rows = locationResult.rows;
 
-        const insights = {
-            conversion_rate: 5.8,
-            avg_premium_tenure: 14.2,
-            churn_rate: 3.2
-        };
+        for (let i = 0; i < Math.min(rows.length, topLimit); i++) {
+            const count = parseInt(rows[i].count);
+            distribution.push({
+                name: rows[i].location_name,
+                value: count,
+                percentage: Math.round((count / totalUsers) * 100)
+            });
+            processedCount += count;
+        }
 
-        const trends = {
-            free: "+8%",
-            premium: "+15%",
-            conversion_rate: "+1.2%",
-            avg_premium_tenure: "+2.4",
-            churn_rate: "-0.8%"
-        };
+        if (processedCount < totalUsers) {
+            const otherCount = totalUsers - processedCount;
+            distribution.push({
+                name: 'Others',
+                value: otherCount,
+                percentage: Math.round((otherCount / totalUsers) * 100)
+            });
+        }
 
         res.json({
             success: true,
             data: {
-                free: freeCount,
-                premium: premiumCount,
-                total: totalCount,
-                free_percentage: freePercentage,
-                premium_percentage: premiumPercentage,
-                subscribers_by_plan: subs.rows,
-                free_metrics: freeMetrics,  // Fixed: use the defined variable
-                premium_metrics: premiumMetrics,  // Fixed: use the defined variable
-                insights,
-                trends
+                total: totalUsers,
+                distribution: distribution,
+                // New Role Data
+                roles: {
+                    free: parseInt(free_count),
+                    member: parseInt(member_count),
+                    author: parseInt(author_count)
+                },
+                trends: {
+                    active_regions: rows.length,
+                    // Mock trends for the UI
+                    free_growth: "+5%",
+                    member_growth: "+12%",
+                    author_growth: "+3%"
+                }
             }
         });
+
     } catch (err) {
-        console.error("❌ Error membership:", err);
+        console.error("❌ Error fetching membership data:", err);
         res.status(500).json({ success: false, error: "Server error" });
     }
 });

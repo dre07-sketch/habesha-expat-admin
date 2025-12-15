@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Eye, CheckCircle, XCircle, MapPin, Globe, Phone, Mail, Calendar, ExternalLink, Map, Hash, Clock, ShieldCheck, Star, MessageSquare, ThumbsUp, Filter, Search } from 'lucide-react';
+import { Plus, Eye, CheckCircle, XCircle, MapPin, Globe, Phone, Mail, Calendar, ExternalLink, Map, Hash, Clock, ShieldCheck, Star, MessageSquare, ThumbsUp, Filter, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import Modal from '../../components/Modal';
 import B2BForm from '../../components/forms/B2BForm';
 import { Business } from '../../types';
@@ -13,7 +13,11 @@ const B2B: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
-  
+
+  // New states for image gallery
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+
   // New states for ratings and comments
   const [businessDetails, setBusinessDetails] = useState<{
     business: Business;
@@ -41,13 +45,13 @@ const B2B: React.FC = () => {
       try {
         setLoading(true);
         const response = await axios.get(`${API_BASE_URL}/businesses-get`);
-        
+
         // Transform the response to rename 'mappin' to 'mapPin'
-        const transformedData = response.data.map(biz => ({
+        const transformedData = response.data.map((biz: any) => ({
           ...biz,
-          mapPin: biz.mappin // Rename the property
+          mapPin: biz.mappin || biz.mapPin // Handle case sensitivity
         }));
-        
+
         setBusinesses(transformedData);
         setError(null);
       } catch (err) {
@@ -64,20 +68,19 @@ const B2B: React.FC = () => {
   // Fetch business details including ratings and comments
   useEffect(() => {
     let isMounted = true;
-    
+
     if (selectedBusiness) {
       const fetchBusinessDetails = async () => {
         setDetailsLoading(true);
         setDetailsError(null);
         try {
           const response = await axios.get(`${API_BASE_URL}/business-rating-comment/${selectedBusiness.id}`);
-          
+
           if (isMounted) {
             if (response.data.success) {
-              // Convert averageRating to a number and handle potential null/undefined
               const avgRating = response.data.averageRating ? parseFloat(response.data.averageRating) : 0;
               const totalReviews = response.data.totalReviews ? parseInt(response.data.totalReviews) : 0;
-              
+
               setBusinessDetails({
                 business: response.data.business,
                 averageRating: isNaN(avgRating) ? 0 : avgRating,
@@ -113,15 +116,13 @@ const B2B: React.FC = () => {
     setUpdatingStatus(id);
     try {
       await axios.put(`${API_BASE_URL}/businesses/${id}/status`, { status });
-      
-      // Update local state
-      setBusinesses(prev => 
-        prev.map(biz => 
+
+      setBusinesses(prev =>
+        prev.map(biz =>
           biz.id === id ? { ...biz, status } : biz
         )
       );
-      
-      // Close modal if open
+
       if (selectedBusiness?.id === id) {
         setSelectedBusiness(null);
       }
@@ -137,24 +138,21 @@ const B2B: React.FC = () => {
   const handleFormSubmit = async (formData: Business) => {
     try {
       await axios.post(`${API_BASE_URL}/businesses`, formData);
-      // Refresh the list
       const response = await axios.get(`${API_BASE_URL}/businesses-get`);
-      
-      // Apply the same transformation
-      const transformedData = response.data.map(biz => ({
+
+      const transformedData = response.data.map((biz: any) => ({
         ...biz,
-        mapPin: biz.mappin
+        mapPin: biz.mappin || biz.mapPin
       }));
-      
+
       setBusinesses(transformedData);
       setIsFormOpen(false);
     } catch (err) {
       console.error('Failed to add business:', err);
-      alert('Failed to add business');
     }
   };
 
-  // Format website URL to ensure it has a protocol
+  // Format website URL
   const formatWebsiteUrl = (url: string) => {
     if (!url || url.trim() === '') return '#';
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -163,64 +161,46 @@ const B2B: React.FC = () => {
     return url;
   };
 
-  // Parse map_pin data to extract coordinates and place information
+  // Parse map_pin data
   const parseMapPinData = (mapPin: string) => {
     if (!mapPin || mapPin.trim() === '') return null;
-    
-    // Check if it's already a Google Maps URL
+
     if (mapPin.startsWith('https://www.google.com/maps')) {
       return { url: mapPin, isUrl: true };
     }
-    
-    // Check if it contains coordinates (lat,lng format)
+
     const coordinatesRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
     const coordinatesMatch = mapPin.match(coordinatesRegex);
-    
+
     if (coordinatesMatch) {
-      const lat = parseFloat(coordinatesMatch[1]);
-      const lng = parseFloat(coordinatesMatch[2]);
-      return { lat, lng, isUrl: false };
+      return { lat: parseFloat(coordinatesMatch[1]), lng: parseFloat(coordinatesMatch[2]), isUrl: false };
     }
-    
-    // Check if it's a simple lat,lng string
+
     const simpleCoordsRegex = /^(-?\d+\.\d+),(-?\d+\.\d+)$/;
     const simpleCoordsMatch = mapPin.match(simpleCoordsRegex);
-    
+
     if (simpleCoordsMatch) {
-      const lat = parseFloat(simpleCoordsMatch[1]);
-      const lng = parseFloat(simpleCoordsMatch[2]);
-      return { lat, lng, isUrl: false };
+      return { lat: parseFloat(simpleCoordsMatch[1]), lng: parseFloat(simpleCoordsMatch[2]), isUrl: false };
     }
-    
-    // If it's just a place name
+
     return { place: mapPin, isUrl: false };
   };
 
-  // Generate Google Maps URL from map_pin data
+  // Get Google Maps URL
   const getGoogleMapsUrl = (mapPin: string) => {
     const parsedData = parseMapPinData(mapPin);
-    
     if (!parsedData) return '#';
-    
-    // If it's already a URL, return it
-    if (parsedData.isUrl) {
-      return parsedData.url;
-    }
-    
-    // If we have coordinates
+    if (parsedData.isUrl) return parsedData.url;
     if (parsedData.lat !== undefined && parsedData.lng !== undefined) {
       return `https://www.google.com/maps/search/?api=1&query=${parsedData.lat},${parsedData.lng}`;
     }
-    
-    // If we have a place name
     if (parsedData.place) {
       return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsedData.place)}`;
     }
-    
     return '#';
   };
 
-  // Open website in new tab
+  // Open website
   const openWebsite = (url: string) => {
     const formattedUrl = formatWebsiteUrl(url);
     if (formattedUrl !== '#') {
@@ -228,33 +208,26 @@ const B2B: React.FC = () => {
     }
   };
 
-  // Open Google Maps in new tab
+  // Open Google Maps
   const openGoogleMaps = (mapPin: string) => {
     const parsedData = parseMapPinData(mapPin);
-    
     if (!parsedData) return;
-    
+
     let mapsUrl;
-    
-    // If it's already a URL, use it directly
     if (parsedData.isUrl) {
       mapsUrl = parsedData.url;
-    } 
-    // If we have coordinates, create a detailed URL
-    else if (parsedData.lat !== undefined && parsedData.lng !== undefined) {
+    } else if (parsedData.lat !== undefined && parsedData.lng !== undefined) {
       mapsUrl = `https://www.google.com/maps/place/${parsedData.lat},${parsedData.lng}/@${parsedData.lat},${parsedData.lng},14z`;
-    } 
-    // If we have a place name, create a search URL
-    else if (parsedData.place) {
+    } else if (parsedData.place) {
       mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parsedData.place)}`;
     }
-    
+
     if (mapsUrl && mapsUrl !== '#') {
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
-  // Close modal and reset details
+  // Close modal
   const closeModal = () => {
     setSelectedBusiness(null);
     setBusinessDetails(null);
@@ -262,8 +235,8 @@ const B2B: React.FC = () => {
     setDetailsError(null);
   };
 
-  // Filter businesses based on search term
-  const filteredBusinesses = businesses.filter(biz => 
+  // Filter businesses
+  const filteredBusinesses = businesses.filter(biz =>
     biz.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     biz.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
     biz.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -272,11 +245,10 @@ const B2B: React.FC = () => {
   // Calculate rating distribution
   const calculateRatingDistribution = () => {
     if (!businessDetails || businessDetails.comments.length === 0) {
-      return [0, 0, 0, 0, 0]; // Default distribution for 5-1 stars
+      return [0, 0, 0, 0, 0];
     }
 
-    const ratingCounts = [0, 0, 0, 0, 0]; // Index 0: 1-star, index 4: 5-star
-    
+    const ratingCounts = [0, 0, 0, 0, 0];
     businessDetails.comments.forEach(comment => {
       const rating = Math.floor(comment.rating);
       if (rating >= 1 && rating <= 5) {
@@ -284,11 +256,33 @@ const B2B: React.FC = () => {
       }
     });
 
-    // Reverse so that index 0 is 5 stars, index 1 is 4 stars, etc.
     const reversedRatingCounts = [...ratingCounts].reverse();
-    const total = businessDetails.totalReviews || 1; // Avoid division by zero
-    
+    const total = businessDetails.totalReviews || 1;
     return reversedRatingCounts.map(count => Math.round((count / total) * 100));
+  };
+
+  // Open image gallery
+  const openGallery = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsGalleryOpen(true);
+  };
+
+  // Navigate to next image in gallery
+  const nextImage = () => {
+    if (selectedBusiness && selectedBusiness.images) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === selectedBusiness.images.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+  };
+
+  // Navigate to previous image in gallery
+  const prevImage = () => {
+    if (selectedBusiness && selectedBusiness.images) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === 0 ? selectedBusiness.images.length - 1 : prevIndex - 1
+      );
+    }
   };
 
   return (
@@ -324,26 +318,26 @@ const B2B: React.FC = () => {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">B2B Requests</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Manage and approve business listings for the directory.</p>
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">B2B Requests</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage and approve business listings for the directory.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
-            <div className="relative w-full md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input 
-                    type="text" 
-                    placeholder="Search businesses..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
-                />
-            </div>
-            <button 
-            onClick={() => setIsFormOpen(true)} 
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search businesses..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+            />
+          </div>
+          <button
+            onClick={() => setIsFormOpen(true)}
             className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
-            >
+          >
             <Plus size={20} className="mr-2" /> Add Business
-            </button>
+          </button>
         </div>
       </div>
 
@@ -360,8 +354,8 @@ const B2B: React.FC = () => {
         <div className="p-8 text-center">
           <div className="text-red-500 text-lg font-medium mb-2">Error Loading Data</div>
           <p className="text-slate-500 dark:text-slate-400">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Retry
@@ -413,20 +407,19 @@ const B2B: React.FC = () => {
                           <span className="text-xs text-slate-500">Updating...</span>
                         </div>
                       ) : (
-                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold uppercase tracking-wide rounded-full ${
-                          biz.status === 'approved' 
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' 
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold uppercase tracking-wide rounded-full ${biz.status === 'approved'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
                             : biz.status === 'pending'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'
-                        }`}>
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'
+                          }`}>
                           {biz.status}
                         </span>
                       )}
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                      <button 
-                        onClick={() => setSelectedBusiness(biz)} 
+                      <button
+                        onClick={() => setSelectedBusiness(biz)}
                         className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
                         title="View Details"
                       >
@@ -457,13 +450,21 @@ const B2B: React.FC = () => {
           <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden flex flex-col">
             {/* Hero Section */}
             <div className="relative h-64 w-full group shrink-0">
-              <img 
-                src={selectedBusiness.image || '/placeholder-business.jpg'} 
-                alt={selectedBusiness.name} 
-                className="w-full h-full object-cover" 
+              <img
+                src={selectedBusiness.image || '/placeholder-business.jpg'}
+                alt={selectedBusiness.name}
+                className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => selectedBusiness.images && selectedBusiness.images.length > 0 && openGallery(0)}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90"></div>
-              
+
+              {/* Image indicator */}
+              {selectedBusiness.images && selectedBusiness.images.length > 1 && (
+                <div className="absolute bottom-4 right-4 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center shadow-lg border border-white/10 backdrop-blur-sm">
+                  <span className="font-medium">{selectedBusiness.images.length} Photos</span>
+                </div>
+              )}
+
               <div className="absolute bottom-0 left-0 w-full p-8">
                 <div className="flex justify-between items-end">
                   <div>
@@ -493,8 +494,33 @@ const B2B: React.FC = () => {
               </div>
             </div>
 
+            {/* Image Gallery Preview */}
+            {selectedBusiness.images && selectedBusiness.images.length > 1 && (
+              <div className="bg-slate-50 dark:bg-slate-800 p-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 flex items-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2"></span>
+                  Gallery Preview
+                </h3>
+                <div className="flex space-x-3 overflow-x-auto pb-2 custom-scrollbar">
+                  {selectedBusiness.images.map((img, index) => (
+                    <div
+                      key={index}
+                      className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all shadow-sm"
+                      onClick={() => openGallery(index)}
+                    >
+                      <img
+                        src={img}
+                        alt={`${selectedBusiness.name} image ${index + 1}`}
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Details Content */}
-            <div className="p-8 bg-slate-50 dark:bg-[#0B1121] space-y-8">
+            <div className="p-8 bg-slate-50 dark:bg-[#0B1121] space-y-8 flex-1 overflow-y-auto">
               {/* Top Section: Contact Info & Map */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Contact & Metadata */}
@@ -502,7 +528,7 @@ const B2B: React.FC = () => {
                   {/* Contact Info Card */}
                   <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                    
+
                     <h3 className="text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-6 flex items-center relative z-10">
                       <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
                       Contact Information
@@ -564,15 +590,14 @@ const B2B: React.FC = () => {
                       </h3>
                       <p className="text-xl text-slate-800 dark:text-slate-200 leading-relaxed font-medium pl-6">{selectedBusiness.address}</p>
                     </div>
-                    
+
                     {/* Map View */}
                     <div className="flex-1 p-2">
-                      <div 
-                        className={`relative w-full h-64 lg:h-full rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600 shadow-inner min-h-[250px] cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-blue-400 ${
-                          selectedBusiness.mapPin && selectedBusiness.mapPin.trim() !== '' 
-                            ? 'bg-slate-100 dark:bg-slate-800' 
+                      <div
+                        className={`relative w-full h-64 lg:h-full rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600 shadow-inner min-h-[250px] cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-blue-400 ${selectedBusiness.mapPin && selectedBusiness.mapPin.trim() !== ''
+                            ? 'bg-slate-100 dark:bg-slate-800'
                             : 'bg-slate-200 dark:bg-slate-900'
-                        }`}
+                          }`}
                         onClick={() => {
                           if (selectedBusiness.mapPin && selectedBusiness.mapPin.trim() !== '') {
                             openGoogleMaps(selectedBusiness.mapPin);
@@ -585,14 +610,14 @@ const B2B: React.FC = () => {
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
                               {/* Animated gradient overlay */}
                               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 animate-pulse-slow"></div>
-                              
+
                               {/* Grid pattern overlay */}
                               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CiAgPGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiNmZmZmZmYyMCIgc3Ryb2tlLXdpZHRoPSIwLjUiPgogICAgPHBhdGggZD0iTTAgMGg2MHY2MEgweiIvPgogIDwvZz4KPC9zdmc+')] opacity-10 dark:opacity-20"></div>
-                              
+
                               {/* Floating particles */}
                               <div className="absolute inset-0">
                                 {[...Array(20)].map((_, i) => (
-                                  <div 
+                                  <div
                                     key={i}
                                     className="absolute rounded-full bg-white/20 dark:bg-white/10"
                                     style={{
@@ -607,25 +632,25 @@ const B2B: React.FC = () => {
                                   ></div>
                                 ))}
                               </div>
-                              
+
                               {/* Animated map lines */}
                               <div className="absolute inset-0 overflow-hidden">
                                 <div className="absolute top-1/4 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-pulse-slow"></div>
                                 <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400 to-transparent animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
                                 <div className="absolute top-3/4 left-0 right-0 h-px bg-gradient-to-r from-transparent via-pink-400 to-transparent animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-                                
+
                                 <div className="absolute left-1/4 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-blue-400 to-transparent animate-pulse-slow"></div>
                                 <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-purple-400 to-transparent animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
                                 <div className="absolute left-3/4 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-pink-400 to-transparent animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
                               </div>
                             </div>
-                            
+
                             {/* Enhanced Map Pin Marker */}
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
                               {/* Pulsing rings */}
                               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-4 border-red-500/30 animate-ping-slow"></div>
                               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border-4 border-red-500/50 animate-ping-slow" style={{ animationDelay: '0.5s' }}></div>
-                              
+
                               {/* Main pin */}
                               <div className="relative">
                                 <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-2xl shadow-red-500/30 transform transition-transform hover:scale-110">
@@ -634,7 +659,7 @@ const B2B: React.FC = () => {
                                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rotate-45"></div>
                               </div>
                             </div>
-                            
+
                             {/* Enhanced Location Info Overlay */}
                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 backdrop-blur-sm">
                               <div className="flex items-center text-white">
@@ -647,7 +672,7 @@ const B2B: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* Enhanced Click Hint */}
                             <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-sm px-4 py-2 rounded-full flex items-center shadow-lg border border-white/10 transition-all hover:bg-black/80 hover:scale-105">
                               <div className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></div>
@@ -670,7 +695,7 @@ const B2B: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Map Link Button */}
                       {selectedBusiness.mapPin && selectedBusiness.mapPin.trim() !== '' && (
                         <div className="mt-4 flex justify-center">
@@ -723,12 +748,12 @@ const B2B: React.FC = () => {
                         </div>
                         <div className="flex justify-center space-x-1 mb-2">
                           {[1, 2, 3, 4, 5].map((s) => (
-                            <Star 
-                              key={s} 
-                              size={20} 
-                              className={s <= Math.round(Number(businessDetails.averageRating || 0)) 
-                                ? "text-yellow-400 fill-yellow-400" 
-                                : "text-slate-300 dark:text-slate-600"} 
+                            <Star
+                              key={s}
+                              size={20}
+                              className={s <= Math.round(Number(businessDetails.averageRating || 0))
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-slate-300 dark:text-slate-600"}
                             />
                           ))}
                         </div>
@@ -747,8 +772,8 @@ const B2B: React.FC = () => {
                                 {stars} <Star size={10} className="ml-0.5 text-slate-400" />
                               </span>
                               <div className="flex-1 mx-3 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full bg-yellow-400 rounded-full" 
+                                <div
+                                  className="h-full bg-yellow-400 rounded-full"
                                   style={{ width: `${percent}%` }}
                                 ></div>
                               </div>
@@ -775,15 +800,15 @@ const B2B: React.FC = () => {
                               rating: comment.rating,
                               comment: comment.comment
                             };
-                            
+
                             return (
                               <div key={review.id} className="p-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="flex items-center">
-                                    <img 
-                                      src={review.avatar} 
-                                      alt={review.user} 
-                                      className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600" 
+                                    <img
+                                      src={review.avatar}
+                                      alt={review.user}
+                                      className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600"
                                     />
                                     <div className="ml-3">
                                       <div className="font-bold text-slate-800 dark:text-white text-sm">{review.user}</div>
@@ -792,12 +817,12 @@ const B2B: React.FC = () => {
                                   </div>
                                   <div className="flex bg-yellow-50 dark:bg-yellow-900/10 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
                                     {[1, 2, 3, 4, 5].map((s) => (
-                                      <Star 
-                                        key={s} 
-                                        size={12} 
-                                        className={s <= review.rating 
-                                          ? "text-yellow-500 fill-yellow-500" 
-                                          : "text-slate-300 dark:text-slate-600"} 
+                                      <Star
+                                        key={s}
+                                        size={12}
+                                        className={s <= review.rating
+                                          ? "text-yellow-500 fill-yellow-500"
+                                          : "text-slate-300 dark:text-slate-600"}
                                       />
                                     ))}
                                   </div>
@@ -841,13 +866,13 @@ const B2B: React.FC = () => {
                 Reviewing listing for approval...
               </div>
               <div className="flex space-x-4 w-full sm:w-auto">
-                <button 
+                <button
                   onClick={() => updateBusinessStatus(selectedBusiness.id, 'rejected')}
                   className="flex-1 sm:flex-none py-3 px-6 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 rounded-xl font-bold transition-all flex items-center justify-center"
                 >
                   <XCircle size={18} className="mr-2" /> Reject
                 </button>
-                <button 
+                <button
                   onClick={() => updateBusinessStatus(selectedBusiness.id, 'approved')}
                   className="flex-1 sm:flex-none py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center transform hover:-translate-y-0.5"
                 >
@@ -858,6 +883,74 @@ const B2B: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Image Gallery Modal */}
+      {isGalleryOpen && selectedBusiness && selectedBusiness.images && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
+          <div className="relative max-w-5xl w-full max-h-[90vh]">
+            {/* Close button */}
+            <button
+              onClick={() => setIsGalleryOpen(false)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Navigation buttons */}
+            {selectedBusiness.images.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
+
+            {/* Image counter */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/50 text-white text-sm px-3 py-1 rounded-full">
+              {currentImageIndex + 1} / {selectedBusiness.images.length}
+            </div>
+
+            {/* Main image */}
+            <div className="flex items-center justify-center h-full">
+              <img
+                src={selectedBusiness.images[currentImageIndex]}
+                alt={`${selectedBusiness.name} image ${currentImageIndex + 1}`}
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+            </div>
+
+            {/* Thumbnail strip */}
+            {selectedBusiness.images.length > 1 && (
+              <div className="absolute bottom-16 left-0 right-0 flex justify-center">
+                <div className="flex space-x-2 overflow-x-auto max-w-md px-4 py-2 bg-black/30 rounded-lg">
+                  {selectedBusiness.images.map((img, index) => (
+                    <div
+                      key={index}
+                      className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden cursor-pointer border-2 ${index === currentImageIndex ? 'border-white' : 'border-transparent'}`}
+                      onClick={() => setCurrentImageIndex(index)}
+                    >
+                      <img
+                        src={img}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
