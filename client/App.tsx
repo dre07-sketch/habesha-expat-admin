@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/auth/Login';
-import Forgot from './pages/auth/Forgot';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import { ResetPassword } from './pages/auth/ResetPassword';
+import { OTP } from './pages/auth/OTP';
 import Dashboard from './pages/lists/Dashboard';
+// ...
+// (Note: The user skipped many lines in the description, but I will target specific blocks to be safe)
+// Actually I will just replace the import block and the route block separately if I could, but wait, `replace_file_content` supports single block.
+// I'll replace the import first.
 import B2B from './pages/lists/B2B';
 import Podcasts from './pages/lists/Podcasts';
 import Videos from './pages/lists/Videos';
@@ -84,7 +90,9 @@ const App: React.FC = () => {
           // Normal routes when system is activated
           <>
             <Route path="/" element={<Login />} />
-            <Route path="/forgot-password" element={<Forgot />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/otp" element={<OTP />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/login" element={<Login />} />
             {/* Protected Admin Routes */}
             <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />

@@ -64,8 +64,6 @@ router.get('/system-status/admin-panel/check', async (req, res) => {
   }
 });
 
-
-
 router.put('/system-status/:id', async (req, res) => {
   const { id } = req.params;
   const { status, maintenance_message, updated_by } = req.body;

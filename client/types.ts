@@ -1,4 +1,5 @@
 
+export type ViewState = 'login' | 'forgot-password' | 'otp' | 'reset-password';
 
 export interface Review {
   id: number;

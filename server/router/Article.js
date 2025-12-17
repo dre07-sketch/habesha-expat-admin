@@ -254,10 +254,6 @@ router.get("/articles-get", async (req, res) => {
 });
 
 
-
-
-
-
 router.post('/toggle-status/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -463,6 +459,37 @@ router.get('/articles/:id/full', async (req, res) => {
     });
   }
 });
+router.delete("/articles-delete/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await query(
+      "DELETE FROM articles WHERE id = $1 RETURNING id, title",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Article not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Article deleted successfully",
+      deleted: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("Error deleting article:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
 
 
 module.exports = router;

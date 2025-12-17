@@ -11,6 +11,7 @@ const Users: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
     // State for Role Editing inside the profile modal
     const [isEditingRole, setIsEditingRole] = useState(false);
@@ -105,6 +106,42 @@ const Users: React.FC = () => {
         }, 1500);
     };
 
+    // Function to toggle user status
+    const handleToggleStatus = async (userId: string) => {
+        try {
+            setIsTogglingStatus(true);
+            
+            const response = await fetch(`http://localhost:5000/api/users/toggle-status/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update the users list with the new status
+                setUsers(prevUsers => 
+                    prevUsers.map(user => 
+                        user.id === userId ? { ...user, status: data.status } : user
+                    )
+                );
+                
+                // Update the selected user if it's the one being modified
+                if (selectedUser && selectedUser.id === userId) {
+                    setSelectedUser({ ...selectedUser, status: data.status });
+                }
+            } else {
+                setError(data.message || 'Failed to update user status');
+            }
+        } catch (err) {
+            setError(err.message || 'An error occurred while updating user status');
+        } finally {
+            setIsTogglingStatus(false);
+        }
+    };
+
     return (
         <div className="animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -169,7 +206,7 @@ const Users: React.FC = () => {
                                 </tr>
                             ) : (
                                 filteredUsers.map((user) => (
-                                    <tr key={user.id} className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors duration-200 cursor-pointer" onClick={() => handleUserClick(user)}>
+                                    <tr key={user.id} className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors duration-200">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <img className="h-10 w-10 rounded-full border-2 border-white dark:border-slate-700 shadow-sm" src={getAvatar(user.name, user.avatar_url)} alt="" />
@@ -207,7 +244,27 @@ const Users: React.FC = () => {
                                             {formatDate(user.updated_at)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <button onClick={(e) => { e.stopPropagation(); handleUserClick(user); }} className="text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleStatus(user.id);
+                                                }}
+                                                disabled={isTogglingStatus}
+                                                className={`mr-2 text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 ${isTogglingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                {user.status === 'Active' ? (
+                                                    <XCircle size={18} className="text-red-500" />
+                                                ) : (
+                                                    <CheckCircle size={18} className="text-emerald-500" />
+                                                )}
+                                            </button>
+                                            <button 
+                                                onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    handleUserClick(user); 
+                                                }} 
+                                                className="text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                                            >
                                                 <Eye size={18} />
                                             </button>
                                         </td>
@@ -278,7 +335,7 @@ const Users: React.FC = () => {
                 </div>
             </Modal>
 
-            {/* User Profile Modal with Role Editing */}
+            {/* User Profile Modal with Status Toggle */}
             <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="User Profile" maxWidth="max-w-3xl">
                 {selectedUser && (
                     <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden relative">
@@ -411,10 +468,33 @@ const Users: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Footer Actions */}
+                        {/* Footer Actions with Status Toggle */}
                         <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-6 flex flex-col sm:flex-row gap-4">
-                            <button className="flex-1 py-3 px-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl text-red-600 dark:text-red-400 font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors shadow-sm">
-                                Ban Account
+                            <button
+                                onClick={() => handleToggleStatus(selectedUser.id)}
+                                disabled={isTogglingStatus}
+                                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-colors shadow-sm flex items-center justify-center ${
+                                    selectedUser.status === 'Active'
+                                        ? 'bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20'
+                                        : 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/20'
+                                } ${isTogglingStatus ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            >
+                                {isTogglingStatus ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                                        {selectedUser.status === 'Active' ? 'Banning...' : 'Activating...'}
+                                    </>
+                                ) : selectedUser.status === 'Active' ? (
+                                    <>
+                                        <XCircle size={16} className="mr-2" />
+                                        Ban Account
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle size={16} className="mr-2" />
+                                        Activate Account
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Plus, Calendar, User, Tag, Clock, Eye, ChevronRight,
   Share2, Bookmark, EyeOff, Heart, MessageCircle,
-  BarChart2, Search
+  BarChart2, Search, Trash2, AlertTriangle, CheckCircle
 } from 'lucide-react';
 import Modal from '../../components/Modal';
 import ArticleForm from '../../components/forms/ArticleForm';
@@ -20,6 +20,10 @@ const Articles: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [statusUpdateError, setStatusUpdateError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   // State for engagement data
   const [comments, setComments] = useState<any[]>([]);
@@ -122,6 +126,43 @@ const Articles: React.FC = () => {
     }
   };
 
+  // --- Delete article ---
+  const handleDeleteArticle = async (articleId: string) => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles/articles-delete/${articleId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete article');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Remove article from state
+        setArticles(prevArticles => prevArticles.filter(article => article.id !== articleId));
+        // Close modal if the deleted article is currently selected
+        if (selectedArticle && selectedArticle.id === articleId) {
+          setSelectedArticle(null);
+        }
+        setDeleteSuccess(true);
+        // Auto close success modal after 2 seconds
+        setTimeout(() => {
+          setShowDeleteConfirm(false);
+          setDeleteSuccess(false);
+        }, 2000);
+      }
+    } catch (err: any) {
+      setDeleteError(err.message || 'An error occurred while deleting the article');
+      console.error('Error deleting article:', err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // --- 1. Initial Fetch ---
   useEffect(() => {
     loadArticles();
@@ -174,6 +215,8 @@ const Articles: React.FC = () => {
     setSelectedArticle(article);
     setActiveTab('content');
     setStatusUpdateError(null);
+    setDeleteError(null);
+    setShowDeleteConfirm(false);
     setComments([]);
     setLikes([]);
     setEngagementLoading(true);
@@ -289,8 +332,20 @@ const Articles: React.FC = () => {
                     <span className="flex items-center"><Heart size={12} className="mr-1.5 text-slate-400" /> {article.likes || 0}</span>
                     <span className="flex items-center"><MessageCircle size={12} className="mr-1.5 text-slate-400" /> {article.comments || 0}</span>
                   </div>
-                  <div className="flex items-center text-blue-600 dark:text-blue-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 duration-300">
-                    Read Article <ChevronRight size={14} className="ml-1" />
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedArticle(article);
+                        setShowDeleteConfirm(true);
+                      }}
+                      className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <div className="flex items-center text-blue-600 dark:text-blue-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 duration-300">
+                      Read Article <ChevronRight size={14} className="ml-1" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -306,7 +361,71 @@ const Articles: React.FC = () => {
         <ArticleForm onSubmit={handleFormSubmit} onCancel={() => setIsFormOpen(false)} />
       </Modal>
 
-      <Modal isOpen={!!selectedArticle} onClose={() => setSelectedArticle(null)} title="Article Preview" maxWidth="max-w-5xl">
+      <Modal isOpen={showDeleteConfirm} onClose={() => {
+        setShowDeleteConfirm(false);
+        setDeleteSuccess(false);
+      }} title={deleteSuccess ? "Article Deleted" : "Confirm Delete"} maxWidth="max-w-md">
+        <div className="p-6">
+          {deleteSuccess ? (
+            <div className="text-center py-4">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                  <CheckCircle className="text-green-600 dark:text-green-400" size={32} />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Article Deleted Successfully</h3>
+              <p className="text-slate-600 dark:text-slate-300">The article has been permanently removed from the system.</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full mr-4">
+                  <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Delete Article</h3>
+              </div>
+              <p className="text-slate-600 dark:text-slate-300 mb-6">
+                Are you sure you want to delete this article? This action cannot be undone.
+              </p>
+              {deleteError && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
+                  {deleteError}
+                </div>
+              )}
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => selectedArticle && handleDeleteArticle(selectedArticle.id.toString())}
+                  disabled={isDeleting}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} className="mr-2" />
+                      Delete Article
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!selectedArticle && !showDeleteConfirm} onClose={() => setSelectedArticle(null)} title="Article Preview" maxWidth="max-w-5xl">
         {selectedArticle && (
           <div className="bg-white dark:bg-slate-900 flex flex-col relative rounded-b-xl overflow-hidden">
             <div className="min-h-[60vh]">
@@ -499,6 +618,12 @@ const Articles: React.FC = () => {
                 <span className={`uppercase font-bold text-sm px-2 py-0.5 rounded ${selectedArticle.status === 'published' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>{selectedArticle.status}</span>
               </div>
               <div className="flex space-x-3 w-full sm:w-auto">
+                <button 
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all shadow-lg shadow-red-600/20"
+                >
+                  <Trash2 size={18} className="mr-2" /> Delete
+                </button>
                 {selectedArticle.status === 'published' ? (
                   <button onClick={() => handleStatusUpdate(selectedArticle.id.toString(), 'draft')} disabled={isUpdatingStatus} className="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-800 text-red-600 dark:text-red-400 border border-slate-300 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all">
                     {isUpdatingStatus ? (<><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Unpublishing...</>) : (<><EyeOff size={18} className="mr-2" /> Unpublish</>)}

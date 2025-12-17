@@ -19,6 +19,7 @@ const LoginRoutes = require('./auth/login');
 const DashboardRoutes = require('./router/dashboard');
 const UserRoutes = require('./router/user');
 const TravelDestinationsRoutes = require('./router/travelDestinations.js');
+const ForgetPassRoutes = require('./auth/forgetpass');
 
 const app = express();
 app.use(cors());
@@ -47,7 +48,7 @@ app.use('/api/podcasts', PodcastRoutes);
 app.use('/api/videos', VideoRoutes);
 app.use('/api/users', UserRoutes);
 app.use('/api/travel-destinations', TravelDestinationsRoutes);
-
+app.use('/api/forget-password', ForgetPassRoutes);
 
 
 
