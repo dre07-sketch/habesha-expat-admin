@@ -5,18 +5,18 @@ const path = require('path');
 const { query, DB_TYPE } = require('../connection/db');
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'upload/');
-    },
-    filename: function (req, file, cb) {
-        const ext = path.extname(file.originalname);
-        cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + ext);
-    }
+  destination: function (req, file, cb) {
+    cb(null, 'upload/');
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + ext);
+  }
 });
 
 const upload = multer({
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 

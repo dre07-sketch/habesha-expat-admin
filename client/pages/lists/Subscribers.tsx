@@ -26,7 +26,12 @@ const Subscribers: React.FC = () => {
         const fetchSubscribers = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`${API_BASE_URL}/api/subscribers/subscribers-get`);
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/api/subscribers/subscribers-get`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 if (!response.ok) {
                     throw new Error('Failed to fetch subscribers');
                 }
@@ -47,7 +52,12 @@ const Subscribers: React.FC = () => {
         const fetchNewsletters = async () => {
             try {
                 setNewslettersLoading(true);
-                const response = await fetch(`${API_BASE_URL}/api/newsletters/newsletters-get`);
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/api/newsletters/newsletters-get`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 if (!response.ok) {
                     throw new Error('Failed to fetch newsletters');
                 }

@@ -1,289 +1,132 @@
-import React, { useEffect, useState } from 'react';
-import {
-  ShieldBan,
-  Database,
-  Cpu,
-  Globe,
-  Lock
-} from 'lucide-react';
+import React from 'react';
+import { Lock, Building2, Activity, Terminal, AlertTriangle } from 'lucide-react';
 
 const AdminPanelShutdown: React.FC = () => {
-  const [progress, setProgress] = useState(0);
-  const [terminalLines, setTerminalLines] = useState<string[]>([]);
-  const [hexStream, setHexStream] = useState<string[]>([]);
-  const [glitch, setGlitch] = useState(false);
-
-  // Random Glitch Effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.92) {
-        setGlitch(true);
-        setTimeout(() => setGlitch(false), 150);
-      }
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Hex Stream Effect
-  useEffect(() => {
-    const chars = '0123456789ABCDEF';
-    const interval = setInterval(() => {
-      const line = Array(8).fill(0).map(() => chars[Math.floor(Math.random() * chars.length)] + chars[Math.floor(Math.random() * chars.length)]).join(' ');
-      setHexStream(prev => [line, ...prev.slice(0, 15)]);
-    }, 80);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Fake Maintenance Progress
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) return 0;
-        return prev + (Math.random() * 3);
-      });
-    }, 150);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Terminal Logs with Habesha Context
-  useEffect(() => {
-    const logs = [
-      "SYSTEM_CORE: INITIATING SHUTDOWN...",
-      "ADDIS_NODE: DISCONNECTED",
-      "USER_DB: ENCRYPTING SHARDS...",
-      "MEMBER_SESSION: TERMINATED",
-      "SECURE_GATEWAY: LOCKED",
-      "VERIFYING INTEGRITY HASHE...",
-      "BACKUP_SERVER: SYNCHRONIZING...",
-      "FIREWALL: MAXIMUM OPACITY",
-      "ADMIN_AUTH_TOKEN: REVOKED",
-      "PROTOCOL_RED: ACTIVE"
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-      const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
-      setTerminalLines(prev => [`[${timestamp}] ${logs[i % logs.length]}`, ...prev.slice(0, 7)]);
-      i++;
-    }, 800);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className={`min-h-screen bg-black text-red-600 font-mono overflow-hidden relative selection:bg-red-900 selection:text-white transition-transform duration-75 ${glitch ? 'translate-x-[2px] skew-x-1' : ''}`}>
-
-      {/* CSS for scanlines and CRT flicker */}
-      <style>{`
-        @keyframes scanline {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(100%); }
-        }
-        .scanline {
-          animation: scanline 8s linear infinite;
-        }
-        .hazard-stripe {
-          background: repeating-linear-gradient(
-            45deg,
-            #7f1d1d,
-            #7f1d1d 10px,
-            #000000 10px,
-            #000000 20px
-          );
-        }
-      `}</style>
-
-      {/* CRT Monitor Overlay */}
-      <div className="fixed inset-0 pointer-events-none z-50">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] bg-repeat"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-900/10 to-transparent scanline h-full w-full opacity-50"></div>
-        <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.9)]"></div>
-      </div>
-
+    <div className="min-h-screen w-full flex flex-col items-center justify-center relative bg-[#05070a] font-sans selection:bg-habesha-red/30 overflow-hidden p-4">
       {/* Background Elements */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-        {/* Hex Grid Pattern */}
-        <div className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%237f1d1d' stroke-width='1'/%3E%3C/svg%3E")`,
-            backgroundSize: '60px 60px'
-          }}>
-        </div>
-        {/* Radar Sweep */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-900/20 to-transparent animate-spin-slow origin-bottom-right opacity-50"></div>
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-habesha-red/10 rounded-full blur-[140px] animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-habesha-gold/5 rounded-full blur-[160px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-[40%] right-[10%] w-[40%] h-[40%] bg-habesha-green/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `linear-gradient(rgba(166, 52, 52, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(166, 52, 52, 0.1) 1px, transparent 1px)`, backgroundSize: '60px 60px' }}></div>
       </div>
+      
+      {/* Noise Overlay */}
+      <div className="absolute inset-0 z-[1] opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
 
-      {/* Red Alert Ambient Glow */}
-      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-red-900/30 to-transparent animate-pulse"></div>
-      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-red-900/30 to-transparent animate-pulse"></div>
-
-      {/* Main Container */}
-      <div className="relative z-10 w-full min-h-screen flex flex-col p-4 md:p-8 lg:p-12">
-
-        {/* Top Header Bar */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-red-800 pb-6 mb-8 relative">
-          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-500 animate-pulse"></div>
-
-          <div className="flex items-center gap-4 mb-4 md:mb-0">
-            <div className="relative">
-              <ShieldBan className="w-12 h-12 text-red-500 animate-pulse" />
-              <div className="absolute inset-0 bg-red-500 blur-xl opacity-40 animate-pulse"></div>
-            </div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic transform -skew-x-12" style={{ textShadow: '4px 4px 0px #7f1d1d' }}>
-                System<span className="text-red-600">Offline</span>
-              </h1>
-              <div className="flex items-center gap-2 text-xs md:text-sm tracking-[0.3em] text-red-400 font-bold mt-1">
-                HABESHA EXPAT // ADMIN CONSOLE
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-end">
-              <span className="text-xs text-red-500/70 uppercase tracking-widest">Security Level</span>
-              <span className="text-xl font-bold text-white bg-red-600 px-3 py-1 rounded-sm shadow-[0_0_15px_rgba(220,38,38,0.5)] animate-pulse">
-                DEFCON 1
-              </span>
-            </div>
-            <div className="hidden lg:block w-px h-12 bg-red-900/50"></div>
-            <div className="hidden lg:flex flex-col items-end text-xs text-red-400/60 font-mono">
-              <span>LAT: 9.005401 N</span>
-              <span>LNG: 38.763611 E</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Dashboard Grid */}
-        <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-
-          {/* Left Column: Diagnostics */}
-          <div className="lg:col-span-3 flex flex-col gap-4">
-            {/* Status Box */}
-            <div className="bg-black/80 border-2 border-red-900/50 p-4 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-1 bg-red-900/50 text-[10px] text-white">CPU_01</div>
-              <div className="flex items-end justify-between mb-2 mt-2">
-                <Cpu className="text-red-500" size={20} />
-                <span className="text-2xl font-bold text-white">98%</span>
-              </div>
-              <div className="w-full bg-red-900/20 h-2">
-                <div className="h-full bg-red-600 animate-pulse" style={{ width: '98%' }}></div>
-              </div>
-            </div>
-
-            <div className="bg-black/80 border-2 border-red-900/50 p-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-1 bg-red-900/50 text-[10px] text-white">MIGRATE</div>
-              <div className="flex items-end justify-between mb-2 mt-2">
-                <Database className="text-red-500" size={20} />
-                <span className="text-2xl font-bold text-white">{Math.floor(progress)}%</span>
-              </div>
-              <div className="w-full bg-red-900/20 h-2">
-                <div className="h-full bg-yellow-500" style={{ width: `${progress}%` }}></div>
-              </div>
-            </div>
-
-            <div className="bg-black/80 border-2 border-red-900/50 p-4 flex-1 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-1 bg-red-900/50 text-[10px] text-white">NET_TOPOLOGY</div>
-              <div className="flex-1 flex items-center justify-center relative my-4">
-                <Globe className="text-red-900 animate-spin-slow w-32 h-32 opacity-50 absolute" />
-                <div className="grid grid-cols-2 gap-2 relative z-10 w-full">
-                  <div className="text-center">
-                    <div className="text-[10px] text-red-500">ADDIS</div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping"></div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-[10px] text-red-500">DUBAI</div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-[10px] text-red-500">LONDON</div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.5s' }}></div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-[10px] text-red-500">DC</div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full mx-auto animate-ping" style={{ animationDelay: '0.8s' }}></div>
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-4xl flex flex-col items-center justify-center gap-8">
+        <div className="w-full backdrop-blur-[40px] bg-white/[0.02] border border-white/10 rounded-[3rem] shadow-[0_48px_96px_-24px_rgba(0,0,0,0.8)] overflow-hidden">
+          <div className="h-1.5 w-full bg-gradient-to-r from-habesha-red via-habesha-gold to-habesha-red opacity-60"></div>
+          
+          <div className="p-8 md:p-12">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+              {/* Security Icon */}
+              <div className="relative flex-shrink-0">
+                <div className="absolute -inset-10 border border-habesha-red/20 rounded-full animate-spin-slow opacity-30"></div>
+                <div className="absolute -inset-6 border border-white/5 rounded-full animate-reverse-spin opacity-20"></div>
+                <div className="relative w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-habesha-red/20 to-transparent border border-white/10 rounded-[2rem] flex items-center justify-center shadow-2xl backdrop-blur-xl">
+                  <Lock className="w-12 h-12 md:w-16 md:h-16 text-habesha-red animate-pulse-slow" strokeWidth={1} />
+                  <div className="absolute -top-2 -right-2">
+                    <div className="relative flex h-6 w-6 md:h-8 md:w-8">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-habesha-red opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-6 w-6 md:h-8 md:w-8 bg-habesha-red border-4 border-white/10 flex items-center justify-center">
+                        <AlertTriangle size={14} className="text-white" />
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="text-center text-xs text-red-500 font-bold bg-red-950/30 py-1">GLOBAL NODES: UNSTABLE</div>
-            </div>
-          </div>
 
-          {/* Center Column: Lockdown Visual */}
-          <div className="lg:col-span-6 flex flex-col items-center justify-center relative py-12 lg:py-0 border-x-0 lg:border-x border-red-900/30 bg-red-900/5">
-
-            {/* Warning Tape */}
-            <div className="absolute top-4 left-0 w-full h-8 hazard-stripe opacity-20 transform -rotate-2"></div>
-            <div className="absolute bottom-4 left-0 w-full h-8 hazard-stripe opacity-20 transform rotate-2"></div>
-
-            <div className="relative group">
-              {/* Spinning Lock Rings */}
-              <div className="absolute inset-0 rounded-full border-4 border-dashed border-red-800 animate-spin-slow opacity-50"></div>
-              <div className="absolute inset-4 rounded-full border-2 border-red-600 animate-spin opacity-30" style={{ animationDirection: 'reverse', animationDuration: '4s' }}></div>
-
-              <div className="relative z-10 w-48 h-48 md:w-64 md:h-64 flex items-center justify-center bg-black rounded-full border-4 border-red-600 shadow-[0_0_50px_rgba(220,38,38,0.4)]">
-                <Lock className="w-24 h-24 text-red-500 animate-pulse" />
-              </div>
-
-              {/* Eclipse Shadow */}
-              <div className="absolute -top-10 -left-10 w-full h-full bg-black rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{ animationDuration: '3s' }}></div>
-            </div>
-
-            <div className="mt-12 text-center z-10 px-4">
-              <h2 className="text-3xl font-black text-white tracking-widest uppercase mb-2">Access Restricted</h2>
-              <p className="text-red-400 font-mono text-sm md:text-base max-w-md mx-auto">
-                CRITICAL SYSTEM MAINTENANCE IN PROGRESS. ALL ADMIN PRIVILEGES HAVE BEEN SUSPENDED.
-              </p>
-              <div className="mt-6 inline-block border border-red-500/30 bg-red-900/10 px-6 py-2 rounded text-xs font-bold tracking-[0.2em] animate-pulse">
-                ESTIMATED RETURN: 0400 HRS
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Terminal & Hex */}
-          <div className="lg:col-span-3 flex flex-col gap-6">
-
-            {/* Terminal Window */}
-            <div className="bg-black border-2 border-red-900 flex-1 p-4 font-mono text-xs overflow-hidden relative">
-              <div className="absolute top-0 left-0 right-0 bg-red-900/20 p-1 text-[10px] text-center font-bold text-red-300">
-                ROOT@HABESHA-MAIN:~
-              </div>
-              <div className="mt-6 flex flex-col justify-end h-full opacity-80">
-                {terminalLines.map((line, i) => (
-                  <div key={i} className="mb-1 text-red-500 whitespace-nowrap">
-                    <span className="text-red-700 mr-2">{'>'}</span>{line}
+              {/* Content */}
+              <div className="flex-1 text-center md:text-left space-y-6">
+                <div className="space-y-3">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+                    <span className="px-3 py-1 rounded-full bg-habesha-red/20 border border-habesha-red/30 text-habesha-red text-[10px] font-bold tracking-[0.3em] uppercase">
+                      Protocol: DEFCON 1
+                    </span>
+                    <span className="flex items-center gap-2 text-habesha-gold text-[10px] font-mono tracking-widest opacity-60">
+                      <Terminal size={14} /> SYSTEM_ROOT_OFFLINE
+                    </span>
                   </div>
-                ))}
-                <div className="animate-pulse">_</div>
+                  <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight text-white leading-[1.1]">
+                    Admin <span className="bg-clip-text text-transparent bg-gradient-to-r from-habesha-red via-white to-habesha-red animate-gradient-x">Locked</span>
+                  </h1>
+                </div>
+
+                <p className="text-gray-400 text-base md:text-lg leading-relaxed">
+                  The Administrative Hub is undergoing a <span className="text-white font-medium italic underline decoration-habesha-red/40 underline-offset-8">critical security synchronization</span>. All remote privileges are temporarily revoked.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-[1.5rem] bg-white/[0.03] border border-white/5 flex flex-col items-center md:items-start gap-2">
+                    <Building2 size={20} className="text-habesha-gold" />
+                    <span className="text-[10px] uppercase tracking-widest text-gray-500 font-mono">Realty Infrastructure</span>
+                    <span className="text-white font-bold text-base">ESTATE_CORE_HUB_01</span>
+                  </div>
+                  <div className="p-4 rounded-[1.5rem] bg-white/[0.03] border border-white/5 flex flex-col items-center md:items-start gap-2">
+                    <Activity size={20} className="text-habesha-green" />
+                    <span className="text-[10px] uppercase tracking-widest text-gray-500 font-mono">Network Security</span>
+                    <span className="text-white font-bold text-base">ISOLATED MODE</span>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Hex Dump */}
-            <div className="h-48 bg-black/50 border border-red-900/30 p-2 font-mono text-[10px] text-red-800 overflow-hidden leading-tight">
-              {hexStream.map((line, i) => (
-                <div key={i} className="opacity-50">{line}</div>
-              ))}
+          {/* Footer */}
+          <div className="px-8 py-4 bg-black/40 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4 text-[10px] font-mono text-gray-500 tracking-widest">
+              <span className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-habesha-red rounded-full shadow-[0_0_8px_rgba(166,52,52,1)] animate-pulse"></div> 
+                SECURE_LOCKDOWN_ACTIVE
+              </span>
+              <div className="w-px h-3 bg-white/10 hidden md:block"></div>
+              <span className="uppercase hidden md:block">Addis Ababa Datacenter</span>
             </div>
-
+            <div className="text-white/20 text-[9px] tracking-[0.4em] uppercase font-bold">
+              Verification Hash: 0xA991...X77
+            </div>
           </div>
-        </main>
+        </div>
 
-        {/* Footer: Powered by Tech 5 Ethiopia */}
-        <footer className="mt-8 flex flex-col items-center justify-center border-t border-red-900/30 pt-8 opacity-70 hover:opacity-100 transition-opacity w-full">
-          <span className="text-[10px] uppercase tracking-[0.25em] text-red-500/60 mb-4">Powered By</span>
-          <div className="flex items-center gap-4 text-red-600">
-            {/* New Logo Image - Increased size */}
-            <img
-              src="https://z-cdn-media.chatglm.cn/files/51571057-558e-44fe-a0a5-d9d5077e1c23.png?auth_key=1865625128-62826a3d984944dcbe1e0f6b825c175e-0-c3820b12ac381571e517f52bad06691d"
-              alt="t'ch Ethiopia Logo"
-              className="w-20 h-30"
+        {/* Tech Footer */}
+        <div className="flex flex-col items-center gap-4 opacity-40 hover:opacity-100 transition-opacity duration-500">
+          <div className="flex items-center gap-4">
+            <img 
+              src="https://z-cdn-media.chatglm.cn/files/f88235dd-b72f-4216-a1a1-88e18824c4c3.png?auth_key=1866410254-131775a622e14fe5ad1baddf9ec42812-0-f9ede7ba153932bc3559db0b23480523" 
+              alt="t፭ch Logo" 
+              className="w-10 h-10 md:w-12 md:h-12 object-contain"
             />
-
+            <div className="text-[9px] font-mono text-white/20 leading-tight">
+              SYSTEM_ID: ADMIN-LOCK-7292<br/>
+              FIRMWARE: V4.2.0-STABLE
+            </div>
           </div>
-          <div className="mt-4 text-[13px] text-white">
-            Developer by Tech 5 Ethiopia © 2025
-          </div>
-        </footer>
-
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes reverse-spin {
+          from { transform: rotate(360deg); }
+          to { transform: rotate(0deg); }
+        }
+        .animate-reverse-spin {
+          animation: reverse-spin 20s linear infinite;
+        }
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .animate-gradient-x {
+          background-size: 200% 100%;
+          animation: gradient-x 8s ease infinite;
+        }
+        .animate-pulse-slow {
+          animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
     </div>
   );
 };

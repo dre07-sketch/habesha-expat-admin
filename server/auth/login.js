@@ -4,22 +4,7 @@ const { query, DB_TYPE } = require('../connection/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken'); // ✅ CommonJS
 
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    
-    if (!token) {
-        return res.status(401).json({ error: "Authentication token required" });
-    }
-    
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ error: "Invalid or expired token" });
-        }
-        req.user = user;
-        next();
-    });
-}
+const { authenticateToken } = require('../middleware/auth');
 
 
 router.post('/login-admins', async (req, res) => {
@@ -31,7 +16,9 @@ router.post('/login-admins', async (req, res) => {
         }
 
         const result = await query(
-            "SELECT id, name, email, password_hash, role, status, avatar_url FROM administrators WHERE email = $1",
+            `SELECT id, name, email, password_hash, role, status, avatar_url
+             FROM administrators
+             WHERE email = $1`,
             [email]
         );
 
@@ -40,13 +27,22 @@ router.post('/login-admins', async (req, res) => {
         }
 
         const admin = result.rows[0];
+
         const isMatch = await bcrypt.compare(password, admin.password_hash);
         if (!isMatch) {
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
+        // ✅ Role check
         if (admin.role !== "Admin") {
             return res.status(403).json({ error: "Access denied. Only admins can log in." });
+        }
+
+        // ✅ Status check (IMPORTANT)
+        if (admin.status !== "active") {
+            return res.status(403).json({
+                error: "Your account is not active. Please contact support."
+            });
         }
 
         const token = jwt.sign(
@@ -70,18 +66,19 @@ router.post('/login-admins', async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: "Server error" });
     }
 });
+
 
 
 router.get('/user-fetch', authenticateToken, async (req, res) => {
     try {
         // Only allow Super Admins to fetch all users
         if (req.user.role !== 'Admin') {
-            return res.status(403).json({ 
-                success: false, 
-                error: "Access denied. Only administrators can view user data." 
+            return res.status(403).json({
+                success: false,
+                error: "Access denied. Only administrators can view user data."
             });
         }
 
@@ -103,7 +100,7 @@ router.get('/user-fetch', authenticateToken, async (req, res) => {
 router.put('/settings/account', authenticateToken, async (req, res) => {
     try {
         const { email, password } = req.body;
-        
+
         // Get admin ID from the authenticated request
         const adminId = req.user.id;
 
@@ -129,29 +126,29 @@ router.put('/settings/account', authenticateToken, async (req, res) => {
 });
 
 router.get("/me", authenticateToken, async (req, res) => {
-  try {
-    // Get admin ID from the authenticated request (added by authenticateToken middleware)
-    const adminId = req.user.id;
+    try {
+        // Get admin ID from the authenticated request (added by authenticateToken middleware)
+        const adminId = req.user.id;
 
-    const sql = `
+        const sql = `
       SELECT id, name, email, role, avatar_url, status, created_at
       FROM administrators
       WHERE id = $1
       LIMIT 1
     `;
 
-    const { rows } = await query(sql, [adminId]);
+        const { rows } = await query(sql, [adminId]);
 
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Admin not found" });
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Admin not found" });
+        }
+
+        res.json(rows[0]);
+
+    } catch (err) {
+        console.error("Error:", err);
+        res.status(500).json({ error: err.message });
     }
-
-    res.json(rows[0]);
-
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: err.message });
-  }
 });
 
 module.exports = router;

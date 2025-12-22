@@ -47,7 +47,12 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
     const fetchCategories = async () => {
       try {
         setIsLoadingCategories(true);
-        const response = await fetch('http://localhost:5000/api/b2b/businesses-catagories');
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('http://localhost:5000/api/b2b/businesses-catagories', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -221,8 +226,12 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
         dataToSend.append(`image_${index}`, image);
       });
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch('http://localhost:5000/api/b2b/businesses-post', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: dataToSend
       });
 

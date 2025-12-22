@@ -77,7 +77,7 @@ router.get('/jobs-get', async (req, res) => {
             ORDER BY posted_date DESC
         `;
         const { rows } = await query(sql);
-        
+
         // No need to parse JSON/arrays for TEXT[] columns
         const formattedRows = rows.map(job => ({
             ...job,

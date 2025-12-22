@@ -6,8 +6,8 @@ const { query, DB_TYPE } = require('../connection/db');
 //  DASHBOARD SUMMARY
 // ------------------------
 router.get('/summary', async (req, res) => {
-    try {
-        const sql = `
+  try {
+    const sql = `
       SELECT
         (SELECT COUNT(*) FROM users) AS users,
         (SELECT COUNT(*) FROM articles WHERE status = 'published') AS articles,
@@ -19,36 +19,36 @@ router.get('/summary', async (req, res) => {
         (SELECT COUNT(*) FROM subscribers WHERE status = 'active') AS subscribers
     `;
 
-        const { rows } = await query(sql);
-        const data = rows[0];
+    const { rows } = await query(sql);
+    const data = rows[0];
 
-        res.json({
-            success: true,
-            data: {
-                users: parseInt(data.users || '0', 10),
-                articles: parseInt(data.articles || '0', 10),
-                videos: parseInt(data.videos || '0', 10),
-                podcasts: parseInt(data.podcasts || '0', 10),
-                events: parseInt(data.events || '0', 10),
-                businesses: parseInt(data.businesses || '0', 10),
-                jobs: parseInt(data.jobs || '0', 10),
-                subscribers: parseInt(data.subscribers || '0', 10)
-            }
-        });
-    } catch (err) {
-        console.error("❌ Error summary:", err);
-        res.status(500).json({ success: false, error: "Server error" });
-    }
+    res.json({
+      success: true,
+      data: {
+        users: parseInt(data.users || '0', 10),
+        articles: parseInt(data.articles || '0', 10),
+        videos: parseInt(data.videos || '0', 10),
+        podcasts: parseInt(data.podcasts || '0', 10),
+        events: parseInt(data.events || '0', 10),
+        businesses: parseInt(data.businesses || '0', 10),
+        jobs: parseInt(data.jobs || '0', 10),
+        subscribers: parseInt(data.subscribers || '0', 10)
+      }
+    });
+  } catch (err) {
+    console.error("❌ Error summary:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // ------------------------
 //  MONTHLY GROWTH
 // ------------------------
 router.get('/growth', async (req, res) => {
-    const months = parseInt(req.query.months || '7', 10);
+  const months = parseInt(req.query.months || '7', 10);
 
-    try {
-        const sql = `
+  try {
+    const sql = `
       WITH months AS (
         SELECT 
           to_char(date_trunc('month', (CURRENT_DATE - (n || ' months')::interval)), 'Mon') AS month_label,
@@ -105,26 +105,26 @@ router.get('/growth', async (req, res) => {
       ORDER BY months.month_start;
     `;
 
-        const { rows } = await query(sql, [months]);
-        res.json({ success: true, data: rows });
+    const { rows } = await query(sql, [months]);
+    res.json({ success: true, data: rows });
 
-    } catch (err) {
-        console.error("❌ Error growth:", err);
-        res.status(500).json({ success: false, error: "Server error" });
-    }
+  } catch (err) {
+    console.error("❌ Error growth:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 
 
 
 router.get('/membership', async (req, res) => {
-    try {
-        // 1. Get total users count
-        const totalResult = await query('SELECT COUNT(*) FROM users');
-        const totalUsers = parseInt(totalResult.rows[0].count);
+  try {
+    // 1. Get total users count
+    const totalResult = await query('SELECT COUNT(*) FROM users');
+    const totalUsers = parseInt(totalResult.rows[0].count);
 
-        // 2. Get counts grouped by location (Top 5) for Pie Chart
-        const locationResult = await query(`
+    // 2. Get counts grouped by location (Top 5) for Pie Chart
+    const locationResult = await query(`
             SELECT 
                 COALESCE(NULLIF(location, ''), 'Unknown') as location_name, 
                 COUNT(*) as count
@@ -133,9 +133,9 @@ router.get('/membership', async (req, res) => {
             ORDER BY count DESC
         `);
 
-        // 3. Get counts specific to Roles (Free, Member, Author)
-        // Adjust logic: assuming 'free' is default/null, and specific roles for others
-        const rolesResult = await query(`
+    // 3. Get counts specific to Roles (Free, Member, Author)
+    // Adjust logic: assuming 'free' is default/null, and specific roles for others
+    const rolesResult = await query(`
             SELECT
                 COUNT(*) FILTER (WHERE role ILIKE 'member') AS member_count,
                 COUNT(*) FILTER (WHERE role ILIKE 'author') AS author_count,
@@ -143,66 +143,66 @@ router.get('/membership', async (req, res) => {
             FROM users
         `);
 
-        const { member_count, author_count, free_count } = rolesResult.rows[0];
+    const { member_count, author_count, free_count } = rolesResult.rows[0];
 
-        // 4. Process Location Data (Top 4 + Others)
-        let distribution = [];
-        let processedCount = 0;
-        const topLimit = 4;
-        const rows = locationResult.rows;
+    // 4. Process Location Data (Top 4 + Others)
+    let distribution = [];
+    let processedCount = 0;
+    const topLimit = 4;
+    const rows = locationResult.rows;
 
-        for (let i = 0; i < Math.min(rows.length, topLimit); i++) {
-            const count = parseInt(rows[i].count);
-            distribution.push({
-                name: rows[i].location_name,
-                value: count,
-                percentage: Math.round((count / totalUsers) * 100)
-            });
-            processedCount += count;
-        }
-
-        if (processedCount < totalUsers) {
-            const otherCount = totalUsers - processedCount;
-            distribution.push({
-                name: 'Others',
-                value: otherCount,
-                percentage: Math.round((otherCount / totalUsers) * 100)
-            });
-        }
-
-        res.json({
-            success: true,
-            data: {
-                total: totalUsers,
-                distribution: distribution,
-                // New Role Data
-                roles: {
-                    free: parseInt(free_count),
-                    member: parseInt(member_count),
-                    author: parseInt(author_count)
-                },
-                trends: {
-                    active_regions: rows.length,
-                    // Mock trends for the UI
-                    free_growth: "+5%",
-                    member_growth: "+12%",
-                    author_growth: "+3%"
-                }
-            }
-        });
-
-    } catch (err) {
-        console.error("❌ Error fetching membership data:", err);
-        res.status(500).json({ success: false, error: "Server error" });
+    for (let i = 0; i < Math.min(rows.length, topLimit); i++) {
+      const count = parseInt(rows[i].count);
+      distribution.push({
+        name: rows[i].location_name,
+        value: count,
+        percentage: Math.round((count / totalUsers) * 100)
+      });
+      processedCount += count;
     }
+
+    if (processedCount < totalUsers) {
+      const otherCount = totalUsers - processedCount;
+      distribution.push({
+        name: 'Others',
+        value: otherCount,
+        percentage: Math.round((otherCount / totalUsers) * 100)
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        total: totalUsers,
+        distribution: distribution,
+        // New Role Data
+        roles: {
+          free: parseInt(free_count),
+          member: parseInt(member_count),
+          author: parseInt(author_count)
+        },
+        trends: {
+          active_regions: rows.length,
+          // Mock trends for the UI
+          free_growth: "+5%",
+          member_growth: "+12%",
+          author_growth: "+3%"
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error("❌ Error fetching membership data:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // ------------------------
 //  CONTENT ENGAGEMENT
 // ------------------------
 router.get('/engagement', async (req, res) => {
-    try {
-        const articles = await query(`
+  try {
+    const articles = await query(`
       SELECT a.id, a.title, a.views, a.image_url,
         COALESCE(c.comment_count, 0) AS comments,
         COALESCE(l.like_count, 0) AS likes
@@ -224,7 +224,7 @@ router.get('/engagement', async (req, res) => {
       LIMIT 5
     `);
 
-        const videos = await query(`
+    const videos = await query(`
       SELECT id, title, views, thumbnail_url
       FROM videos
       WHERE status = 'visible'
@@ -232,34 +232,34 @@ router.get('/engagement', async (req, res) => {
       LIMIT 5
     `);
 
-        const totals = await query(`
+    const totals = await query(`
       SELECT 
         (SELECT COUNT(*) FROM likes) AS total_likes,
         (SELECT COUNT(*) FROM comments) AS total_comments
     `);
 
-        res.json({
-            success: true,
-            data: {
-                topArticles: articles.rows,
-                topVideos: videos.rows,
-                totals: totals.rows[0]
-            }
-        });
-    } catch (err) {
-        console.error("❌ Error engagement:", err);
-        res.status(500).json({ success: false, error: "Server error" });
-    }
+    res.json({
+      success: true,
+      data: {
+        topArticles: articles.rows,
+        topVideos: videos.rows,
+        totals: totals.rows[0]
+      }
+    });
+  } catch (err) {
+    console.error("❌ Error engagement:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // ------------------------
 //  BUSINESS ANALYTICS
 // ------------------------
 router.get('/business', async (req, res) => {
-    try {
-        const total = await query(`SELECT COUNT(*) AS total FROM businesses WHERE status <> 'hidden'`);
+  try {
+    const total = await query(`SELECT COUNT(*) AS total FROM businesses WHERE status <> 'hidden'`);
 
-        const categories = await query(`
+    const categories = await query(`
       SELECT category, COUNT(*) AS count
       FROM businesses
       GROUP BY category
@@ -267,35 +267,35 @@ router.get('/business', async (req, res) => {
       LIMIT 8
     `);
 
-        const reviews = await query(`
+    const reviews = await query(`
       SELECT 
         COUNT(*) AS total_reviews,
         AVG(rating)::numeric(3,2) AS avg_rating
       FROM business_reviews
     `);
 
-        res.json({
-            success: true,
-            data: {
-                total_businesses: total.rows[0].total,
-                categories: categories.rows,
-                reviews: reviews.rows[0]
-            }
-        });
-    } catch (err) {
-        console.error("❌ Error business analytics:", err);
-        res.status(500).json({ success: false, error: "Server error" });
-    }
+    res.json({
+      success: true,
+      data: {
+        total_businesses: total.rows[0].total,
+        categories: categories.rows,
+        reviews: reviews.rows[0]
+      }
+    });
+  } catch (err) {
+    console.error("❌ Error business analytics:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // ------------------------
 //  RECENT ARTICLES
 // ------------------------
 router.get('/articles/recent', async (req, res) => {
-    const limit = Math.min(parseInt(req.query.limit || '6'), 50);
+  const limit = Math.min(parseInt(req.query.limit || '6'), 50);
 
-    try {
-        const sql = `
+  try {
+    const sql = `
       SELECT a.id, a.title, a.slug, a.excerpt, a.image_url, a.views,
         a.category, a.author_name, a.created_at,
         COALESCE(c.comment_count, 0) AS comments
@@ -309,23 +309,23 @@ router.get('/articles/recent', async (req, res) => {
       ORDER BY a.publish_date DESC NULLS LAST, a.created_at DESC
       LIMIT $1
     `;
-        const { rows } = await query(sql, [limit]);
+    const { rows } = await query(sql, [limit]);
 
-        res.json({ success: true, data: rows });
-    } catch (err) {
-        console.error("❌ Error recent articles:", err);
-        res.status(500).json({ success: false, error: "Server error" });
-    }
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error("❌ Error recent articles:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // ------------------------
 //  TOP USER LOCATIONS
 // ------------------------
 router.get('/locations/top', async (req, res) => {
-    const limit = Math.min(parseInt(req.query.limit || '5'), 20);
+  const limit = Math.min(parseInt(req.query.limit || '5'), 20);
 
-    try {
-        const sql = `
+  try {
+    const sql = `
       SELECT COALESCE(location, 'Unknown') AS location,
              COUNT(*) AS count
       FROM users
@@ -334,13 +334,13 @@ router.get('/locations/top', async (req, res) => {
       LIMIT $1
     `;
 
-        const { rows } = await query(sql, [limit]);
-        res.json({ success: true, data: rows });
+    const { rows } = await query(sql, [limit]);
+    res.json({ success: true, data: rows });
 
-    } catch (err) {
-        console.error("❌ Error locations:", err);
-        res.status(500).json({ success: false, error: "Server error" });
-    }
+  } catch (err) {
+    console.error("❌ Error locations:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 });
 
 // ------------------------

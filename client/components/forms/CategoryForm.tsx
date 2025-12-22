@@ -26,10 +26,12 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
     setErrorMessage('');
 
     try {
+      const token = localStorage.getItem('authToken');
       const response = await fetch('http://localhost:5000/api/categories/categories-post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData),
       });
@@ -95,8 +97,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
           </div>
           <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Error</h3>
           <p className="text-slate-500 dark:text-slate-400 font-medium text-center max-w-md">{errorMessage}</p>
-          <button 
-            onClick={() => setSubmitStatus('idle')} 
+          <button
+            onClick={() => setSubmitStatus('idle')}
             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Try Again
@@ -116,13 +118,13 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
           <label className={labelClass}>Category Name</label>
           <div className="relative">
             <Type className={iconClass} />
-            <input 
-              required 
-              name="name" 
+            <input
+              required
+              name="name"
               value={formData.name}
-              onChange={handleChange} 
-              className={inputClass} 
-              placeholder="e.g. Technology" 
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="e.g. Technology"
             />
           </div>
         </div>
@@ -131,10 +133,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
           <label className={labelClass}>Content Type</label>
           <div className="relative">
             <Tag className={iconClass} />
-            <select 
-              name="type" 
+            <select
+              name="type"
               value={formData.type}
-              onChange={handleChange} 
+              onChange={handleChange}
               className={`${inputClass} appearance-none`}
             >
               <option value="articles">articles</option>
@@ -146,15 +148,15 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
         </div>
 
         <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
-          <button 
-            type="button" 
-            onClick={onCancel} 
+          <button
+            type="button"
+            onClick={onCancel}
             className="px-6 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
             Cancel
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isSubmitting}
             className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
           >

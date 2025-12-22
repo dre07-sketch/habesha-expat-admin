@@ -157,8 +157,12 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                 });
             }
 
-            const response = await fetch('/api/travel-destinations/travel-destinations-post', { // Adjusted endpoint
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('http://localhost:5000/api/travel-destinations/travel-destinations-post', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 // Do NOT set the 'Content-Type' header. The browser does it automatically for FormData.
                 body: formDataToSubmit,
             });

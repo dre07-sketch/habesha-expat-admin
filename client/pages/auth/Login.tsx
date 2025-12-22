@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Mail, Lock, AlertCircle } from 'lucide-react';
+import SuspendedAccount from '../shutdown/SuspendedAccount';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const Login: React.FC = () => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         // Using a slightly greenish slate for the particles to match the brand
-        ctx.fillStyle = `rgba(148, 163, 184, ${p.alpha})`; 
+        ctx.fillStyle = `rgba(148, 163, 184, ${p.alpha})`;
         ctx.fill();
       });
     };
@@ -86,6 +87,11 @@ const Login: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 403 && data.error && data.error.includes('not active')) {
+          navigate('/suspended');
+          setLoading(false);
+          return;
+        }
         throw new Error(data.error || 'Invalid credentials provided.');
       }
 
@@ -110,10 +116,10 @@ const Login: React.FC = () => {
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-green-600/20 rounded-full blur-[120px] animate-pulse" />
       {/* Blue blob for contrast */}
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-      
+
       {/* Noise Overlay */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-      
+
       {/* Particle Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
 
@@ -124,8 +130,8 @@ const Login: React.FC = () => {
         <div className="hidden md:flex flex-col justify-between w-5/12 relative p-10 border-r border-white/5 overflow-hidden group">
           {/* Background Image with Overlay */}
           <div className="absolute inset-0 z-0">
-             <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-green-900/40 z-10"></div>
-             <img
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-green-900/40 z-10"></div>
+            <img
               src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"
               alt="Global Network"
               className="w-full h-full object-cover opacity-40 mix-blend-overlay group-hover:scale-105 transition-transform duration-1000"
@@ -154,7 +160,7 @@ const Login: React.FC = () => {
 
         {/* Right Column: Form */}
         <div className="flex-1 p-8 md:p-14 flex flex-col justify-center relative">
-          
+
           {/* Decorative Glow inside form area */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full blur-[80px] pointer-events-none"></div>
 

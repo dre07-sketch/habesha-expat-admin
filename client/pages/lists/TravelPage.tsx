@@ -136,8 +136,8 @@ const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) =
                                         onClick={() => onToggleVisibility(destination.id)}
                                         disabled={isUpdating}
                                         className={`w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${destination.status === 'visible'
-                                                ? 'bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200'
-                                                : 'bg-green-600 hover:bg-green-500 text-white'
+                                            ? 'bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200'
+                                            : 'bg-green-600 hover:bg-green-500 text-white'
                                             } ${isUpdating ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     >
                                         {isUpdating ? (
@@ -194,7 +194,12 @@ export default function TravelPage() {
         const fetchDestinations = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`${API_BASE_URL}/api/travel-destinations/travel-destinations-get`);
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/api/travel-destinations/travel-destinations-get`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 const result = await response.json();
 
                 if (result.success) {
@@ -249,10 +254,12 @@ export default function TravelPage() {
             const newStatus = destination.status === 'visible' ? 'hidden' : 'visible';
 
             // Make API call to update status - using the correct endpoint path
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${API_BASE_URL}/api/travel-destinations/travel-destinations-status/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ status: newStatus }),
             });
@@ -386,8 +393,8 @@ export default function TravelPage() {
                                         <td className="p-4">
                                             <div className="flex items-center">
                                                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${dest.status === 'visible'
-                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
                                                     }`}>
                                                     {dest.status === 'visible' ? <Eye size={12} /> : <EyeOff size={12} />}
                                                     {dest.status === 'visible' ? 'Visible' : 'Hidden'}

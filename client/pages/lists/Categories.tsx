@@ -25,27 +25,38 @@ const Categories: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Fetch categories
-      const categoriesResponse = await fetch('http://localhost:5000/api/categories/categories-get');
-      
+      // Fetch categories
+      const token = localStorage.getItem('authToken');
+      const categoriesResponse = await fetch('http://localhost:5000/api/categories/categories-get', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
       if (!categoriesResponse.ok) {
         throw new Error('Failed to fetch categories');
       }
-      
+
       const categoriesData = await categoriesResponse.json();
       setCategories(categoriesData);
-      
+
       // Fetch category usage
-      const usageResponse = await fetch('http://localhost:5000/api/categories/categories/usage');
-      
+      // Fetch category usage
+      const usageResponse = await fetch('http://localhost:5000/api/categories/categories/usage', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
       if (!usageResponse.ok) {
         throw new Error('Failed to fetch category usage');
       }
-      
+
       const usageData = await usageResponse.json();
       setCategoryUsage(usageData.usedCategories || []);
-      
+
     } catch (err: any) {
       setError(err.message || 'An error occurred while fetching categories');
       console.error('Error fetching categories:', err);
@@ -62,18 +73,22 @@ const Categories: React.FC = () => {
   // Handle category deletion
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (window.confirm('Are you sure you want to delete this category? Content tagged with it may be affected.')) {
       try {
         setDeleteInProgress(id);
+        const token = localStorage.getItem('authToken');
         const response = await fetch(`http://localhost:5000/api/categories/categories/${id}`, {
           method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to delete category');
         }
-        
+
         // Update local state to remove the deleted category
         setCategories(categories.filter(c => c.id !== id));
       } catch (err: any) {
@@ -94,7 +109,7 @@ const Categories: React.FC = () => {
 
   // Get count for a specific type within a category
   const getCategoryTypeCount = (categoryName: string, type: string) => {
-    const usageItem = categoryUsage.find(item => 
+    const usageItem = categoryUsage.find(item =>
       item.name === categoryName && item.source === type
     );
     return usageItem ? usageItem.count : 0;
@@ -118,8 +133,8 @@ const Categories: React.FC = () => {
           <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Content Categories</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Organize your platform's taxonomy and tags.</p>
         </div>
-        <button 
-          onClick={() => setIsFormOpen(true)} 
+        <button
+          onClick={() => setIsFormOpen(true)}
           className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200"
         >
           <Plus size={20} className="mr-2" /> Add Category
@@ -131,8 +146,8 @@ const Categories: React.FC = () => {
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 p-4 rounded-xl mb-6 flex items-center">
           <AlertCircle size={20} className="mr-3" />
           <span>{error}</span>
-          <button 
-            onClick={() => setError(null)} 
+          <button
+            onClick={() => setError(null)}
             className="ml-auto text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
           >
             ×
@@ -152,8 +167,8 @@ const Categories: React.FC = () => {
             ) : (
               <>
                 Actions
-                <button 
-                  onClick={fetchCategories} 
+                <button
+                  onClick={fetchCategories}
                   className="ml-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   title="Refresh categories"
                 >
@@ -163,7 +178,7 @@ const Categories: React.FC = () => {
             )}
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <RefreshCw size={24} className="animate-spin text-slate-400" />
@@ -179,10 +194,10 @@ const Categories: React.FC = () => {
               const style = getTypeConfig(cat.type);
               const Icon = style.icon;
               const totalCount = getCategoryTotalCount(cat.name);
-              
+
               return (
-                <div 
-                  key={cat.id} 
+                <div
+                  key={cat.id}
                   className="group flex items-center p-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all duration-200 cursor-pointer"
                   onClick={() => setSelectedCategory(cat)}
                 >
@@ -215,7 +230,7 @@ const Categories: React.FC = () => {
 
                   {/* Actions */}
                   <div className="w-2/12 flex justify-end items-center pr-2 space-x-2">
-                    <button 
+                    <button
                       onClick={(e) => handleDelete(cat.id, e)}
                       disabled={deleteInProgress === cat.id}
                       className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -237,12 +252,12 @@ const Categories: React.FC = () => {
       </div>
 
       <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title="New Category" maxWidth="max-w-2xl">
-        <CategoryForm 
+        <CategoryForm
           onSuccess={() => {
             setIsFormOpen(false);
             fetchCategories(); // Refresh categories after adding a new one
-          }} 
-          onCancel={() => setIsFormOpen(false)} 
+          }}
+          onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
 
@@ -251,15 +266,14 @@ const Categories: React.FC = () => {
         {selectedCategory && (
           <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
             {/* Header Gradient */}
-            <div className={`h-40 w-full bg-gradient-to-r relative overflow-hidden flex items-center px-8 ${
-              selectedCategory.type === 'Article' ? 'from-indigo-600 to-blue-600' : 
-              selectedCategory.type === 'Video' ? 'from-sky-600 to-cyan-600' :
-              selectedCategory.type === 'Podcast' ? 'from-rose-600 to-pink-600' :
-              'from-emerald-600 to-green-600'
-            }`}>
+            <div className={`h-40 w-full bg-gradient-to-r relative overflow-hidden flex items-center px-8 ${selectedCategory.type === 'Article' ? 'from-indigo-600 to-blue-600' :
+                selectedCategory.type === 'Video' ? 'from-sky-600 to-cyan-600' :
+                  selectedCategory.type === 'Podcast' ? 'from-rose-600 to-pink-600' :
+                    'from-emerald-600 to-green-600'
+              }`}>
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
               <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white/10 to-transparent"></div>
-              
+
               <div className="relative z-10 flex items-center w-full">
                 <div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl text-white shadow-xl border border-white/20 mr-6">
                   {React.createElement(getTypeConfig(selectedCategory.type).icon, { size: 40 })}
@@ -267,7 +281,7 @@ const Categories: React.FC = () => {
                 <div>
                   <div className="flex items-center space-x-3 mb-1">
                     <span className="text-white/80 text-xs font-bold uppercase tracking-widest border border-white/30 px-2 py-0.5 rounded-full">{selectedCategory.type}</span>
-                    <span className="text-white/60 text-xs flex items-center"><Hash size={12} className="mr-0.5"/> ID: {selectedCategory.id}</span>
+                    <span className="text-white/60 text-xs flex items-center"><Hash size={12} className="mr-0.5" /> ID: {selectedCategory.id}</span>
                   </div>
                   <h2 className="text-4xl font-bold text-white shadow-black drop-shadow-md">{selectedCategory.name}</h2>
                 </div>
@@ -282,7 +296,7 @@ const Categories: React.FC = () => {
                   <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTotalCount(selectedCategory.name)}</span>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Total Items</span>
                 </div>
-                
+
                 {selectedCategory.type === 'Article' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                     <FileText className="text-indigo-500 mb-2" size={24} />
@@ -290,7 +304,7 @@ const Categories: React.FC = () => {
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Articles</span>
                   </div>
                 )}
-                
+
                 {selectedCategory.type === 'Podcast' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                     <Mic className="text-rose-500 mb-2" size={24} />
@@ -298,7 +312,7 @@ const Categories: React.FC = () => {
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Podcasts</span>
                   </div>
                 )}
-                
+
                 {selectedCategory.type === 'Video' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                     <Video className="text-sky-500 mb-2" size={24} />
@@ -306,7 +320,7 @@ const Categories: React.FC = () => {
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Videos</span>
                   </div>
                 )}
-                
+
                 {selectedCategory.type === 'Business' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                     <Briefcase className="text-emerald-500 mb-2" size={24} />
@@ -314,7 +328,7 @@ const Categories: React.FC = () => {
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Businesses</span>
                   </div>
                 )}
-                
+
                 <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
                   <BarChart3 className="text-emerald-500 mb-2" size={24} />
                   <span className="text-2xl font-bold text-slate-800 dark:text-white">12.5k</span>

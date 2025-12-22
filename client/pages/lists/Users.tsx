@@ -23,7 +23,13 @@ const Users: React.FC = () => {
         const fetchUsers = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch('http://localhost:5000/api/users/users-roles');
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('http://localhost:5000/api/users/users-roles', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch users');
@@ -110,11 +116,13 @@ const Users: React.FC = () => {
     const handleToggleStatus = async (userId: string) => {
         try {
             setIsTogglingStatus(true);
-            
+
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`http://localhost:5000/api/users/toggle-status/${userId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
             });
 
@@ -122,12 +130,12 @@ const Users: React.FC = () => {
 
             if (data.success) {
                 // Update the users list with the new status
-                setUsers(prevUsers => 
-                    prevUsers.map(user => 
+                setUsers(prevUsers =>
+                    prevUsers.map(user =>
                         user.id === userId ? { ...user, status: data.status } : user
                     )
                 );
-                
+
                 // Update the selected user if it's the one being modified
                 if (selectedUser && selectedUser.id === userId) {
                     setSelectedUser({ ...selectedUser, status: data.status });
@@ -218,12 +226,12 @@ const Users: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold border ${user.role === 'Premium'
-                                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-                                                    : user.role === 'Author'
-                                                        ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
-                                                        : user.role === 'User'
-                                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800'
-                                                            : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
+                                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                                : user.role === 'Author'
+                                                    ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+                                                    : user.role === 'User'
+                                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                                                        : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
                                                 }`}>
                                                 {user.role}
                                             </span>
@@ -244,7 +252,7 @@ const Users: React.FC = () => {
                                             {formatDate(user.updated_at)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <button 
+                                            <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleToggleStatus(user.id);
@@ -258,11 +266,11 @@ const Users: React.FC = () => {
                                                     <CheckCircle size={18} className="text-emerald-500" />
                                                 )}
                                             </button>
-                                            <button 
-                                                onClick={(e) => { 
-                                                    e.stopPropagation(); 
-                                                    handleUserClick(user); 
-                                                }} 
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleUserClick(user);
+                                                }}
                                                 className="text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
                                             >
                                                 <Eye size={18} />
@@ -393,9 +401,9 @@ const Users: React.FC = () => {
                                     ) : (
                                         <div className="flex items-center group/role">
                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${selectedUser.role === 'Premium' ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' :
-                                                    selectedUser.role === 'Author' ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20' :
-                                                        selectedUser.role === 'User' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' :
-                                                            'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/20'
+                                                selectedUser.role === 'Author' ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20' :
+                                                    selectedUser.role === 'User' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' :
+                                                        'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/20'
                                                 }`}>
                                                 {selectedUser.role}
                                             </span>
@@ -473,11 +481,10 @@ const Users: React.FC = () => {
                             <button
                                 onClick={() => handleToggleStatus(selectedUser.id)}
                                 disabled={isTogglingStatus}
-                                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-colors shadow-sm flex items-center justify-center ${
-                                    selectedUser.status === 'Active'
-                                        ? 'bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20'
-                                        : 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/20'
-                                } ${isTogglingStatus ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-colors shadow-sm flex items-center justify-center ${selectedUser.status === 'Active'
+                                    ? 'bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20'
+                                    : 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/20'
+                                    } ${isTogglingStatus ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                                 {isTogglingStatus ? (
                                     <>

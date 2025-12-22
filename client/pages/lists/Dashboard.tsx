@@ -41,13 +41,16 @@ const Dashboard: React.FC = () => {
             try {
                 setLoading(true);
 
+                const token = localStorage.getItem('authToken');
+                const headers = { 'Authorization': `Bearer ${token}` };
+
                 const [summaryRes, growthRes, membershipRes, engagementRes, businessRes, locationsRes] = await Promise.all([
-                    fetch('http://localhost:5000/api/dashboard/summary'),
-                    fetch('http://localhost:5000/api/dashboard/growth'),
-                    fetch('http://localhost:5000/api/dashboard/membership'),
-                    fetch('http://localhost:5000/api/dashboard/engagement'),
-                    fetch('http://localhost:5000/api/dashboard/business'),
-                    fetch('http://localhost:5000/api/dashboard/locations/top')
+                    fetch('http://localhost:5000/api/dashboard/summary', { headers }),
+                    fetch('http://localhost:5000/api/dashboard/growth', { headers }),
+                    fetch('http://localhost:5000/api/dashboard/membership', { headers }),
+                    fetch('http://localhost:5000/api/dashboard/engagement', { headers }),
+                    fetch('http://localhost:5000/api/dashboard/business', { headers }),
+                    fetch('http://localhost:5000/api/dashboard/locations/top', { headers })
                 ]);
 
                 const [summary, growth, membership, engagement, business, locations] = await Promise.all([
@@ -265,8 +268,8 @@ const Dashboard: React.FC = () => {
                                 <button
                                     key={metric.key}
                                     className={`flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 ${activeMetrics.includes(metric.key)
-                                            ? `bg-gradient-to-r ${metric.gradient} text-white shadow-lg`
-                                            : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                        ? `bg-gradient-to-r ${metric.gradient} text-white shadow-lg`
+                                        : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                                         }`}
                                     onClick={() => toggleMetric(metric.key)}
                                 >
@@ -379,8 +382,8 @@ const Dashboard: React.FC = () => {
                                 <div className="flex items-center justify-between mb-3">
                                     <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${stat.gradient}`}></div>
                                     <span className={`text-xs font-black px-2.5 py-1 rounded-lg ${stat.change.startsWith('+')
-                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                                         }`}>
                                         {stat.change}
                                     </span>

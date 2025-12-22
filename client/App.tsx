@@ -6,10 +6,6 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import { ResetPassword } from './pages/auth/ResetPassword';
 import { OTP } from './pages/auth/OTP';
 import Dashboard from './pages/lists/Dashboard';
-// ...
-// (Note: The user skipped many lines in the description, but I will target specific blocks to be safe)
-// Actually I will just replace the import block and the route block separately if I could, but wait, `replace_file_content` supports single block.
-// I'll replace the import first.
 import B2B from './pages/lists/B2B';
 import Podcasts from './pages/lists/Podcasts';
 import Videos from './pages/lists/Videos';
@@ -21,6 +17,7 @@ import Ads from './pages/lists/Ads';
 import Categories from './pages/lists/Categories';
 import Settings from './pages/lists/Settings';
 import AdminPanelShutdown from './pages/shutdown/AdminPanelShutdown';
+import SuspendedAccount from './pages/shutdown/SuspendedAccount';
 import Jobs from './pages/lists/Jobs';
 import Travel from './pages/lists/TravelPage';
 
@@ -94,6 +91,7 @@ const App: React.FC = () => {
             <Route path="/otp" element={<OTP />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/suspended" element={<SuspendedAccount />} />
             {/* Protected Admin Routes */}
             <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
             <Route path="/b2b" element={<Layout><B2B /></Layout>} />

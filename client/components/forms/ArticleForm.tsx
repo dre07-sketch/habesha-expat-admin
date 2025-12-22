@@ -51,7 +51,12 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/articles/articles-catagories');
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('http://localhost:5000/api/articles/articles-catagories', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch categories');
         }
@@ -137,12 +142,12 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
   // Handle tag input with automatic # prefix
   const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
-    
+
     // Automatically add # at the beginning if not present
     if (value && !value.startsWith('#')) {
       value = '#' + value;
     }
-    
+
     setCurrentTag(value);
   };
 
@@ -167,7 +172,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
       if (!tagToAdd.startsWith('#')) {
         tagToAdd = '#' + tagToAdd;
       }
-      
+
       const newTags = [...formData.tags, tagToAdd];
       setFormData(prev => ({ ...prev, tags: newTags }));
       setCurrentTag('#'); // Reset to # for next tag
@@ -227,8 +232,13 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
       }
 
       // Send data to server
+      // Send data to server
+      const token = localStorage.getItem('authToken');
       const response = await fetch('http://localhost:5000/api/articles/articles-post', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formDataToSend,
       });
 
@@ -404,11 +414,11 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
             <label className={labelClass}>Author</label>
             <div className="relative">
               <User className={iconClass} />
-              <input 
+              <input
                 name="author_name"
-                onChange={handleChange} 
-                className={inputClass} 
-                placeholder="Author Name" 
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="Author Name"
               />
             </div>
           </div>
@@ -417,11 +427,11 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
             <label className={labelClass}>Publish Date</label>
             <div className="relative">
               <Calendar className={iconClass} />
-              <input 
-                type="datetime-local" 
+              <input
+                type="datetime-local"
                 name="publish_date"
-                onChange={handleChange} 
-                className={inputClass} 
+                onChange={handleChange}
+                className={inputClass}
               />
             </div>
           </div>
@@ -433,22 +443,20 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ onSubmit, onCancel }) => {
               <button
                 type="button"
                 onClick={() => handleVideoOptionChange('file')}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center ${
-                  videoOption === 'file'
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center ${videoOption === 'file'
                     ? 'bg-blue-500 text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
+                  }`}
               >
                 <UploadCloud size={14} className="mr-1" /> Upload Video
               </button>
               <button
                 type="button"
                 onClick={() => handleVideoOptionChange('url')}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center ${
-                  videoOption === 'url'
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center ${videoOption === 'url'
                     ? 'bg-blue-500 text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
+                  }`}
               >
                 <LinkIcon size={14} className="mr-1" /> Video URL
               </button>

@@ -18,7 +18,12 @@ const Ads: React.FC = () => {
         const fetchAds = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch('http://localhost:5000/api/ads/ads-get');
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('http://localhost:5000/api/ads/ads-get', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
                 if (!response.ok) {
                     throw new Error(`Server responded with ${response.status}`);
@@ -48,8 +53,12 @@ const Ads: React.FC = () => {
         try {
             setActionLoading(prev => ({ ...prev, [id]: true }));
 
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`http://localhost:5000/api/ads/ads/${id}`, {
                 method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             if (!response.ok) {
@@ -83,6 +92,7 @@ const Ads: React.FC = () => {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
                 body: JSON.stringify({ status: newStatus }),
             });
@@ -110,7 +120,12 @@ const Ads: React.FC = () => {
         // Refresh ads list after form submission
         const fetchAds = async () => {
             try {
-                const response = await fetch('/api/ads-get');
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('http://localhost:5000/api/ads/ads-get', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
                 if (!response.ok) {
                     throw new Error(`Server responded with ${response.status}`);

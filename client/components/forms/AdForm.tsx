@@ -74,8 +74,12 @@ const AdForm: React.FC<AdFormProps> = ({ onSubmit, onCancel }) => {
             }
 
             // Make API call to your backend
+            const token = localStorage.getItem('authToken');
             const response = await fetch('http://localhost:5000/api/ads/ads-post', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: data,
                 // Don't set Content-Type header when using FormData, browser will set it with boundary
             });
