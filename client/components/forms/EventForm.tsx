@@ -81,14 +81,14 @@ const EventForm: React.FC<EventFormProps> = ({ onCancel, onSuccess }) => {
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.error || 'Failed to create event');
+                throw new Error(result.error || result.message || 'Failed to create event');
             }
 
             // Success simulation delay just for the UI effect
             setTimeout(() => {
                 setIsSubmitting(false);
                 if (onSuccess) onSuccess(result);
-                alert('Event created successfully!');
+
                 onCancel(); // Close form
             }, 1500);
 

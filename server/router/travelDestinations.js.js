@@ -191,6 +191,8 @@ router.get('/travel-destinations-get', async (req, res) => {
 });
 
 
+const { logAction } = require('../utils/auditLogger');
+
 router.put('/travel-destinations-status/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -218,6 +220,8 @@ router.put('/travel-destinations-status/:id', async (req, res) => {
         message: 'Destination not found'
       });
     }
+
+    await logAction(req, 'UPDATE', 'TRAVEL', id, "Updated travel destination status to " + status);
 
     res.json({
       success: true,

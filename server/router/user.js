@@ -42,6 +42,8 @@ router.get("/users-roles", async (req, res) => {
 });
 
 
+const { logAction } = require('../utils/auditLogger');
+
 router.put("/toggle-status/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -72,6 +74,8 @@ router.put("/toggle-status/:id", async (req, res) => {
       `,
       [newStatus, id]
     );
+
+    await logAction(req, 'UPDATE', 'USER', id, `Changed user status to ${newStatus}`);
 
     res.status(200).json({
       success: true,

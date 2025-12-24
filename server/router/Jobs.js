@@ -92,11 +92,15 @@ router.get('/jobs-get', async (req, res) => {
 
 
 
+const { logAction } = require('../utils/auditLogger');
+
 router.delete('/jobs-delete/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
         await query(`DELETE FROM jobs WHERE id = $1`, [id]);
+
+        await logAction(req, 'DELETE', 'JOB', id, 'Deleted Job listing');
 
         res.json({ success: true, message: 'Job listing deleted' });
     } catch (err) {
@@ -122,6 +126,8 @@ router.put('/jobs/:id/status', async (req, res) => {
         `;
 
         await query(sql, [status, id]);
+
+        await logAction(req, 'UPDATE', 'JOB', id, `Updated Job status to ${status}`);
 
         res.json({
             success: true,

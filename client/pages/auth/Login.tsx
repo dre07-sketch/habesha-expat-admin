@@ -92,7 +92,7 @@ const Login: React.FC = () => {
           setLoading(false);
           return;
         }
-        throw new Error(data.error || 'Invalid credentials provided.');
+        throw new Error(data.error || data.message || 'Invalid credentials provided.');
       }
 
       localStorage.setItem('authToken', data.token);

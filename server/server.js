@@ -42,7 +42,6 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) === -1) {
-            // Check if it's a subdomain or matches regex if needed, otherwise block
             return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
         }
         return callback(null, true);
@@ -52,23 +51,28 @@ app.use(cors({
 
 // Security Middleware: Rate Limiting
 // 1. Global Limiter (Apply to all API routes)
-const globalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200, // Limit each IP to 200 requests per windowMs
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: "Too many requests from this IP, please try again after 15 minutes"
-});
-app.use('/api', globalLimiter);
+// 1. Global Limiter (Apply to all API routes)
+// const globalLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     max: 200, // Limit each IP to 200 requests per windowMs
+//     standardHeaders: true,
+//     legacyHeaders: false,
+//     message: { message: "Too many requests from this IP, please try again after 15 minutes" }
+// });
+// app.use('/api', globalLimiter);
 
 // 2. Strict Login Limiter
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Limit each IP to 10 login attempts per windowMs
-    message: "Too many login attempts, please try again after 15 minutes",
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// 2. Strict Login Limiter
+// const loginLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     max: 10, // Limit each IP to 10 login attempts per windowMs
+//     message: { message: "Too many login attempts, please try again after 15 minutes" },
+//     standardHeaders: true,
+//     legacyHeaders: false,
+// });
+
+
+
 app.use(bodyParser.json());
 app.use('/upload', express.static(path.join(__dirname, 'upload')));
 
@@ -77,7 +81,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //-----------login/public routes----------------
-app.use('/api/login', loginLimiter, LoginRoutes);
+// app.use('/api/login', loginLimiter, LoginRoutes);
+app.use('/api/login', LoginRoutes);
 app.use('/api/forget-password', ForgetPassRoutes);
 
 //-----------Protect all other API routes----------------
@@ -92,7 +97,7 @@ app.use('/api/events', authenticateToken, EventRoutes);
 app.use('/api/ads', authenticateToken, AdRoutes);
 app.use('/api/categories', authenticateToken, CategoryRoutes);
 app.use('/api/subscribers', authenticateToken, subscriberRoutes);
-app.use('/api/system',  systemStatusRoutes);
+app.use('/api/system', systemStatusRoutes);
 app.use('/api/podcasts', authenticateToken, PodcastRoutes);
 app.use('/api/videos', authenticateToken, VideoRoutes);
 app.use('/api/users', authenticateToken, UserRoutes);

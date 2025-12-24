@@ -44,7 +44,12 @@ const B2B: React.FC = () => {
     const fetchBusinesses = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/businesses-get`);
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`${API_BASE_URL}/businesses-get`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
         // Transform the response to rename 'mappin' to 'mapPin'
         const transformedData = response.data.map((biz: any) => ({
@@ -74,7 +79,12 @@ const B2B: React.FC = () => {
         setDetailsLoading(true);
         setDetailsError(null);
         try {
-          const response = await axios.get(`${API_BASE_URL}/business-rating-comment/${selectedBusiness.id}`);
+          const token = localStorage.getItem('authToken');
+          const response = await axios.get(`${API_BASE_URL}/business-rating-comment/${selectedBusiness.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
 
           if (isMounted) {
             if (response.data.success) {
@@ -115,7 +125,12 @@ const B2B: React.FC = () => {
   const updateBusinessStatus = async (id: number, status: 'approved' | 'rejected' | 'pending') => {
     setUpdatingStatus(id);
     try {
-      await axios.put(`${API_BASE_URL}/businesses/${id}/status`, { status });
+      const token = localStorage.getItem('authToken');
+      await axios.put(`${API_BASE_URL}/businesses/${id}/status`, { status }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
       setBusinesses(prev =>
         prev.map(biz =>
@@ -135,10 +150,16 @@ const B2B: React.FC = () => {
   };
 
   // Handle form submission
-  const handleFormSubmit = async (formData: Business) => {
+  const handleFormSubmit = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/businesses`, formData);
-      const response = await axios.get(`${API_BASE_URL}/businesses-get`);
+      // Note: B2BForm handles the actual POST request with FormData
+      // We only need to refresh the list here
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(`${API_BASE_URL}/businesses-get`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
       const transformedData = response.data.map((biz: any) => ({
         ...biz,
@@ -146,9 +167,9 @@ const B2B: React.FC = () => {
       }));
 
       setBusinesses(transformedData);
-      setIsFormOpen(false);
+      // setIsFormOpen(false); // Removed to allow B2BForm to show success popup
     } catch (err) {
-      console.error('Failed to add business:', err);
+      console.error('Failed to refresh businesses:', err);
     }
   };
 
@@ -408,10 +429,10 @@ const B2B: React.FC = () => {
                         </div>
                       ) : (
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold uppercase tracking-wide rounded-full ${biz.status === 'approved'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-                            : biz.status === 'pending'
-                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                          : biz.status === 'pending'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'
                           }`}>
                           {biz.status}
                         </span>
@@ -595,8 +616,8 @@ const B2B: React.FC = () => {
                     <div className="flex-1 p-2">
                       <div
                         className={`relative w-full h-64 lg:h-full rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600 shadow-inner min-h-[250px] cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-blue-400 ${selectedBusiness.mapPin && selectedBusiness.mapPin.trim() !== ''
-                            ? 'bg-slate-100 dark:bg-slate-800'
-                            : 'bg-slate-200 dark:bg-slate-900'
+                          ? 'bg-slate-100 dark:bg-slate-800'
+                          : 'bg-slate-200 dark:bg-slate-900'
                           }`}
                         onClick={() => {
                           if (selectedBusiness.mapPin && selectedBusiness.mapPin.trim() !== '') {

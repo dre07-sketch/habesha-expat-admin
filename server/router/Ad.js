@@ -88,11 +88,16 @@ router.get('/ads-get', async (req, res) => {
     }
 });
 
+const { logAction } = require('../utils/auditLogger');
+
 // DELETE Ad Campaign
 router.delete('/ads/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await query(`DELETE FROM ads WHERE id = $1`, [id]);
+
+        await logAction(req, 'DELETE', 'AD', id, 'Deleted Ad Campaign');
+
         res.json({ success: true, message: 'Ad campaign deleted' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -111,6 +116,9 @@ router.put('/ads/:id/status', async (req, res) => {
         }
 
         await query(`UPDATE ads SET status = $1 WHERE id = $2`, [status, id]);
+
+        await logAction(req, 'UPDATE', 'AD', id, `Updated Ad status to ${status}`);
+
         res.json({ success: true, message: `Ad campaign is now ${status}` });
     } catch (err) {
         res.status(500).json({ error: err.message });

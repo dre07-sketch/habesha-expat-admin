@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { query, DB_TYPE } = require('../connection/db');
+const { authenticateToken } = require('../middleware/auth');
+const { logAction } = require('../utils/auditLogger');
 
-router.put('/system-status/:id/toggle', async (req, res) => {
+router.put('/system-status/:id/toggle', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -23,6 +25,10 @@ router.put('/system-status/:id/toggle', async (req, res) => {
     if (!result.rows.length) {
       return res.status(404).json({ success: false, message: 'Service not found' });
     }
+
+    const serviceName = result.rows[0].serviceName;
+    const newStatus = result.rows[0].status;
+    await logAction(req, 'UPDATE', 'SYSTEM', id, `Toggled system service "${serviceName}" to ${newStatus} (Kill Switch used)`);
 
     res.json({ success: true, message: 'Status toggled', service: result.rows[0] });
   } catch (err) {
@@ -64,7 +70,7 @@ router.get('/system-status/admin-panel/check', async (req, res) => {
   }
 });
 
-router.put('/system-status/:id', async (req, res) => {
+router.put('/system-status/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { status, maintenance_message, updated_by } = req.body;
 

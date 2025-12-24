@@ -99,11 +99,16 @@ router.get('/events-get', async (req, res) => {
     }
 });
 
+const { logAction } = require('../utils/auditLogger');
+
 // DELETE Event
 router.delete('/events-delete/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await query(`DELETE FROM events WHERE id = $1`, [id]);
+
+        await logAction(req, 'DELETE', 'EVENT', id, 'Deleted Event');
+
         res.json({ success: true, message: 'Event deleted' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -122,6 +127,9 @@ router.put('/events/:id/status', async (req, res) => {
         }
 
         await query(`UPDATE events SET status = $1 WHERE id = $2`, [status, id]);
+
+        await logAction(req, 'UPDATE', 'EVENT', id, `Updated Event status to ${status}`);
+
         res.json({ success: true, message: `Event is now ${status}` });
     } catch (err) {
         res.status(500).json({ error: err.message });

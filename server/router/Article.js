@@ -284,6 +284,8 @@ router.post('/toggle-status/:id', async (req, res) => {
         `;
     const updateResult = await query(updateQuery, [newStatus, id]);
 
+    await logAction(req, 'UPDATE', 'ARTICLE', id, "Toggled article status to " + newStatus);
+
     // Format the returned article with the correct image URL so the frontend doesn't crash
     const rawArticle = updateResult.rows[0];
     let finalImage = null;
@@ -459,6 +461,8 @@ router.get('/articles/:id/full', async (req, res) => {
     });
   }
 });
+const { logAction } = require('../utils/auditLogger');
+
 router.delete("/articles-delete/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -474,6 +478,9 @@ router.delete("/articles-delete/:id", async (req, res) => {
         message: "Article not found",
       });
     }
+
+    const title = result.rows[0].title;
+    await logAction(req, 'DELETE', 'ARTICLE', id, "Deleted Article: " + title);
 
     res.status(200).json({
       success: true,
