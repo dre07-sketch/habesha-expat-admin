@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { query, DB_TYPE } = require("../connection/db");
+const { logAction } = require('../utils/auditLogger');
 
 // GET /users/roles
 router.get("/users-roles", async (req, res) => {
@@ -42,7 +43,7 @@ router.get("/users-roles", async (req, res) => {
 });
 
 
-const { logAction } = require('../utils/auditLogger');
+
 
 router.put("/toggle-status/:id", async (req, res) => {
   const { id } = req.params;

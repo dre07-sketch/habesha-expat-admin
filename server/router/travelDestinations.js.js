@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const { query, DB_TYPE } = require('../connection/db');
+const { logAction } = require('../utils/auditLogger');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -124,6 +125,8 @@ router.post('/travel-destinations-post', upload.any(), async (req, res) => {
 
     const result = await query(sql, values);
 
+    await logAction(req, 'CREATE', 'TRAVEL', result.rows[0].id, `Created Travel Destination: ${name}`);
+
     res.status(201).json({
       success: true,
       message: 'Travel destination created successfully',
@@ -191,7 +194,7 @@ router.get('/travel-destinations-get', async (req, res) => {
 });
 
 
-const { logAction } = require('../utils/auditLogger');
+
 
 router.put('/travel-destinations-status/:id', async (req, res) => {
   try {

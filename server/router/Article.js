@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const { query, DB_TYPE } = require('../connection/db');
+const { logAction } = require('../utils/auditLogger');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -173,6 +174,8 @@ router.post('/articles-post', upload.fields([
     ];
 
     const result = await query(sql, values);
+
+    await logAction(req, 'CREATE', 'ARTICLE', result.rows[0].id, `Created Article: ${title}`);
 
     res.status(201).json({
       success: true,
@@ -461,7 +464,7 @@ router.get('/articles/:id/full', async (req, res) => {
     });
   }
 });
-const { logAction } = require('../utils/auditLogger');
+
 
 router.delete("/articles-delete/:id", async (req, res) => {
   const { id } = req.params;

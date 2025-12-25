@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const { query, DB_TYPE } = require('../connection/db');
+const { logAction } = require('../utils/auditLogger');
 
 const storage = multer.diskStorage({
     destination: "upload/",
@@ -36,6 +37,8 @@ router.post('/ads-post', upload.single('mediaFile'), async (req, res) => {
         ];
 
         const result = await query(sql, values);
+
+        await logAction(req, 'CREATE', 'AD', result.rows[0].id, `Created Ad Campaign: ${title}`);
 
         res.status(201).json({
             success: true,
@@ -88,7 +91,7 @@ router.get('/ads-get', async (req, res) => {
     }
 });
 
-const { logAction } = require('../utils/auditLogger');
+
 
 // DELETE Ad Campaign
 router.delete('/ads/:id', async (req, res) => {

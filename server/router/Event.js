@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const { query, DB_TYPE } = require('../connection/db');
+const { logAction } = require('../utils/auditLogger');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -42,6 +43,8 @@ router.post('/events-post', upload.single('image'), async (req, res) => {
             description,
             image_url
         ]);
+
+        await logAction(req, 'CREATE', 'EVENT', result.insertId, `Created Event: ${title}`);
 
         res.status(201).json({
             success: true,
@@ -99,7 +102,7 @@ router.get('/events-get', async (req, res) => {
     }
 });
 
-const { logAction } = require('../utils/auditLogger');
+
 
 // DELETE Event
 router.delete('/events-delete/:id', async (req, res) => {

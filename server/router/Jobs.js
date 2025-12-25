@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query, DB_TYPE } = require('../connection/db');
+const { logAction } = require('../utils/auditLogger');
 
 
 router.post('/jobs-post', async (req, res) => {
@@ -54,6 +55,8 @@ router.post('/jobs-post', async (req, res) => {
             url  // <-- NEW PARAMETER
         ]);
 
+        await logAction(req, 'CREATE', 'JOB', result.rows[0].id, `Posted Job: ${title}`);
+
         res.status(201).json({
             success: true,
             message: 'Job posted',
@@ -91,8 +94,6 @@ router.get('/jobs-get', async (req, res) => {
 });
 
 
-
-const { logAction } = require('../utils/auditLogger');
 
 router.delete('/jobs-delete/:id', async (req, res) => {
     try {
