@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Eye, CheckCircle, XCircle, MapPin, Globe, Phone, Mail, Calendar, ExternalLink, Map, Hash, Clock, ShieldCheck, Star, MessageSquare, ThumbsUp, Filter, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Plus, Eye, CheckCircle, XCircle, MapPin, Globe, Phone, Building2, Mail, Calendar, ExternalLink, Map, Hash, Clock, ShieldCheck, Star, MessageSquare, ThumbsUp, Filter, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import Modal from '../../components/Modal';
 import B2BForm from '../../components/forms/B2BForm';
 import { Business } from '../../types';
@@ -337,34 +337,37 @@ const B2B: React.FC = () => {
         }
       `}</style>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">B2B Requests</h1>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">B2B Requests</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Manage and approve business listings for the directory.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               type="text"
               placeholder="Search businesses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+              className="w-full pl-5 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
             />
           </div>
           <button
             onClick={() => setIsFormOpen(true)}
-            className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+            className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-3 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
           >
-            <Plus size={20} className="mr-2" /> Add Business
+            <Plus size={14} className="mr-2" /> Add Business
           </button>
         </div>
       </div>
 
+      {/* Metrics Section */}
+
+
       {/* Loading State */}
       {loading && (
-        <div className="p-8 text-center">
+        <div className="p-4 text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           <p className="mt-4 text-slate-500 dark:text-slate-400">Loading businesses...</p>
         </div>
@@ -372,7 +375,7 @@ const B2B: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <div className="p-8 text-center">
+        <div className="p-4 text-center">
           <div className="text-red-500 text-lg font-medium mb-2">Error Loading Data</div>
           <p className="text-slate-500 dark:text-slate-400">{error}</p>
           <button
@@ -391,16 +394,17 @@ const B2B: React.FC = () => {
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700/60">
               <thead className="bg-slate-50/50 dark:bg-slate-900/50">
                 <tr>
-                  <th className="px-8 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Business Info</th>
-                  <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-5 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Business Info</th>
+                  <th className="px-3 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
+                  <th className="px-3 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Performance</th>
+                  <th className="px-3 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                  <th className="px-3 py-5 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-slate-800/0 divide-y divide-slate-200 dark:divide-slate-700/60">
                 {filteredBusinesses.map((biz) => (
                   <tr key={biz.id} className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors duration-200">
-                    <td className="px-8 py-5 whitespace-nowrap">
+                    <td className="px-4 py-5 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="relative">
                           <div className="h-12 w-12 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 group-hover:border-blue-500/50 transition-colors">
@@ -416,12 +420,28 @@ const B2B: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5 whitespace-nowrap">
+                    <td className="px-3 py-5 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                         {biz.category}
                       </span>
                     </td>
-                    <td className="px-6 py-5 whitespace-nowrap">
+                    <td className="px-3 py-5 whitespace-nowrap">
+                      <div className="flex flex-col space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <Eye className="text-blue-500" size={12} />
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                            {biz.listing_views} <span className="text-[10px] text-slate-400 font-normal">Views</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Star className="text-yellow-400 fill-yellow-400" size={12} />
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                            {Number(biz.average_rating || 0).toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">({biz.rating_count} Reviews)</span>
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 whitespace-nowrap">
                       {updatingStatus === biz.id ? (
                         <div className="flex items-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
@@ -438,13 +458,13 @@ const B2B: React.FC = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-3 py-5 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => setSelectedBusiness(biz)}
                         className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
                         title="View Details"
                       >
-                        <Eye size={20} />
+                        <Eye size={14} />
                       </button>
                     </td>
                   </tr>
@@ -452,7 +472,7 @@ const B2B: React.FC = () => {
               </tbody>
             </table>
             {filteredBusinesses.length === 0 && (
-              <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+              <div className="p-4 text-center text-slate-500 dark:text-slate-400">
                 No businesses found matching your search.
               </div>
             )}
@@ -461,7 +481,7 @@ const B2B: React.FC = () => {
       )}
 
       {/* Add Form Popup */}
-      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title="Add New Business">
+      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title="Add New Business" maxWidth="max-w-4xl">
         <B2BForm onSubmit={handleFormSubmit} onCancel={() => setIsFormOpen(false)} />
       </Modal>
 
@@ -486,7 +506,7 @@ const B2B: React.FC = () => {
                 </div>
               )}
 
-              <div className="absolute bottom-0 left-0 w-full p-8">
+              <div className="absolute bottom-0 left-0 w-full p-4">
                 <div className="flex justify-between items-end">
                   <div>
                     <div className="flex items-center space-x-2 mb-2">
@@ -495,20 +515,32 @@ const B2B: React.FC = () => {
                         {selectedBusiness.status}
                       </span>
                     </div>
-                    <h2 className="text-4xl font-bold text-white mb-1 tracking-tight shadow-black drop-shadow-md">{selectedBusiness.name}</h2>
+                    <h2 className="text-lg font-bold text-white mb-1 tracking-tight shadow-black drop-shadow-md">{selectedBusiness.name}</h2>
                     <div className="flex items-center text-slate-300 text-sm font-medium">
                       <Calendar size={14} className="mr-1.5" /> Added on Oct 24, 2025
                     </div>
                   </div>
                   {businessDetails && (
-                    <div className="hidden sm:flex bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl flex-col items-center">
-                      <div className="flex items-center space-x-1">
-                        <Star className="text-yellow-400 fill-yellow-400" size={24} />
-                        <span className="text-3xl font-bold text-white">
-                          {Number(businessDetails.averageRating || 0).toFixed(1)}
-                        </span>
+                    <div className="flex space-x-2">
+                      <div className="hidden sm:flex bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl flex-col items-center min-w-[100px]">
+                        <div className="flex items-center space-x-1">
+                          <Eye className="text-blue-400" size={16} />
+                          <span className="text-xl font-bold text-white">
+                            {businessDetails.listingViews}
+                          </span>
+                        </div>
+                        <span className="text-xs text-white/80 font-medium whitespace-nowrap">Listing Views</span>
                       </div>
-                      <span className="text-xs text-white/80 font-medium">Overall Rating</span>
+
+                      <div className="hidden sm:flex bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl flex-col items-center min-w-[100px]">
+                        <div className="flex items-center space-x-1">
+                          <Star className="text-yellow-400 fill-yellow-400" size={16} />
+                          <span className="text-xl font-bold text-white">
+                            {Number(businessDetails.averageRating || 0).toFixed(1)}
+                          </span>
+                        </div>
+                        <span className="text-xs text-white/80 font-medium whitespace-nowrap">Overall Rating</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -541,16 +573,16 @@ const B2B: React.FC = () => {
             )}
 
             {/* Details Content */}
-            <div className="p-8 bg-slate-50 dark:bg-[#0B1121] space-y-8 flex-1 overflow-y-auto">
+            <div className="p-4 bg-slate-50 dark:bg-[#0B1121] space-y-4 flex-1 overflow-y-auto">
               {/* Top Section: Contact Info & Map */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Left Column: Contact & Metadata */}
-                <div className="lg:col-span-1 space-y-6">
+                <div className="lg:col-span-1 space-y-3">
                   {/* Contact Info Card */}
-                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-3 border border-slate-200 dark:border-slate-700 shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl -mr-5 -mt-5"></div>
 
-                    <h3 className="text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-6 flex items-center relative z-10">
+                    <h3 className="text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center relative z-10">
                       <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
                       Contact Information
                     </h3>
@@ -602,20 +634,20 @@ const B2B: React.FC = () => {
                 </div>
 
                 {/* Right Column: Location & Map */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-3">
                   <div className="bg-white dark:bg-slate-800 rounded-2xl p-1 border border-slate-200 dark:border-slate-700 shadow-sm h-full flex flex-col">
                     <div className="p-5 pb-2">
                       <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center">
                         <MapPin size={16} className="text-red-500 mr-2" />
                         Location Details
                       </h3>
-                      <p className="text-xl text-slate-800 dark:text-slate-200 leading-relaxed font-medium pl-6">{selectedBusiness.address}</p>
+                      <p className="text-xl text-slate-800 dark:text-slate-200 leading-relaxed font-medium pl-3">{selectedBusiness.address}</p>
                     </div>
 
                     {/* Map View */}
                     <div className="flex-1 p-2">
                       <div
-                        className={`relative w-full h-64 lg:h-full rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600 shadow-inner min-h-[250px] cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-blue-400 ${selectedBusiness.mapPin && selectedBusiness.mapPin.trim() !== ''
+                        className={`relative w-full h-64 lg:h-full rounded-xl overflow-hidden border border-slate-300 dark:border-slate-600 shadow-inner min-h-[170px] cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-blue-400 ${selectedBusiness.mapPin && selectedBusiness.mapPin.trim() !== ''
                           ? 'bg-slate-100 dark:bg-slate-800'
                           : 'bg-slate-200 dark:bg-slate-900'
                           }`}
@@ -670,22 +702,22 @@ const B2B: React.FC = () => {
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
                               {/* Pulsing rings */}
                               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-4 border-red-500/30 animate-ping-slow"></div>
-                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border-4 border-red-500/50 animate-ping-slow" style={{ animationDelay: '0.5s' }}></div>
+                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full border-4 border-red-500/50 animate-ping-slow" style={{ animationDelay: '0.5s' }}></div>
 
                               {/* Main pin */}
                               <div className="relative">
-                                <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-2xl shadow-red-500/30 transform transition-transform hover:scale-110">
-                                  <MapPin className="text-white" size={28} />
+                                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-2xl shadow-red-500/30 transform transition-transform hover:scale-110">
+                                  <MapPin className="text-white" size={18} />
                                 </div>
                                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rotate-45"></div>
                               </div>
                             </div>
 
                             {/* Enhanced Location Info Overlay */}
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 backdrop-blur-sm">
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-3 backdrop-blur-sm">
                               <div className="flex items-center text-white">
                                 <div className="p-2 bg-red-500/20 rounded-lg mr-3">
-                                  <MapPin className="text-red-400" size={20} />
+                                  <MapPin className="text-red-400" size={14} />
                                 </div>
                                 <div>
                                   <p className="text-xs text-slate-300 font-medium">LOCATION</p>
@@ -705,7 +737,7 @@ const B2B: React.FC = () => {
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
                             <div className="relative">
                               <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-4">
-                                <Map className="text-slate-400 dark:text-slate-500" size={48} />
+                                <Map className="text-slate-400 dark:text-slate-500" size={18} />
                               </div>
                               <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold animate-bounce">
                                 !
@@ -738,10 +770,10 @@ const B2B: React.FC = () => {
               </div>
 
               {/* Ratings & Reviews Section */}
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-3 md:p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center">
-                    <Star className="text-yellow-500 mr-2" fill="currentColor" size={24} /> Ratings & Reviews
+                    <Star className="text-yellow-500 mr-2" fill="currentColor" size={16} /> Ratings & Reviews
                   </h3>
                   <div className="flex gap-2">
                     <button className="flex items-center text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
@@ -760,18 +792,18 @@ const B2B: React.FC = () => {
                     <p className="text-slate-500 dark:text-slate-400">{detailsError}</p>
                   </div>
                 ) : businessDetails ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-12">
                     {/* Left: Summary Stats */}
-                    <div className="lg:col-span-1 space-y-6">
-                      <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 text-center">
-                        <div className="text-5xl font-extrabold text-slate-800 dark:text-white mb-2">
+                    <div className="lg:col-span-1 space-y-3">
+                      <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-700 text-center">
+                        <div className="text-xl font-extrabold text-slate-800 dark:text-white mb-2">
                           {Number(businessDetails.averageRating || 0).toFixed(1)}
                         </div>
                         <div className="flex justify-center space-x-1 mb-2">
                           {[1, 2, 3, 4, 5].map((s) => (
                             <Star
                               key={s}
-                              size={20}
+                              size={14}
                               className={s <= Math.round(Number(businessDetails.averageRating || 0))
                                 ? "text-yellow-400 fill-yellow-400"
                                 : "text-slate-300 dark:text-slate-600"}
@@ -864,7 +896,7 @@ const B2B: React.FC = () => {
                           })
                         ) : (
                           <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                            <Star size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                            <Star size={14} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
                             <p className="text-slate-500 dark:text-slate-400 font-medium">No reviews yet.</p>
                             <p className="text-xs text-slate-400 mt-1">Be the first to leave a review!</p>
                           </div>
@@ -881,7 +913,7 @@ const B2B: React.FC = () => {
             </div>
 
             {/* Bottom Sticky Action Bar */}
-            <div className="bg-white dark:bg-slate-800 p-6 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4 sticky bottom-0 z-20">
+            <div className="bg-white dark:bg-slate-800 p-3 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4 sticky bottom-0 z-20">
               <div className="flex items-center text-slate-500 text-sm">
                 <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 animate-pulse"></div>
                 Reviewing listing for approval...
@@ -889,13 +921,13 @@ const B2B: React.FC = () => {
               <div className="flex space-x-4 w-full sm:w-auto">
                 <button
                   onClick={() => updateBusinessStatus(selectedBusiness.id, 'rejected')}
-                  className="flex-1 sm:flex-none py-3 px-6 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 rounded-xl font-bold transition-all flex items-center justify-center"
+                  className="flex-1 sm:flex-none py-3 px-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 rounded-xl font-bold transition-all flex items-center justify-center"
                 >
                   <XCircle size={18} className="mr-2" /> Reject
                 </button>
                 <button
                   onClick={() => updateBusinessStatus(selectedBusiness.id, 'approved')}
-                  className="flex-1 sm:flex-none py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center transform hover:-translate-y-0.5"
+                  className="flex-1 sm:flex-none py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center transform hover:-translate-y-0.5"
                 >
                   <CheckCircle size={18} className="mr-2" /> Approve Listing
                 </button>
@@ -914,7 +946,7 @@ const B2B: React.FC = () => {
               onClick={() => setIsGalleryOpen(false)}
               className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
             >
-              <X size={24} />
+              <X size={16} />
             </button>
 
             {/* Navigation buttons */}
@@ -924,13 +956,13 @@ const B2B: React.FC = () => {
                   onClick={prevImage}
                   className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                 >
-                  <ChevronLeft size={24} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button
                   onClick={nextImage}
                   className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                 >
-                  <ChevronRight size={24} />
+                  <ChevronRight size={16} />
                 </button>
               </>
             )}
@@ -956,7 +988,7 @@ const B2B: React.FC = () => {
                   {selectedBusiness.images.map((img, index) => (
                     <div
                       key={index}
-                      className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden cursor-pointer border-2 ${index === currentImageIndex ? 'border-white' : 'border-transparent'}`}
+                      className={`flex-shrink-0 w-10 h-10 rounded-md overflow-hidden cursor-pointer border-2 ${index === currentImageIndex ? 'border-white' : 'border-transparent'}`}
                       onClick={() => setCurrentImageIndex(index)}
                     >
                       <img

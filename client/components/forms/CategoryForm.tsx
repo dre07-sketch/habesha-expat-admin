@@ -55,7 +55,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
   };
 
   const inputWrapperClass = "relative group";
-  const inputClass = "w-full pl-10 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400";
+  const inputClass = "w-full pl-5 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400";
   const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1";
   const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors h-4 w-4 pointer-events-none";
 
@@ -64,12 +64,12 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
       {/* Loading Overlay */}
       {isSubmitting && (
         <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
-          <div className="relative mb-6">
-            <div className="w-20 h-20 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
-            <div className="w-20 h-20 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
-            <Tag className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={24} />
+          <div className="relative mb-3">
+            <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
+            <Tag className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={16} />
           </div>
-          <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Creating Category...</h3>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Creating Category...</h3>
           <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Organizing content structure</p>
         </div>
       )}
@@ -77,12 +77,12 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
       {/* Success Overlay */}
       {submitStatus === 'success' && (
         <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
-          <div className="relative mb-6">
-            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-              <CheckCircle className="text-green-600" size={40} />
+          <div className="relative mb-3">
+            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+              <CheckCircle className="text-green-600" size={16} />
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Category Created!</h3>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Category Created!</h3>
           <p className="text-slate-500 dark:text-slate-400 font-medium">Your new category has been added successfully</p>
         </div>
       )}
@@ -90,26 +90,26 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
       {/* Error Overlay */}
       {submitStatus === 'error' && (
         <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
-          <div className="relative mb-6">
-            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-              <AlertCircle className="text-red-600" size={40} />
+          <div className="relative mb-3">
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+              <AlertCircle className="text-red-600" size={16} />
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Error</h3>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Error</h3>
           <p className="text-slate-500 dark:text-slate-400 font-medium text-center max-w-md">{errorMessage}</p>
           <button
             onClick={() => setSubmitStatus('idle')}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="mt-4 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Try Again
           </button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div className="pb-2 border-b border-slate-100 dark:border-slate-700">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
-            <Layers className="mr-2 text-blue-500" size={20} /> Category Details
+            <Layers className="mr-2 text-blue-500" size={14} /> Category Details
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">Define a new classification for your content.</p>
         </div>
@@ -147,18 +147,18 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onCancel, onSuccess }) => {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            className="px-3 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
+            className="px-4 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <PlusCircle size={18} className="mr-2" /> Create Category
           </button>

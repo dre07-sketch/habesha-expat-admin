@@ -1,0 +1,47 @@
+/* =========================================================
+   Global Scale Reduction - Habesha Expat Admin Panel
+   Reducing base font from 16px → 13px scales ALL rem units
+   (padding, margin, width, height, text) proportionally.
+   ========================================================= */
+
+html {
+  font-size: 12px;
+  /* was 16px — shrinks everything ~25% */
+}
+
+/* Ensure the app fills the viewport cleanly */
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Override specific chart/fixed-px elements to avoid them
+   being too tiny after base font reduction */
+.recharts-text {
+  font-size: 11px !important;
+}
+
+/* Keep icons crisp — lucide-react uses px internally */
+svg {
+  flex-shrink: 0;
+}

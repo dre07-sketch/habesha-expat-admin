@@ -53,7 +53,7 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-red-500">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-red-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-red-500 mx-auto"></div>
           <p className="mt-4 text-lg font-mono">CHECKING ADMIN PANEL STATUS...</p>
         </div>
       </div>
@@ -63,8 +63,8 @@ const App: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-red-500">
-        <div className="text-center p-6 border border-red-800 rounded max-w-md">
-          <h2 className="text-2xl font-bold mb-4">SYSTEM ERROR</h2>
+        <div className="text-center p-3 border border-red-800 rounded max-w-md">
+          <h2 className="text-lg font-bold mb-4">SYSTEM ERROR</h2>
           <p className="mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}

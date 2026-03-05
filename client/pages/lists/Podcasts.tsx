@@ -30,27 +30,27 @@ const Podcasts: React.FC = () => {
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Podcast Episodes</h1>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Podcast Episodes</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your audio content library and RSS feed.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
              <div className="relative w-full md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                 <input 
                     type="text" 
                     placeholder="Search podcasts..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+                    className="w-full pl-5 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
                 />
             </div>
             <button 
             onClick={() => setIsFormOpen(true)} 
-            className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+            className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-3 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
             >
-            <Plus size={20} className="mr-2" /> New Episode
+            <Plus size={14} className="mr-2" /> New Episode
             </button>
         </div>
       </div>
@@ -72,7 +72,7 @@ const Podcasts: React.FC = () => {
                 >
                     {/* Episode Info */}
                     <div className="w-1/2 flex items-center gap-4">
-                        <div className="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden shadow-sm group-hover:shadow-md transition-all">
+                        <div className="relative w-10 h-10 shrink-0 rounded-lg overflow-hidden shadow-sm group-hover:shadow-md transition-all">
                             <img src={pod.coverImage} alt={pod.title} className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <div className="bg-white/90 text-blue-900 rounded-full p-1.5 shadow-sm scale-90 group-hover:scale-100 transition-transform">
@@ -109,13 +109,13 @@ const Podcasts: React.FC = () => {
                     {/* Actions */}
                     <div className="w-1/12 flex justify-end pr-2">
                          <button className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                            <MoreHorizontal size={20} />
+                            <MoreHorizontal size={14} />
                          </button>
                     </div>
                 </div>
             ))}
             {filteredPodcasts.length === 0 && (
-                 <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                 <div className="p-4 text-center text-slate-500 dark:text-slate-400">
                     No episodes found.
                 </div>
             )}
@@ -137,7 +137,7 @@ const Podcasts: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-slate-950 dark:via-slate-950/80 dark:to-transparent"></div>
              </div>
 
-             <div className="relative z-10 flex flex-col md:flex-row gap-8 p-8">
+             <div className="relative z-10 flex flex-col md:flex-row gap-4 p-4">
                 {/* Left: Album Art & Stats */}
                 <div className="w-full md:w-1/3 flex flex-col items-center">
                     <div className="w-full aspect-square rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
@@ -146,28 +146,28 @@ const Podcasts: React.FC = () => {
                     </div>
                     
                     {/* Quick Stats */}
-                    <div className="flex w-full justify-between mt-6 px-2">
+                    <div className="flex w-full justify-between mt-3 px-2">
                         <div className="text-center">
                             <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Duration</div>
                             <div className="text-lg font-mono font-bold text-slate-800 dark:text-white">{selectedPodcast.duration}</div>
                         </div>
-                        <div className="text-center border-l border-slate-200 dark:border-slate-700 pl-6">
+                        <div className="text-center border-l border-slate-200 dark:border-slate-700 pl-3">
                              <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Size</div>
                             <div className="text-lg font-mono font-bold text-slate-800 dark:text-white">42 MB</div>
                         </div>
                     </div>
 
                      {/* Engagement Stats Summary */}
-                    <div className="flex w-full justify-between mt-6 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl p-4 backdrop-blur-md border border-white/10">
+                    <div className="flex w-full justify-between mt-3 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl p-4 backdrop-blur-md border border-white/10">
                         <div className="flex items-center space-x-2">
-                            <Heart className="text-red-500" size={20} fill="currentColor" />
+                            <Heart className="text-red-500" size={14} fill="currentColor" />
                             <div>
                                 <div className="text-sm font-bold text-slate-800 dark:text-white">{selectedPodcast.likes || 0}</div>
                                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Likes</div>
                             </div>
                         </div>
                         <div className="flex items-center space-x-2 border-l border-slate-300 dark:border-slate-700 pl-4">
-                            <MessageCircle className="text-blue-500" size={20} fill="currentColor" />
+                            <MessageCircle className="text-blue-500" size={14} fill="currentColor" />
                             <div>
                                 <div className="text-sm font-bold text-slate-800 dark:text-white">{selectedPodcast.comments || 0}</div>
                                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Comments</div>
@@ -193,14 +193,14 @@ const Podcasts: React.FC = () => {
                         </span>
                     </div>
                     
-                    <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">{selectedPodcast.title}</h2>
-                    <p className="text-xl text-slate-500 dark:text-slate-400 font-medium flex items-center mb-6">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight">{selectedPodcast.title}</h2>
+                    <p className="text-xl text-slate-500 dark:text-slate-400 font-medium flex items-center mb-3">
                         <Mic size={18} className="mr-2 text-blue-500" /> 
                         Host: <span className="text-slate-700 dark:text-slate-300 ml-1">{selectedPodcast.host}</span>
                     </p>
 
                     {/* Player Card */}
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-xl border border-slate-100 dark:border-slate-800 mb-6">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-xl border border-slate-100 dark:border-slate-800 mb-3">
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
                                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
@@ -237,7 +237,7 @@ const Podcasts: React.FC = () => {
                     </div>
 
                     {/* Tab Content */}
-                    <div className="min-h-[200px] bg-slate-50 dark:bg-slate-900/30 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4">
+                    <div className="min-h-[160px] bg-slate-50 dark:bg-slate-900/30 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4">
                         
                         {/* DETAILS TAB */}
                         {activeTab === 'details' && (
@@ -273,7 +273,7 @@ const Podcasts: React.FC = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">No likes yet.</div>
+                                    <div className="text-center py-4 text-slate-500 dark:text-slate-400 text-sm">No likes yet.</div>
                                 )}
                             </div>
                         )}
@@ -295,14 +295,14 @@ const Podcasts: React.FC = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">No comments yet.</div>
+                                    <div className="text-center py-4 text-slate-500 dark:text-slate-400 text-sm">No comments yet.</div>
                                 )}
                             </div>
                         )}
                     </div>
 
                     {/* Footer Buttons - Always Visible */}
-                    <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="mt-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                         <div className="flex space-x-3">
                              {selectedPodcast.status === 'visible' ? (
                                 <button 

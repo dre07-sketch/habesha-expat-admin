@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Plus, Calendar, User, Tag, Clock, Eye, ChevronRight,
   Share2, Bookmark, EyeOff, Heart, MessageCircle,
-  BarChart2, Search, Trash2, AlertTriangle, CheckCircle
+  BarChart2, Search, Trash2, AlertTriangle, CheckCircle, FileText, ImageIcon, Link as LinkIcon
 } from 'lucide-react';
 import Modal from '../../components/Modal';
 import ArticleForm from '../../components/forms/ArticleForm';
@@ -82,6 +82,7 @@ const Articles: React.FC = () => {
         url: item.url || null,
         video_url: item.video_url || null,
         image: item.image,
+        attachments: item.attachments || [],
         likes: 0,
         comments: 0,
         likedBy: [],
@@ -286,27 +287,27 @@ const Articles: React.FC = () => {
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Articles & Blog</h1>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Articles & Blog</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Manage editorial content, news, and stories.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               type="text"
               placeholder="Search articles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+              className="w-full pl-5 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
             />
           </div>
           <button
             onClick={() => setIsFormOpen(true)}
-            className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+            className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-3 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
           >
-            <Plus size={20} className="mr-2" /> New Article
+            <Plus size={14} className="mr-2" /> New Article
           </button>
         </div>
       </div>
@@ -318,7 +319,7 @@ const Articles: React.FC = () => {
       )}
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 text-center">
           <h3 className="text-lg font-bold text-red-700 dark:text-red-300 mb-2">Error Loading Articles</h3>
           <p className="text-red-600 dark:text-red-400">{error}</p>
           <button onClick={loadArticles} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Try Again</button>
@@ -328,7 +329,7 @@ const Articles: React.FC = () => {
       {!loading && !error && (
         <div className="space-y-3">
           {filteredArticles.map((article) => (
-            <div key={article.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-6 hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all cursor-pointer group" onClick={() => handleOpenArticle(article)}>
+            <div key={article.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-3 hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all cursor-pointer group" onClick={() => handleOpenArticle(article)}>
               <div className="relative w-full md:w-64 h-40 shrink-0 rounded-xl overflow-hidden">
                 <ArticleImage src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute top-2 left-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold text-slate-800 dark:text-white shadow-sm flex items-center">
@@ -372,12 +373,12 @@ const Articles: React.FC = () => {
             </div>
           ))}
           {filteredArticles.length === 0 && (
-            <div className="p-8 text-center text-slate-500 dark:text-slate-400">No articles found.</div>
+            <div className="p-4 text-center text-slate-500 dark:text-slate-400">No articles found.</div>
           )}
         </div>
       )}
 
-      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title="Draft New Article" maxWidth="max-w-5xl">
+      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title="Draft New Article" maxWidth="max-w-7xl">
         <ArticleForm onSubmit={handleFormSubmit} onCancel={() => setIsFormOpen(false)} />
       </Modal>
 
@@ -385,12 +386,12 @@ const Articles: React.FC = () => {
         setShowDeleteConfirm(false);
         setDeleteSuccess(false);
       }} title={deleteSuccess ? "Article Deleted" : "Confirm Delete"} maxWidth="max-w-md">
-        <div className="p-6">
+        <div className="p-3">
           {deleteSuccess ? (
             <div className="text-center py-4">
               <div className="flex justify-center mb-4">
                 <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
-                  <CheckCircle className="text-green-600 dark:text-green-400" size={32} />
+                  <CheckCircle className="text-green-600 dark:text-green-400" size={14} />
                 </div>
               </div>
               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Article Deleted Successfully</h3>
@@ -400,11 +401,11 @@ const Articles: React.FC = () => {
             <>
               <div className="flex items-center mb-4">
                 <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full mr-4">
-                  <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
+                  <AlertTriangle className="text-red-600 dark:text-red-400" size={16} />
                 </div>
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white">Delete Article</h3>
               </div>
-              <p className="text-slate-600 dark:text-slate-300 mb-6">
+              <p className="text-slate-600 dark:text-slate-300 mb-3">
                 Are you sure you want to delete this article? This action cannot be undone.
               </p>
               {deleteError && (
@@ -452,7 +453,7 @@ const Articles: React.FC = () => {
               <div className="relative h-80 w-full rounded-t-xl md:rounded-xl overflow-hidden mb-0 group">
                 <ArticleImage src={selectedArticle.image} alt={selectedArticle.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent opacity-95"></div>
-                <div className="absolute bottom-0 left-0 w-full p-8 md:p-10">
+                <div className="absolute bottom-0 left-0 w-full p-4 md:p-5">
                   <div className="max-w-4xl">
                     <div className="flex flex-wrap gap-3 mb-4">
                       <span className="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg shadow-blue-900/20 uppercase tracking-wide">{selectedArticle.category}</span>
@@ -467,8 +468,8 @@ const Articles: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <h1 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight shadow-black drop-shadow-lg">{selectedArticle.title}</h1>
-                    <div className="flex items-center space-x-6 text-slate-200 text-sm font-medium">
+                    <h1 className="text-xl md:text-xl font-bold text-white mb-3 leading-tight shadow-black drop-shadow-lg">{selectedArticle.title}</h1>
+                    <div className="flex items-center space-x-3 text-slate-200 text-sm font-medium">
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center mr-3 backdrop-blur-sm border border-white/20"><User size={14} className="text-white" /></div>
                         <span>{selectedArticle.author}</span>
@@ -487,15 +488,15 @@ const Articles: React.FC = () => {
                 </div>
               </div>
 
-              <div className="px-4 md:px-12 max-w-5xl mx-auto py-10">
+              <div className="px-4 md:px-12 max-w-5xl mx-auto py-5">
                 {activeTab === 'content' && (
                   <div className="animate-in slide-in-from-bottom-2 fade-in duration-300">
                     <div className="prose prose-lg dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-loose">
-                      <p className="lead text-xl text-slate-500 dark:text-slate-400 font-serif italic border-l-4 border-blue-500 pl-4 mb-8">{selectedArticle.excerpt}</p>
+                      <p className="lead text-xl text-slate-500 dark:text-slate-400 font-serif italic border-l-4 border-blue-500 pl-4 mb-4">{selectedArticle.excerpt}</p>
 
                       {/* Video Player */}
                       {selectedArticle.video_url && (
-                        <div className="my-8 rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700">
+                        <div className="my-4 rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700">
                           {isYouTubeUrl(selectedArticle.video_url) ? (
                             // YouTube video
                             <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
@@ -527,6 +528,43 @@ const Articles: React.FC = () => {
                       )}
 
                       <div className="whitespace-pre-line font-serif text-lg">{selectedArticle.content}</div>
+
+                      {/* Attachments Section */}
+                      {selectedArticle.attachments && selectedArticle.attachments.length > 0 && (
+                        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+                          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center">
+                            <Share2 className="mr-2 text-blue-500" size={16} /> Additional Attachments
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {selectedArticle.attachments.map((att: any, index: number) => (
+                              <div key={index} className="flex items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 group hover:border-blue-500/50 transition-colors">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 shrink-0 ${att.type === 'image' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' :
+                                  att.type === 'pdf' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                                    'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                                  }`}>
+                                  {att.type === 'image' && <ImageIcon size={18} />}
+                                  {att.type === 'pdf' && <FileText size={18} />}
+                                  {att.type === 'video_url' && <LinkIcon size={18} />}
+                                </div>
+                                <div className="flex-1 min-w-0 pr-2">
+                                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider scale-90 origin-left mb-0.5">{att.type.replace('_', ' ')}</p>
+                                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
+                                    {att.originalName || (att.type === 'video_url' ? 'External Video' : 'Attachment')}
+                                  </p>
+                                </div>
+                                <a
+                                  href={att.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-2 text-slate-400 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all"
+                                >
+                                  {att.type === 'video_url' ? <Plus size={16} /> : <Eye size={16} />}
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -541,34 +579,34 @@ const Articles: React.FC = () => {
 
                     {!engagementLoading && (
                       <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/50 p-6 rounded-2xl border border-blue-100 dark:border-slate-700 flex items-center justify-between">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/50 p-3 rounded-2xl border border-blue-100 dark:border-slate-700 flex items-center justify-between">
                             <div>
                               <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Views</p>
-                              <h3 className="text-3xl font-bold text-slate-800 dark:text-white">{selectedArticle.views?.toLocaleString() || '0'}</h3>
+                              <h3 className="text-xl font-bold text-slate-800 dark:text-white">{selectedArticle.views?.toLocaleString() || '0'}</h3>
                             </div>
-                            <div className="p-3 bg-white dark:bg-slate-700 rounded-xl text-blue-600 dark:text-blue-400 shadow-sm"><BarChart2 size={24} /></div>
+                            <div className="p-3 bg-white dark:bg-slate-700 rounded-xl text-blue-600 dark:text-blue-400 shadow-sm"><BarChart2 size={16} /></div>
                           </div>
-                          <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-slate-800 dark:to-slate-800/50 p-6 rounded-2xl border border-rose-100 dark:border-slate-700 flex items-center justify-between">
+                          <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-slate-800 dark:to-slate-800/50 p-3 rounded-2xl border border-rose-100 dark:border-slate-700 flex items-center justify-between">
                             <div>
                               <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Likes</p>
-                              <h3 className="text-3xl font-bold text-slate-800 dark:text-white">{likes.length.toLocaleString()}</h3>
+                              <h3 className="text-xl font-bold text-slate-800 dark:text-white">{likes.length.toLocaleString()}</h3>
                             </div>
-                            <div className="p-3 bg-white dark:bg-slate-700 rounded-xl text-rose-500 shadow-sm"><Heart size={24} fill="currentColor" /></div>
+                            <div className="p-3 bg-white dark:bg-slate-700 rounded-xl text-rose-500 shadow-sm"><Heart size={16} fill="currentColor" /></div>
                           </div>
-                          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-800/50 p-6 rounded-2xl border border-emerald-100 dark:border-slate-700 flex items-center justify-between">
+                          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-800/50 p-3 rounded-2xl border border-emerald-100 dark:border-slate-700 flex items-center justify-between">
                             <div>
                               <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Comments</p>
-                              <h3 className="text-3xl font-bold text-slate-800 dark:text-white">{comments.length.toLocaleString()}</h3>
+                              <h3 className="text-xl font-bold text-slate-800 dark:text-white">{comments.length.toLocaleString()}</h3>
                             </div>
-                            <div className="p-3 bg-white dark:bg-slate-700 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-sm"><MessageCircle size={24} /></div>
+                            <div className="p-3 bg-white dark:bg-slate-700 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-sm"><MessageCircle size={16} /></div>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                          <div className="lg:col-span-2 space-y-6">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center"><MessageCircle className="mr-2 text-blue-500" size={20} /> Discussion ({comments.length})</h3>
-                            <div className="space-y-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                          <div className="lg:col-span-2 space-y-3">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center"><MessageCircle className="mr-2 text-blue-500" size={14} /> Discussion ({comments.length})</h3>
+                            <div className="space-y-3">
                               {comments.length > 0 ? (
                                 comments.map(comment => (
                                   <div key={comment.id} className="flex gap-4 group">
@@ -590,15 +628,15 @@ const Articles: React.FC = () => {
                                 ))
                               ) : (
                                 <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-                                  <MessageCircle size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                                  <MessageCircle size={14} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
                                   <p className="text-slate-500 dark:text-slate-400">No comments yet.</p>
                                 </div>
                               )}
                             </div>
                           </div>
 
-                          <div className="lg:col-span-1 space-y-6">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center"><Heart className="mr-2 text-rose-500" size={20} /> Recent Likes</h3>
+                          <div className="lg:col-span-1 space-y-3">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center"><Heart className="mr-2 text-rose-500" size={14} /> Recent Likes</h3>
                             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                               {likes.length > 0 ? (
                                 <div className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -613,13 +651,13 @@ const Articles: React.FC = () => {
                                   ))}
                                 </div>
                               ) : (
-                                <div className="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">No likes recorded yet.</div>
+                                <div className="p-3 text-center text-slate-500 dark:text-slate-400 text-sm">No likes recorded yet.</div>
                               )}
                               <div className="p-3 bg-slate-50 dark:bg-slate-900/30 text-center border-t border-slate-100 dark:border-slate-700">
                                 <button className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">View All Likes</button>
                               </div>
                             </div>
-                            <div className="bg-blue-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-blue-100 dark:border-slate-700 mt-6">
+                            <div className="bg-blue-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-blue-100 dark:border-slate-700 mt-3">
                               <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-2">Performance Tip</h4>
                               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">Articles published on Tuesday mornings tend to get 20% more engagement. Consider sharing this on social media now.</p>
                             </div>
@@ -640,16 +678,16 @@ const Articles: React.FC = () => {
               <div className="flex space-x-3 w-full sm:w-auto">
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all shadow-lg shadow-red-600/20"
+                  className="flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white px-3 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all shadow-lg shadow-red-600/20"
                 >
                   <Trash2 size={18} className="mr-2" /> Delete
                 </button>
                 {selectedArticle.status === 'published' ? (
-                  <button onClick={() => handleStatusUpdate(selectedArticle.id.toString(), 'draft')} disabled={isUpdatingStatus} className="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-800 text-red-600 dark:text-red-400 border border-slate-300 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all">
+                  <button onClick={() => handleStatusUpdate(selectedArticle.id.toString(), 'draft')} disabled={isUpdatingStatus} className="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-800 text-red-600 dark:text-red-400 border border-slate-300 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 px-3 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all">
                     {isUpdatingStatus ? (<><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Unpublishing...</>) : (<><EyeOff size={18} className="mr-2" /> Unpublish</>)}
                   </button>
                 ) : (
-                  <button onClick={() => handleStatusUpdate(selectedArticle.id.toString(), 'published')} disabled={isUpdatingStatus} className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <button onClick={() => handleStatusUpdate(selectedArticle.id.toString(), 'published')} disabled={isUpdatingStatus} className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed">
                     {isUpdatingStatus ? (<><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Publishing...</>) : (<><Eye size={18} className="mr-2" /> Publish Now</>)}
                   </button>
                 )}

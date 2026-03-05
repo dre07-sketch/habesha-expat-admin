@@ -91,10 +91,10 @@ const Dashboard: React.FC = () => {
         return (
             <div className="flex items-center justify-center h-screen">
                 <div className="text-center">
-                    <div className="relative w-20 h-20 mx-auto mb-6">
+                    <div className="relative w-12 h-12 mx-auto mb-3">
                         <div className="absolute inset-0 rounded-full border-4 border-blue-200 dark:border-blue-900"></div>
                         <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 dark:border-t-blue-400 animate-spin"></div>
-                        <Activity className="absolute inset-0 m-auto text-blue-600 dark:text-blue-400" size={32} />
+                        <Activity className="absolute inset-0 m-auto text-blue-600 dark:text-blue-400" size={14} />
                     </div>
                     <p className="text-xl font-semibold text-slate-700 dark:text-slate-300">Loading analytics...</p>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Fetching real-time data</p>
@@ -106,15 +106,15 @@ const Dashboard: React.FC = () => {
     if (error) {
         return (
             <div className="flex items-center justify-center h-screen">
-                <div className="text-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 p-10 rounded-3xl max-w-md border-2 border-red-200 dark:border-red-800 shadow-2xl">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-red-500 rounded-full flex items-center justify-center">
-                        <Zap className="text-white" size={40} />
+                <div className="text-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 p-5 rounded-2xl max-w-md border-2 border-red-200 dark:border-red-800 shadow-2xl">
+                    <div className="w-12 h-12 mx-auto mb-4 bg-red-500 rounded-full flex items-center justify-center">
+                        <Zap className="text-white" size={16} />
                     </div>
-                    <h2 className="text-2xl font-black text-red-700 dark:text-red-300 mb-3">Connection Error</h2>
-                    <p className="text-red-600 dark:text-red-400 mb-6">{error}</p>
+                    <h2 className="text-lg font-black text-red-700 dark:text-red-300 mb-3">Connection Error</h2>
+                    <p className="text-red-600 dark:text-red-400 mb-3">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl transition-all font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transition-all font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
                         Retry Connection
                     </button>
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
     }));
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-4 animate-in fade-in duration-700">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                     {
@@ -216,13 +216,13 @@ const Dashboard: React.FC = () => {
                 ].map((stat, i) => (
                     <div
                         key={i}
-                        className="group relative bg-white dark:bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-slate-200 dark:border-slate-700/50 hover:border-transparent overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1"
+                        className="group relative bg-white dark:bg-slate-800/50 backdrop-blur-xl p-3 rounded-2xl border border-slate-200 dark:border-slate-700/50 hover:border-transparent overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1"
                     >
                         <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
                         <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-6">
+                            <div className="flex justify-between items-start mb-3">
                                 <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-xl ${stat.shadowColor}`}>
-                                    <stat.icon size={24} className="text-white" />
+                                    <stat.icon size={16} className="text-white" />
                                 </div>
                                 <span className={`text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20`}>
                                     {stat.badge}
@@ -230,7 +230,7 @@ const Dashboard: React.FC = () => {
                             </div>
                             <div>
                                 <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">{stat.label}</p>
-                                <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4">{stat.value}</h3>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4">{stat.value}</h3>
                             </div>
                             <div className="relative w-full bg-slate-100 dark:bg-slate-700/50 h-2 rounded-full overflow-hidden">
                                 <div
@@ -243,16 +243,16 @@ const Dashboard: React.FC = () => {
                 ))}
             </div>
 
-            <div className="relative bg-white dark:bg-slate-800/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-xl">
+            <div className="relative bg-white dark:bg-slate-800/50 backdrop-blur-xl p-4 rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-xl">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="relative z-10">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
                         <div className="flex items-center mb-4 md:mb-0">
                             <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mr-4 shadow-lg shadow-blue-500/20">
-                                <TrendingUp className="text-white" size={28} />
+                                <TrendingUp className="text-white" size={18} />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black text-slate-900 dark:text-white">Monthly Growth Trends</h2>
+                                <h2 className="text-lg font-black text-slate-900 dark:text-white">Monthly Growth Trends</h2>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">Track performance across all metrics</p>
                             </div>
                         </div>
@@ -280,7 +280,7 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="h-[340px] w-full">
+                    <div className="h-[220px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={dashboardData.growth} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                                 <defs>
@@ -334,7 +334,7 @@ const Dashboard: React.FC = () => {
                                                     <p className="font-bold text-white mb-3 text-lg">{label}</p>
                                                     <div className="space-y-2">
                                                         {payload.map((entry, index) => (
-                                                            <div key={index} className="flex justify-between items-center gap-6">
+                                                            <div key={index} className="flex justify-between items-center gap-3">
                                                                 <span className="text-slate-400 capitalize text-sm">{entry.dataKey}:</span>
                                                                 <span className="text-white font-bold text-sm">{entry.value?.toLocaleString()}</span>
                                                             </div>
@@ -367,7 +367,7 @@ const Dashboard: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
                         {[
                             { label: 'Users', value: dashboardData.summary.users?.toLocaleString() || '0', change: '+12%', gradient: 'from-blue-500 to-cyan-500' },
                             { label: 'Articles', value: dashboardData.summary.articles?.toLocaleString() || '0', change: '+24%', gradient: 'from-blue-600 to-cyan-600' },
@@ -389,30 +389,30 @@ const Dashboard: React.FC = () => {
                                     </span>
                                 </div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">{stat.label}</div>
-                                <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stat.value}</div>
+                                <div className="text-lg font-black text-slate-900 dark:text-white mt-1">{stat.value}</div>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div className="relative bg-white dark:bg-slate-800/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-xl">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                <div className="relative bg-white dark:bg-slate-800/50 backdrop-blur-xl p-4 rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-xl">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
                     <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-10">
+                        <div className="flex items-center justify-between mb-5">
                             <div className="flex items-center">
                                 <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mr-4 shadow-lg shadow-blue-500/20">
-                                    <Globe className="text-white" size={24} />
+                                    <Globe className="text-white" size={16} />
                                 </div>
                                 <h2 className="text-xl font-black text-slate-900 dark:text-white">Content Engagement</h2>
                             </div>
                             <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl transition-colors">
-                                <ArrowRight size={20} className="text-slate-400 hover:text-blue-500" />
+                                <ArrowRight size={14} className="text-slate-400 hover:text-blue-500" />
                             </button>
                         </div>
 
-                        <div className="space-y-6 mb-10">
+                        <div className="space-y-3 mb-5">
                             {[
                                 {
                                     label: 'Articles',
@@ -502,10 +502,10 @@ const Dashboard: React.FC = () => {
                                     className="group bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/80 dark:to-slate-800/80 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 hover:shadow-xl transition-all duration-300"
                                 >
                                     <div className={`p-2.5 w-fit rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg mb-4`}>
-                                        <card.icon size={20} className="text-white" />
+                                        <card.icon size={14} className="text-white" />
                                     </div>
                                     <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">{card.label}</div>
-                                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-2">{card.value}</div>
+                                    <div className="text-lg font-black text-slate-900 dark:text-white mt-2">{card.value}</div>
                                     <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-2">{card.change}</div>
                                 </div>
                             ))}
@@ -513,19 +513,19 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="relative bg-white dark:bg-slate-800/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-xl">
+                <div className="relative bg-white dark:bg-slate-800/50 backdrop-blur-xl p-4 rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-xl">
                     <div className="absolute top-0 left-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
                     <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center">
                                 <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl mr-4 shadow-lg shadow-amber-500/20">
-                                    <MapPin className="text-white" size={24} />
+                                    <MapPin className="text-white" size={16} />
                                 </div>
                                 <h2 className="text-xl font-black text-slate-900 dark:text-white">Business Analytics</h2>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                             {[
                                 {
                                     icon: MapPin,
@@ -559,14 +559,14 @@ const Dashboard: React.FC = () => {
                                             <card.icon size={18} className="text-white" />
                                         </div>
                                         <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">{card.label}</div>
-                                        <div className="text-2xl font-black mt-2">{card.value}</div>
+                                        <div className="text-lg font-black mt-2">{card.value}</div>
                                         <div className={`text-xs font-bold mt-2 bg-gradient-to-r ${card.gradient} bg-clip-text text-transparent`}>{card.change}</div>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-wider">Popular Categories</h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 uppercase tracking-wider">Popular Categories</h3>
                         <div className="space-y-5">
                             {dashboardData.business.categories?.map((cat: any, i: number) => {
                                 const percentage = Math.round((cat.count / dashboardData.business.total_businesses) * 100);
@@ -601,7 +601,7 @@ const Dashboard: React.FC = () => {
                 </div>
             </div>
 
-            <div className="relative bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:to-slate-900 text-slate-900 dark:text-white p-10 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl min-h-[550px] flex flex-col">
+            <div className="relative bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:to-slate-900 text-slate-900 dark:text-white p-5 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl min-h-[320px] flex flex-col">
                 <div className="absolute inset-0 opacity-20 bg-[url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')] bg-cover bg-center bg-no-repeat pointer-events-none dark:invert"></div>
 
                 <div className="absolute inset-0 pointer-events-none">
@@ -618,13 +618,13 @@ const Dashboard: React.FC = () => {
                     <span className="absolute top-[30%] left-[70%] w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_30px_rgba(16,185,129,0.8)]"></span>
                 </div>
 
-                <div className="relative z-10 flex justify-between items-center mb-10">
+                <div className="relative z-10 flex justify-between items-center mb-5">
                     <div>
                         <div className="flex items-center mb-3">
                             <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl mr-4 shadow-lg shadow-cyan-500/20">
-                                <Globe size={28} className="text-white" />
+                                <Globe size={18} className="text-white" />
                             </div>
-                            <h2 className="text-3xl font-black text-slate-900 dark:text-white">Global Community</h2>
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white">Global Community</h2>
                         </div>
                         <p className="text-slate-500 dark:text-slate-300 text-sm ml-16">Real-time user activity across the world</p>
                     </div>
@@ -634,8 +634,8 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="absolute left-10 top-32 z-20 w-80 bg-white/80 dark:bg-white/10 backdrop-blur-2xl border border-slate-200 dark:border-white/20 rounded-3xl p-6 shadow-2xl animate-in slide-in-from-left-8 duration-700">
-                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-white/10">
+                <div className="absolute left-10 top-32 z-20 w-80 bg-white/80 dark:bg-white/10 backdrop-blur-2xl border border-slate-200 dark:border-white/20 rounded-2xl p-3 shadow-2xl animate-in slide-in-from-left-8 duration-700">
+                    <div className="flex items-center justify-between mb-3 pb-4 border-b border-slate-200 dark:border-white/10">
                         <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Top Active Regions</h3>
                         <Globe size={16} className="opacity-70 text-slate-600 dark:text-white" />
                     </div>
@@ -663,7 +663,7 @@ const Dashboard: React.FC = () => {
                         ))}
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10 text-center">
+                    <div className="mt-3 pt-4 border-t border-slate-200 dark:border-white/10 text-center">
                         <button className="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-white transition-colors font-bold uppercase tracking-wider flex items-center justify-center w-full group">
                             View Full Report
                             <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
@@ -678,18 +678,18 @@ const Dashboard: React.FC = () => {
                 <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-cyan-400/10 to-transparent rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-blue-400/10 to-transparent rounded-full blur-3xl" />
 
-                <div className="relative z-10 p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
+                <div className="relative z-10 p-3">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-3 gap-4">
                         <div className="space-y-2">
                             <div className="flex items-center gap-3">
                                 <div className="relative">
                                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl blur-xl opacity-70 animate-pulse" />
                                     <div className="relative p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-xl">
-                                        <Users size={24} className="text-white" />
+                                        <Users size={16} className="text-white" />
                                     </div>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black text-slate-900 dark:text-white bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                                    <h2 className="text-lg font-black text-slate-900 dark:text-white bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                                         User Demographics
                                     </h2>
                                     <p className="text-slate-600 dark:text-slate-300 text-sm">
@@ -729,21 +729,21 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mb-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 mb-3">
                         <div className="xl:col-span-2 relative group">
                             <div className="absolute -inset-3 bg-gradient-to-r from-blue-400/30 via-cyan-400/30 to-teal-400/30 rounded-[28px] blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-0 group-hover:opacity-100" />
 
-                            <div className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[24px] p-6 border-2 border-white/50 dark:border-slate-700/50 shadow-xl">
+                            <div className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[24px] p-3 border-2 border-white/50 dark:border-slate-700/50 shadow-xl">
                                 <div className="flex items-center justify-center mb-4">
                                     <div className="relative">
                                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-xl" />
-                                        <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 flex items-center justify-center border-4 border-white dark:border-slate-800 shadow-lg">
-                                            <Globe className="text-blue-600 dark:text-cyan-400" size={28} />
+                                        <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 flex items-center justify-center border-4 border-white dark:border-slate-800 shadow-lg">
+                                            <Globe className="text-blue-600 dark:text-cyan-400" size={18} />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="relative h-[200px]">
+                                <div className="relative h-[160px]">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
@@ -773,11 +773,11 @@ const Dashboard: React.FC = () => {
                                                             <div className="bg-slate-900/95 backdrop-blur-2xl border-2 border-slate-700/50 text-white p-4 rounded-xl shadow-xl">
                                                                 <div className="font-black text-lg mb-2 text-cyan-400">{data.name}</div>
                                                                 <div className="space-y-1">
-                                                                    <div className="flex items-center justify-between gap-6">
+                                                                    <div className="flex items-center justify-between gap-3">
                                                                         <span className="text-sm text-slate-300">Users:</span>
                                                                         <span className="font-mono font-black text-lg">{data.value?.toLocaleString()}</span>
                                                                     </div>
-                                                                    <div className="flex items-center justify-between gap-6">
+                                                                    <div className="flex items-center justify-between gap-3">
                                                                         <span className="text-sm text-slate-300">Share:</span>
                                                                         <span className="font-mono font-black text-lg text-cyan-400">{data.percentage}%</span>
                                                                     </div>
@@ -797,7 +797,7 @@ const Dashboard: React.FC = () => {
                                             <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center shadow-xl border-4 border-white dark:border-slate-900">
                                                 <div className="text-center">
                                                     <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Regions</div>
-                                                    <div className="text-3xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                                                    <div className="text-xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                                                         {dashboardData.membership.trends?.active_regions || 0}
                                                     </div>
                                                 </div>
@@ -869,7 +869,7 @@ const Dashboard: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="font-black text-2xl text-slate-900 dark:text-white mb-1 group-hover:scale-110 transition-transform duration-300">
+                                            <div className="font-black text-lg text-slate-900 dark:text-white mb-1 group-hover:scale-110 transition-transform duration-300">
                                                 {item.value?.toLocaleString()}
                                             </div>
                                             <div className="flex items-center gap-2 justify-end">
@@ -901,7 +901,7 @@ const Dashboard: React.FC = () => {
                     <div className="pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                <Award className="text-blue-600 dark:text-cyan-400" size={20} />
+                                <Award className="text-blue-600 dark:text-cyan-400" size={14} />
                                 Membership Tiers
                             </h3>
                             <button className="text-sm font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 group">
@@ -920,7 +920,7 @@ const Dashboard: React.FC = () => {
                                         <div className="relative">
                                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl blur-lg opacity-60 group-hover:opacity-100 transition-opacity" />
                                             <div className="relative p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                                                <Users size={20} className="text-white" />
+                                                <Users size={14} className="text-white" />
                                             </div>
                                         </div>
                                         <span className="text-xs font-black text-blue-600 dark:text-cyan-400 uppercase tracking-widest bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-lg">
@@ -931,7 +931,7 @@ const Dashboard: React.FC = () => {
                                     <div className="space-y-2 mb-3">
                                         <div className="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">Free Users</div>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-3xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                                            <span className="text-xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                                                 {dashboardData.membership.roles?.free?.toLocaleString() || 0}
                                             </span>
                                             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">members</span>
@@ -959,7 +959,7 @@ const Dashboard: React.FC = () => {
                                         <div className="relative">
                                             <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-400 rounded-xl blur-lg opacity-80 animate-pulse" />
                                             <div className="relative p-3 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl shadow-xl border-2 border-cyan-300/50">
-                                                <Crown size={20} className="text-white" />
+                                                <Crown size={14} className="text-white" />
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 px-3 py-1 rounded-lg border border-cyan-400/50">
@@ -973,7 +973,7 @@ const Dashboard: React.FC = () => {
                                     <div className="space-y-2 mb-3">
                                         <div className="text-xs text-cyan-200 font-bold uppercase tracking-wider">Active Members</div>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-3xl font-black text-white drop-shadow-xl">
+                                            <span className="text-xl font-black text-white drop-shadow-xl">
                                                 {dashboardData.membership.roles?.member?.toLocaleString() || 0}
                                             </span>
                                             <span className="text-xs font-bold text-cyan-200">members</span>
@@ -1000,7 +1000,7 @@ const Dashboard: React.FC = () => {
                                         <div className="relative">
                                             <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl blur-lg opacity-60 group-hover:opacity-100 transition-opacity" />
                                             <div className="relative p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">
-                                                <Award size={20} className="text-white" />
+                                                <Award size={14} className="text-white" />
                                             </div>
                                         </div>
                                         <span className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest bg-amber-100 dark:bg-amber-900/30 px-3 py-1 rounded-lg">
@@ -1011,7 +1011,7 @@ const Dashboard: React.FC = () => {
                                     <div className="space-y-2 mb-3">
                                         <div className="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">Verified Authors</div>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-3xl font-black bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                                            <span className="text-xl font-black bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                                                 {dashboardData.membership.roles?.author?.toLocaleString() || 0}
                                             </span>
                                             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">creators</span>

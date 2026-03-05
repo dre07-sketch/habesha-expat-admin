@@ -10,13 +10,41 @@ const Users: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [eligibleUsers, setEligibleUsers] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+    const [authorFormData, setAuthorFormData] = useState({
+        user_id: '',
+        portfolio_url: '',
+        experience: '',
+        previous_work: ''
+    });
+    const [cvFile, setCvFile] = useState<File | null>(null);
 
     // State for Role Editing inside the profile modal
     const [isEditingRole, setIsEditingRole] = useState(false);
     const [selectedRole, setSelectedRole] = useState('');
     const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+
+    // Fetch eligible users for author promotion
+    const fetchEligibleUsers = async () => {
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('http://localhost:5000/api/users/eligible-authors', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.success) setEligibleUsers(data.data);
+        } catch (err) {
+            console.error('Error fetching eligible users:', err);
+        }
+    };
+
+    useEffect(() => {
+        if (isAddUserOpen) {
+            fetchEligibleUsers();
+        }
+    }, [isAddUserOpen]);
 
     // Fetch users from API
     useEffect(() => {
@@ -77,19 +105,57 @@ const Users: React.FC = () => {
     };
 
     const filteredUsers = users.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.role.toLowerCase().includes(searchTerm.toLowerCase())
+        (user.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (user.role?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
 
-    const handleAddUser = (e: React.FormEvent) => {
+    const handleAddUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        // Simulate API call to register Admin/User
-        setTimeout(() => {
+        try {
+            const formData = new FormData();
+            formData.append('user_id', authorFormData.user_id);
+            formData.append('portfolio_url', authorFormData.portfolio_url);
+            formData.append('experience', authorFormData.experience);
+            formData.append('previous_work', authorFormData.previous_work);
+            if (cvFile) {
+                formData.append('cv', cvFile);
+            }
+
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('http://localhost:5000/api/users/create-author', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                setIsAddUserOpen(false);
+                // Refresh list
+                const res = await fetch('http://localhost:5000/api/users/users-roles', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const listData = await res.json();
+                if (listData.success) setUsers(listData.data);
+                // Reset form
+                setAuthorFormData({
+                    user_id: '',
+                    portfolio_url: '',
+                    experience: '',
+                    previous_work: ''
+                });
+                setCvFile(null);
+            } else {
+                alert(data.message || 'Failed to create author');
+            }
+        } catch (err) {
+            console.error('Error adding author:', err);
+        } finally {
             setIsSubmitting(false);
-            setIsAddUserOpen(false);
-        }, 2000);
+        }
     };
 
     const handleUserClick = (user: User) => {
@@ -152,27 +218,27 @@ const Users: React.FC = () => {
 
     return (
         <div className="animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">User Management</h1>
+                    <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">User Management</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage user accounts, roles, and permissions.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 items-center w-full md:w-auto">
                     <div className="relative w-full md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                         <input
                             type="text"
                             placeholder="Search users..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+                            className="w-full pl-5 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
                         />
                     </div>
                     <button
                         onClick={() => setIsAddUserOpen(true)}
-                        className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+                        className="bg-slate-900 border border-slate-700/50 text-white px-3 py-3 rounded-xl flex items-center font-bold text-xs uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-200"
                     >
-                        <Plus size={20} className="mr-2" /> Add User
+                        Promote to Author <UserPlus size={14} className="ml-2 text-blue-500" />
                     </button>
                 </div>
             </div>
@@ -183,17 +249,17 @@ const Users: React.FC = () => {
                     <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700/60">
                         <thead className="bg-slate-50/50 dark:bg-slate-900/50">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Profile</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Last Active</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Action</th>
+                                <th className="px-3 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Profile</th>
+                                <th className="px-3 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
+                                <th className="px-3 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                                <th className="px-3 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Last Active</th>
+                                <th className="px-3 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-slate-800/0 divide-y divide-slate-200 dark:divide-slate-700/60">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center">
+                                    <td colSpan={5} className="px-3 py-12 text-center">
                                         <div className="flex justify-center">
                                             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                                         </div>
@@ -202,20 +268,20 @@ const Users: React.FC = () => {
                                 </tr>
                             ) : error ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center">
+                                    <td colSpan={5} className="px-3 py-12 text-center">
                                         <p className="text-red-500 dark:text-red-400">Error: {error}</p>
                                     </td>
                                 </tr>
                             ) : filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                                    <td colSpan={5} className="px-3 py-12 text-center text-slate-500 dark:text-slate-400">
                                         No users found.
                                     </td>
                                 </tr>
                             ) : (
                                 filteredUsers.map((user) => (
                                     <tr key={user.id} className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors duration-200">
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-3 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <img className="h-10 w-10 rounded-full border-2 border-white dark:border-slate-700 shadow-sm" src={getAvatar(user.name, user.avatar_url)} alt="" />
                                                 <div className="ml-4">
@@ -224,7 +290,7 @@ const Users: React.FC = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-3 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold border ${user.role === 'Premium'
                                                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800'
                                                 : user.role === 'Author'
@@ -236,7 +302,7 @@ const Users: React.FC = () => {
                                                 {user.role}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-3 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 {user.status === 'Active' ? (
                                                     <CheckCircle size={14} className="text-emerald-500 mr-1.5" />
@@ -248,10 +314,10 @@ const Users: React.FC = () => {
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+                                        <td className="px-3 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
                                             {formatDate(user.updated_at)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        <td className="px-3 py-4 whitespace-nowrap text-right">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -284,59 +350,112 @@ const Users: React.FC = () => {
                 </div>
             </div>
 
-            {/* Add User Modal */}
-            <Modal isOpen={isAddUserOpen} onClose={() => setIsAddUserOpen(false)} title="Register New User" maxWidth="max-w-2xl">
-                <div className="relative">
+            {/* Author Promotion Modal */}
+            <Modal isOpen={isAddUserOpen} onClose={() => setIsAddUserOpen(false)} title="Promote User to Author" maxWidth="max-w-4xl">
+                <div className="relative p-6">
                     {isSubmitting && (
-                        <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
-                            <div className="relative mb-6">
-                                <div className="w-16 h-16 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
-                                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
-                                <UserPlus className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={20} />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Creating Account...</h3>
+                        <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl">
+                            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="mt-4 text-white font-bold tracking-widest uppercase text-xs">Finalizing Profile...</p>
                         </div>
                     )}
+
                     <form onSubmit={handleAddUser} className="space-y-6">
-                        <div className="pb-2 border-b border-slate-100 dark:border-slate-700">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
-                                <UserIcon className="mr-2 text-blue-500" size={20} /> Account Details
-                            </h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Manually register a new user, admin, or author.</p>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Left Column: Core Identity */}
+                            <div className="space-y-4">
+                                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center">
+                                        <UserIcon className="mr-2 text-blue-500" size={14} /> Step 1: Identity Selection
+                                    </h3>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Select Active User</label>
+                                        <select
+                                            required
+                                            value={authorFormData.user_id}
+                                            onChange={(e) => setAuthorFormData({ ...authorFormData, user_id: e.target.value })}
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
+                                        >
+                                            <option value="">Select a user account...</option>
+                                            {eligibleUsers.map(user => (
+                                                <option key={user.id} value={user.id}>{user.first_name} {user.last_name} ({user.email})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center">
+                                        <Monitor className="mr-2 text-indigo-500" size={14} /> Step 2: Professional Links
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Portfolio or Website URL</label>
+                                            <input
+                                                type="url"
+                                                value={authorFormData.portfolio_url}
+                                                onChange={(e) => setAuthorFormData({ ...authorFormData, portfolio_url: e.target.value })}
+                                                className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                                placeholder="https://portfolio.me"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">CV / Resume File</label>
+                                            <input
+                                                type="file"
+                                                accept=".pdf,.doc,.docx"
+                                                onChange={(e) => setCvFile(e.target.files ? e.target.files[0] : null)}
+                                                className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:uppercase file:bg-blue-500 file:text-white hover:file:bg-blue-600 transition-all cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Column: Experience/Work */}
+                            <div className="space-y-4">
+                                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 h-full flex flex-col">
+                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center">
+                                        <Edit2 className="mr-2 text-emerald-500" size={14} /> Step 3: Bio & Experience
+                                    </h3>
+                                    <div className="space-y-4 flex-1 flex flex-col">
+                                        <div className="space-y-1 flex-1 flex flex-col">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Professional Experience</label>
+                                            <textarea
+                                                required
+                                                value={authorFormData.experience}
+                                                onChange={(e) => setAuthorFormData({ ...authorFormData, experience: e.target.value })}
+                                                className="w-full flex-1 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm resize-none min-h-[120px]"
+                                                placeholder="Describe your writing background and expertise..."
+                                            />
+                                        </div>
+                                        <div className="space-y-1 flex-1 flex flex-col">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Previous Notable Work</label>
+                                            <textarea
+                                                value={authorFormData.previous_work}
+                                                onChange={(e) => setAuthorFormData({ ...authorFormData, previous_work: e.target.value })}
+                                                className="w-full flex-1 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm resize-none min-h-[120px]"
+                                                placeholder="Links or descriptions of published articles/books..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1">Full Name</label>
-                                <input required className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="John Doe" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1">Email Address</label>
-                                <input required type="email" className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="john@example.com" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1">Password</label>
-                                <input required type="password" className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="••••••••" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1">System Role</label>
-                                <select className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer">
-                                    <option value="User">User</option>
-                                    <option value="Premium">Premium</option>
-                                    <option value="Author">Author</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
-                            <button type="button" onClick={() => setIsAddUserOpen(false)} className="px-6 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsAddUserOpen(false)}
+                                className="px-6 py-3 text-slate-500 hover:text-slate-800 dark:hover:text-white font-bold text-xs uppercase tracking-widest transition-colors"
+                            >
                                 Cancel
                             </button>
-                            <button type="submit" className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center">
-                                <UserPlus size={18} className="mr-2" /> Create User
+                            <button
+                                type="submit"
+                                className="bg-slate-900 border border-slate-700/50 text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-xl hover:bg-slate-800 hover:-translate-y-0.5 transition-all"
+                            >
+                                Confirm Promotion
                             </button>
                         </div>
                     </form>
@@ -347,161 +466,147 @@ const Users: React.FC = () => {
             <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="User Profile" maxWidth="max-w-3xl">
                 {selectedUser && (
                     <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden relative">
-                        {/* Decorative Background Blur */}
-                        <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                            <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white dark:from-slate-900 to-transparent"></div>
+                        {/* Professional Code-Inspired Header */}
+                        <div className="absolute top-0 left-0 w-full h-40 bg-slate-950">
+                            <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
                         </div>
 
                         {/* Header Content */}
-                        <div className="relative px-8 pt-20 pb-6 flex flex-col md:flex-row items-end md:items-end gap-6">
+                        <div className="relative px-6 pt-16 pb-4 flex flex-col md:flex-row items-center md:items-end gap-6">
                             <div className="relative group shrink-0">
-                                <div className="w-32 h-32 rounded-3xl bg-white dark:bg-slate-800 p-1.5 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-300">
+                                <div className="w-28 h-28 rounded-xl bg-slate-800 border border-slate-700/50 p-1 shadow-2xl relative overflow-hidden transition-all duration-300">
                                     <img
                                         src={getAvatar(selectedUser.name, selectedUser.avatar_url)}
                                         alt={selectedUser.name}
-                                        className="w-full h-full rounded-2xl object-cover"
+                                        className="w-full h-full rounded-lg object-cover grayscale-[0.2] hover:grayscale-0 transition-all"
                                     />
                                 </div>
-                                <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center ${selectedUser.status === 'Active' ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                                    {selectedUser.status === 'Active' ? <CheckCircle size={14} className="text-white" /> : <XCircle size={14} className="text-white" />}
+                                <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-slate-900 flex items-center justify-center ${selectedUser.status === 'Active' ? 'bg-emerald-500' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'}`}>
+                                    {selectedUser.status === 'Active' ? <CheckCircle size={10} className="text-white" /> : <XCircle size={10} className="text-white" />}
                                 </div>
                             </div>
 
-                            <div className="flex-1 mb-2">
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{selectedUser.name}</h2>
-
-                                    {/* Role Badge / Editor */}
+                            <div className="flex-1 mb-2 text-center md:text-left">
+                                <div className="flex flex-col md:flex-row items-center md:items-center gap-2 mb-2">
+                                    <h2 className="text-2xl font-bold text-white tracking-tight uppercase">{selectedUser.name}</h2>
+                                    <span className="text-slate-600 font-medium hidden md:inline">•</span>
+                                    {/* Role Editor */}
                                     {isEditingRole ? (
-                                        <div className="flex items-center bg-white dark:bg-slate-800 rounded-lg shadow-lg p-1 animate-in fade-in zoom-in duration-200 border border-slate-200 dark:border-slate-700">
+                                        <div className="flex items-center bg-slate-800 rounded-lg border border-blue-500/30 p-1 animate-in fade-in duration-200">
                                             <select
                                                 value={selectedRole}
                                                 onChange={(e) => setSelectedRole(e.target.value)}
-                                                className="text-xs font-bold uppercase bg-transparent border-none outline-none text-slate-700 dark:text-slate-200 px-2 py-1 cursor-pointer"
+                                                className="text-[10px] font-bold uppercase bg-transparent border-none outline-none text-blue-400 px-2 py-0.5 cursor-pointer"
                                             >
                                                 <option value="User">User</option>
                                                 <option value="Premium">Premium</option>
                                                 <option value="Author">Author</option>
                                             </select>
-                                            <button
-                                                onClick={handleSaveRole}
-                                                disabled={isUpdatingRole}
-                                                className="bg-emerald-500 hover:bg-emerald-600 text-white p-1 rounded ml-1 transition-colors disabled:opacity-50"
-                                            >
-                                                {isUpdatingRole ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <CheckCircle size={12} />}
-                                            </button>
-                                            <button
-                                                onClick={() => setIsEditingRole(false)}
-                                                className="bg-slate-200 dark:bg-slate-700 hover:bg-red-500 hover:text-white text-slate-500 p-1 rounded ml-1 transition-colors"
-                                            >
-                                                <X size={12} />
+                                            <button onClick={handleSaveRole} disabled={isUpdatingRole} className="text-emerald-400 hover:text-emerald-300 p-1 transition-colors">
+                                                {isUpdatingRole ? <div className="w-2 h-2 border-2 border-current border-t-transparent rounded-full animate-spin"></div> : <Save size={12} />}
                                             </button>
                                         </div>
                                     ) : (
                                         <div className="flex items-center group/role">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${selectedUser.role === 'Premium' ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' :
-                                                selectedUser.role === 'Author' ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20' :
-                                                    selectedUser.role === 'User' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' :
-                                                        'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/20'
+                                            <span className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider ${selectedUser.role === 'Premium' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                                selectedUser.role === 'Author' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                                                    'bg-slate-500/10 text-slate-400 border-slate-500/20'
                                                 }`}>
                                                 {selectedUser.role}
                                             </span>
-                                            <button
-                                                onClick={() => setIsEditingRole(true)}
-                                                className="ml-2 opacity-0 group-hover/role:opacity-100 transition-opacity text-slate-400 hover:text-blue-500 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-                                                title="Edit Role"
-                                            >
-                                                <Edit2 size={12} />
+                                            <button onClick={() => setIsEditingRole(true)} className="ml-2 opacity-0 group-hover/role:opacity-100 transition-opacity text-slate-500 hover:text-blue-400">
+                                                <Edit2 size={10} />
                                             </button>
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex items-center text-slate-500 dark:text-slate-400 font-medium">
-                                    <Mail size={16} className="mr-2" /> {selectedUser.email}
+                                <div className="flex items-center justify-center md:justify-start text-slate-400 text-sm">
+                                    <Mail size={14} className="mr-2 text-blue-500" />
+                                    <span>{selectedUser.email}</span>
                                 </div>
                             </div>
 
                             <div className="flex gap-3 mb-2">
                                 <button className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 dark:bg-slate-800 hover:dark:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-sm">
-                                    <MoreVertical size={20} />
+                                    <MoreVertical size={14} />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Content Grid */}
-                        <div className="px-8 py-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                            {/* Stats */}
-                            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-100 dark:border-slate-700/60 h-full">
-                                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Account Stats</h3>
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                                                <Calendar size={18} />
-                                            </div>
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Joined</span>
-                                        </div>
-                                        <span className="text-sm font-bold text-slate-900 dark:text-white">{formatDate(selectedUser.created_at)}</span>
+                        {/* Details Content */}
+                        <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Account Details */}
+                            <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+                                <div className="flex justify-between mb-4 border-b border-slate-800 pb-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Account Details</span>
+                                    <span className="text-[10px] text-blue-500 font-bold uppercase">Public Profile</span>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-500 font-medium">Joined Date</span>
+                                        <span className="text-slate-200">{formatDate(selectedUser.created_at)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                                                <Shield size={18} />
-                                            </div>
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Verification</span>
-                                        </div>
-                                        <span className="text-sm font-bold text-slate-900 dark:text-white">Verified</span>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-500 font-medium">Authentication</span>
+                                        <span className="text-emerald-400 font-bold text-xs uppercase">Verified</span>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-                                                <MapPin size={18} />
-                                            </div>
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Location</span>
-                                        </div>
-                                        <span className="text-sm font-bold text-slate-900 dark:text-white text-right">{selectedUser.location || 'Unknown'}</span>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-500 font-medium">Location</span>
+                                        <span className="text-slate-200">{selectedUser.location || 'Not Set'}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Contact Info */}
-                            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-100 dark:border-slate-700/60 h-full">
-                                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Contact</h3>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <Mail size={16} className="text-slate-400" />
-                                    <span className="text-sm text-slate-700 dark:text-slate-300 truncate">{selectedUser.email}</span>
+                            {/* Activity Info */}
+                            <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+                                <div className="flex justify-between mb-4 border-b border-slate-800 pb-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Activity Status</span>
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                        <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Live</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-500 font-medium">Reference ID</span>
+                                        <span className="text-slate-200">#{selectedUser.id}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-500 font-medium">Last Online</span>
+                                        <span className="text-slate-300">{formatDate(selectedUser.updated_at)}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Footer Actions with Status Toggle */}
-                        <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-6 flex flex-col sm:flex-row gap-4">
+                        {/* Footer Actions */}
+                        <div className="bg-slate-950 border-t border-slate-800 p-6 flex flex-col sm:flex-row gap-4">
                             <button
                                 onClick={() => handleToggleStatus(selectedUser.id)}
                                 disabled={isTogglingStatus}
-                                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-colors shadow-sm flex items-center justify-center ${selectedUser.status === 'Active'
-                                    ? 'bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20'
-                                    : 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/20'
-                                    } ${isTogglingStatus ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                className={`flex-1 py-4 px-6 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border flex items-center justify-center ${selectedUser.status === 'Active'
+                                    ? 'bg-red-500/5 border-red-500/20 text-red-500 hover:bg-red-500/10'
+                                    : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10'
+                                    } ${isTogglingStatus ? 'opacity-50' : ''}`}
                             >
                                 {isTogglingStatus ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
-                                        {selectedUser.status === 'Active' ? 'Banning...' : 'Activating...'}
-                                    </>
-                                ) : selectedUser.status === 'Active' ? (
-                                    <>
-                                        <XCircle size={16} className="mr-2" />
-                                        Ban Account
+                                        Processing...
                                     </>
                                 ) : (
                                     <>
-                                        <CheckCircle size={16} className="mr-2" />
-                                        Activate Account
+                                        {selectedUser.status === 'Active' ? <XCircle size={16} className="mr-2" /> : <CheckCircle size={16} className="mr-2" />}
+                                        {selectedUser.status === 'Active' ? 'Ban User Account' : 'Activate User Account'}
                                     </>
                                 )}
+                            </button>
+                            <button
+                                onClick={() => setSelectedUser(null)}
+                                className="px-6 py-4 bg-slate-800 text-slate-400 text-xs uppercase font-bold rounded-lg border border-slate-700 hover:bg-slate-700 transition-all"
+                            >
+                                Close Profile
                             </button>
                         </div>
                     </div>

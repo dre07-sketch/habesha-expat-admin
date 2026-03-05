@@ -186,32 +186,32 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-3">
             <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
             {/* Modal Container */}
             <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 transform transition-all">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 rounded-t-2xl z-10 backdrop-blur-md">
+                <div className="flex items-center justify-between px-3 py-5 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 rounded-t-2xl z-10 backdrop-blur-md">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                         {initialData ? 'Edit Destination' : 'New Destination'}
                     </h2>
                     <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors">
-                        <X size={20} />
+                        <X size={14} />
                     </button>
                 </div>
 
                 {/* Error Message */}
                 {error && (
-                    <div className="mx-6 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                    <div className="mx-3 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
                         {error}
                     </div>
                 )}
 
                 {/* Scrollable Form Content */}
-                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
-                    <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="flex-1 overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
+                    <form onSubmit={handleSubmit} className="space-y-4">
 
                         {/* Section 1: General Info */}
                         <div className="space-y-4">
@@ -256,7 +256,7 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                         </div>
 
                         {/* Section 2: Details & Stats */}
-                        <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
                             <h3 className="text-sm uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold mb-2">Details & Logistics</h3>
                             {/* ... (Location, Duration, Group Size, Languages, Rating inputs remain the same) ... */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -265,7 +265,7 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                                     <div className="relative">
                                         <MapPin size={16} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
                                         <input type="text" name="location" value={formData.location} onChange={handleChange}
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-5 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
                                     </div>
                                 </div>
                                 <div>
@@ -273,7 +273,7 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                                     <div className="relative">
                                         <Calendar size={16} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
                                         <input type="text" name="duration" value={formData.duration} onChange={handleChange} placeholder="7 Days"
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-5 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
                                     </div>
                                 </div>
                                 <div>
@@ -281,7 +281,7 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                                     <div className="relative">
                                         <Users size={16} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
                                         <input type="text" name="group_size" value={formData.group_size} onChange={handleChange} placeholder="Max 12"
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-5 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
                                     </div>
                                 </div>
                                 <div>
@@ -289,7 +289,7 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                                     <div className="relative">
                                         <Globe size={16} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
                                         <input type="text" name="languages" value={formData.languages} onChange={handleChange}
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-5 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
                                     </div>
                                 </div>
                             </div>
@@ -301,7 +301,7 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                         </div>
 
                         {/* Section 3: Media - REVISED */}
-                        <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
                             <h3 className="text-sm uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold mb-2">Media</h3>
 
                             {/* Hero Image Upload */}
@@ -315,7 +315,7 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                                                 <img src={heroPreview} alt="Hero preview" className="h-32 mx-auto object-cover rounded" />
                                             ) : (
                                                 <div className="text-slate-500 dark:text-slate-400 flex flex-col items-center gap-2">
-                                                    <ImageIcon size={24} />
+                                                    <ImageIcon size={16} />
                                                     <span className="text-sm">Click to upload hero image</span>
                                                 </div>
                                             )}
@@ -353,14 +353,14 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                                         onClick={() => galleryFileInputRef.current.click()}
                                         className="w-full h-24 bg-slate-50 dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 transition-colors"
                                     >
-                                        <Plus size={20} />
+                                        <Plus size={14} />
                                     </button>
                                 </div>
                             </div>
                         </div>
 
                         {/* Section 4: JSON Data (Highlights & Itinerary) - REMAINS THE SAME */}
-                        <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
                             <h3 className="text-sm uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold mb-2">Experience Details</h3>
                             {/* Highlights */}
                             <div>
@@ -412,11 +412,11 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
                 </div>
 
                 {/* Footer Actions */}
-                <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white/50 dark:bg-slate-900/50 rounded-b-2xl flex justify-end gap-3 z-10 backdrop-blur-md">
+                <div className="border-t border-slate-200 dark:border-slate-800 p-3 bg-white/50 dark:bg-slate-900/50 rounded-b-2xl flex justify-end gap-3 z-10 backdrop-blur-md">
                     <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium">
                         Cancel
                     </button>
-                    <button onClick={handleSubmit} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 transition-all font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <button onClick={handleSubmit} disabled={isSubmitting} className="px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 transition-all font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
                         <Save size={18} />
                         {isSubmitting ? 'Saving...' : (initialData ? 'Update Destination' : 'Create Destination')}
                     </button>

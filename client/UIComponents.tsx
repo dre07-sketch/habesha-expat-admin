@@ -12,7 +12,7 @@ export const Button: React.FC<ButtonProps> = ({
   isLoading,
   ...props 
 }) => {
-  const baseStyles = "w-full py-3.5 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-night-950 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseStyles = "w-full py-3.5 px-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-night-950 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
     primary: "bg-white text-night-950 hover:bg-gray-100 focus:ring-white",

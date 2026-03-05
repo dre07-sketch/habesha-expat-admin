@@ -39,27 +39,27 @@ const Videos: React.FC = () => {
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
          <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Video Content</h1>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Video Content</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Manage video uploads, descriptions and visibility.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
             <div className="relative w-full md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                 <input 
                     type="text" 
                     placeholder="Search videos..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+                    className="w-full pl-5 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
                 />
             </div>
             <button 
             onClick={() => setIsFormOpen(true)} 
-            className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+            className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-3 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
             >
-            <Plus size={20} className="mr-2" /> Upload Video
+            <Plus size={14} className="mr-2" /> Upload Video
             </button>
         </div>
       </div>
@@ -86,7 +86,7 @@ const Videos: React.FC = () => {
                             <img src={vid.thumbnail} alt={vid.title} className="w-full h-full object-cover" />
                             <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">{vid.duration}</div>
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Play size={24} className="text-white drop-shadow-lg" fill="currentColor" />
+                                <Play size={16} className="text-white drop-shadow-lg" fill="currentColor" />
                             </div>
                         </div>
                         <div>
@@ -136,7 +136,7 @@ const Videos: React.FC = () => {
                  </div>
             ))}
             {filteredVideos.length === 0 && (
-                 <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                 <div className="p-4 text-center text-slate-500 dark:text-slate-400">
                     No videos found.
                 </div>
             )}
@@ -150,7 +150,7 @@ const Videos: React.FC = () => {
       {/* Video Details Modal - Theater Mode */}
       <Modal isOpen={!!selectedVideo} onClose={() => setSelectedVideo(null)} title="Video Manager" maxWidth="max-w-5xl">
         {selectedVideo && (
-          <div className="flex flex-col space-y-6">
+          <div className="flex flex-col space-y-3">
              
              {/* Video Player Container - Reduced Size */}
              <div className="w-full max-w-4xl mx-auto">
@@ -185,33 +185,33 @@ const Videos: React.FC = () => {
              </div>
 
              {/* Tab Content Area */}
-             <div className="bg-slate-50 dark:bg-slate-900/30 rounded-xl p-6 border border-slate-100 dark:border-slate-800 min-h-[300px]">
+             <div className="bg-slate-50 dark:bg-slate-900/30 rounded-xl p-3 border border-slate-100 dark:border-slate-800 min-h-[160px]">
                 
                 {/* DETAILS TAB */}
                 {activeTab === 'details' && (
-                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         {/* Metadata & Description */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="lg:col-span-2 space-y-3">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <div className="flex items-center space-x-3 mb-2">
                                         <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded uppercase">{selectedVideo.category}</span>
                                         <span className="text-slate-500 dark:text-slate-400 text-xs font-bold flex items-center"><Calendar size={12} className="mr-1"/> {selectedVideo.uploadDate}</span>
                                     </div>
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{selectedVideo.title}</h2>
+                                    <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{selectedVideo.title}</h2>
                                 </div>
                                 <div className="flex space-x-2">
                                     <button className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-                                        <MoreVertical size={20} />
+                                        <MoreVertical size={14} />
                                     </button>
                                 </div>
                             </div>
 
                             {/* Engagement Bar */}
-                            <div className="flex items-center space-x-6 py-4 border-y border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center space-x-3 py-4 border-y border-slate-200 dark:border-slate-800">
                                 <div className="flex items-center space-x-2" title="Views">
                                     <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-full text-blue-600 dark:text-blue-400">
-                                        <Eye size={20} />
+                                        <Eye size={14} />
                                     </div>
                                     <div>
                                         <div className="text-lg font-bold text-slate-800 dark:text-white">{selectedVideo.views?.toLocaleString()}</div>
@@ -220,7 +220,7 @@ const Videos: React.FC = () => {
                                 </div>
                                 <div className="flex items-center space-x-2" title="Likes">
                                     <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-full text-red-500">
-                                        <Heart size={20} fill="currentColor" />
+                                        <Heart size={14} fill="currentColor" />
                                     </div>
                                     <div>
                                         <div className="text-lg font-bold text-slate-800 dark:text-white">{selectedVideo.likes?.toLocaleString()}</div>
@@ -229,7 +229,7 @@ const Videos: React.FC = () => {
                                 </div>
                                 <div className="flex items-center space-x-2" title="Comments">
                                     <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-full text-emerald-500">
-                                        <MessageCircle size={20} />
+                                        <MessageCircle size={14} />
                                     </div>
                                     <div>
                                         <div className="text-lg font-bold text-slate-800 dark:text-white">{selectedVideo.comments?.toLocaleString()}</div>
@@ -246,7 +246,7 @@ const Videos: React.FC = () => {
                         </div>
 
                         {/* Sidebar Actions */}
-                        <div className="lg:col-span-1 space-y-6">
+                        <div className="lg:col-span-1 space-y-3">
                             <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide mb-4">Visibility Control</h3>
                                 

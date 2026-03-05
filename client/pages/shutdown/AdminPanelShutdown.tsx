@@ -16,18 +16,18 @@ const AdminPanelShutdown: React.FC = () => {
       <div className="absolute inset-0 z-[1] opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-4xl flex flex-col items-center justify-center gap-8">
+      <div className="relative z-10 w-full max-w-4xl flex flex-col items-center justify-center gap-4">
         <div className="w-full backdrop-blur-[40px] bg-white/[0.02] border border-white/10 rounded-[3rem] shadow-[0_48px_96px_-24px_rgba(0,0,0,0.8)] overflow-hidden">
           <div className="h-1.5 w-full bg-gradient-to-r from-habesha-red via-habesha-gold to-habesha-red opacity-60"></div>
           
-          <div className="p-8 md:p-12">
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+          <div className="p-4 md:p-12">
+            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-16">
               {/* Security Icon */}
               <div className="relative flex-shrink-0">
                 <div className="absolute -inset-10 border border-habesha-red/20 rounded-full animate-spin-slow opacity-30"></div>
                 <div className="absolute -inset-6 border border-white/5 rounded-full animate-reverse-spin opacity-20"></div>
                 <div className="relative w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-habesha-red/20 to-transparent border border-white/10 rounded-[2rem] flex items-center justify-center shadow-2xl backdrop-blur-xl">
-                  <Lock className="w-12 h-12 md:w-16 md:h-16 text-habesha-red animate-pulse-slow" strokeWidth={1} />
+                  <Lock className="w-12 h-12 md:w-10 md:h-10 text-habesha-red animate-pulse-slow" strokeWidth={1} />
                   <div className="absolute -top-2 -right-2">
                     <div className="relative flex h-6 w-6 md:h-8 md:w-8">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-habesha-red opacity-75"></span>
@@ -40,7 +40,7 @@ const AdminPanelShutdown: React.FC = () => {
               </div>
 
               {/* Content */}
-              <div className="flex-1 text-center md:text-left space-y-6">
+              <div className="flex-1 text-center md:text-left space-y-3">
                 <div className="space-y-3">
                   <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
                     <span className="px-3 py-1 rounded-full bg-habesha-red/20 border border-habesha-red/30 text-habesha-red text-[10px] font-bold tracking-[0.3em] uppercase">
@@ -50,7 +50,7 @@ const AdminPanelShutdown: React.FC = () => {
                       <Terminal size={14} /> SYSTEM_ROOT_OFFLINE
                     </span>
                   </div>
-                  <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight text-white leading-[1.1]">
+                  <h1 className="text-xl md:text-xl font-serif font-bold tracking-tight text-white leading-[1.1]">
                     Admin <span className="bg-clip-text text-transparent bg-gradient-to-r from-habesha-red via-white to-habesha-red animate-gradient-x">Locked</span>
                   </h1>
                 </div>
@@ -61,12 +61,12 @@ const AdminPanelShutdown: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-[1.5rem] bg-white/[0.03] border border-white/5 flex flex-col items-center md:items-start gap-2">
-                    <Building2 size={20} className="text-habesha-gold" />
+                    <Building2 size={14} className="text-habesha-gold" />
                     <span className="text-[10px] uppercase tracking-widest text-gray-500 font-mono">Realty Infrastructure</span>
                     <span className="text-white font-bold text-base">ESTATE_CORE_HUB_01</span>
                   </div>
                   <div className="p-4 rounded-[1.5rem] bg-white/[0.03] border border-white/5 flex flex-col items-center md:items-start gap-2">
-                    <Activity size={20} className="text-habesha-green" />
+                    <Activity size={14} className="text-habesha-green" />
                     <span className="text-[10px] uppercase tracking-widest text-gray-500 font-mono">Network Security</span>
                     <span className="text-white font-bold text-base">ISOLATED MODE</span>
                   </div>
@@ -76,7 +76,7 @@ const AdminPanelShutdown: React.FC = () => {
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-4 bg-black/40 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="px-4 py-4 bg-black/40 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4 text-[10px] font-mono text-gray-500 tracking-widest">
               <span className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-habesha-red rounded-full shadow-[0_0_8px_rgba(166,52,52,1)] animate-pulse"></div> 

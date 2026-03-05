@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Mail, Phone, MapPin, Globe, AlignLeft, Image as ImageIcon, UploadCloud, Map, Type, Tag, CheckCircle, XCircle, AlertCircle, X, Loader, Sparkles, Check } from 'lucide-react';
+import { Building2, Mail, Phone, MapPin, Globe, AlignLeft, Image as ImageIcon, UploadCloud, Map, Type, Tag, CheckCircle, XCircle, AlertCircle, X, Loader, Sparkles, Check, Hash, Star, Clock } from 'lucide-react';
 
 interface B2BFormProps {
   onSubmit: (data: any) => void;
@@ -16,6 +16,10 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
     mapPin: '',
     website: '',
     description: '',
+    slug: '',
+    location: '',
+    openingHours: '',
+    closingHours: '',
     images: [] as File[]
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -221,6 +225,10 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
       dataToSend.append('mapPin', formData.mapPin);
       dataToSend.append('website', formData.website);
       dataToSend.append('description', formData.description);
+      dataToSend.append('slug', formData.slug);
+      dataToSend.append('location', formData.location);
+      dataToSend.append('openingHours', formData.openingHours);
+      dataToSend.append('closingHours', formData.closingHours);
 
       formData.images.forEach((image, index) => {
         dataToSend.append(`image_${index}`, image);
@@ -251,6 +259,10 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
           mapPin: '',
           website: '',
           description: '',
+          slug: '',
+          location: '',
+          openingHours: '',
+          closingHours: '',
           images: []
         });
         setImagePreviews([]);
@@ -304,7 +316,7 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
   const errorClass = "text-xs text-red-500 dark:text-red-400 mt-1 flex items-center";
 
   return (
-    <div className="relative p-6">
+    <div className="relative p-3">
       {/* Enhanced Cool Loading Overlay */}
       {isSubmitting && (
         <div className="absolute inset-0 z-50 bg-gradient-to-br from-slate-50/95 to-white/95 dark:from-slate-900/95 dark:to-slate-800/95 backdrop-blur-xl flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-500">
@@ -325,28 +337,28 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
             ))}
           </div>
 
-          <div className="relative z-10 flex flex-col items-center max-w-md w-full px-6">
-            <div className="relative mb-8">
+          <div className="relative z-10 flex flex-col items-center max-w-md w-full px-3">
+            <div className="relative mb-4">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-lg">
                 <div className="relative">
-                  <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-800 rounded-full"></div>
-                  <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_20px_rgba(37,99,235,0.6)]"></div>
-                  <Building2 className="absolute inset-0 m-auto text-blue-600 dark:text-blue-400 animate-pulse" size={28} />
+                  <div className="w-10 h-10 border-4 border-blue-200 dark:border-blue-800 rounded-full"></div>
+                  <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_20px_rgba(37,99,235,0.6)]"></div>
+                  <Building2 className="absolute inset-0 m-auto text-blue-600 dark:text-blue-400 animate-pulse" size={18} />
                 </div>
               </div>
 
-              <Sparkles className="absolute -top-2 -right-2 text-yellow-400 animate-ping" size={20} />
+              <Sparkles className="absolute -top-2 -right-2 text-yellow-400 animate-ping" size={14} />
               <Sparkles className="absolute -bottom-2 -left-2 text-indigo-400 animate-ping" size={16} style={{ animationDelay: '0.5s' }} />
             </div>
 
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2 text-center">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2 text-center">
               Submitting Your Business
             </h3>
-            <p className="text-slate-600 dark:text-slate-300 font-medium text-center mb-8">
+            <p className="text-slate-600 dark:text-slate-300 font-medium text-center mb-4">
               {loadingSteps[loadingStep]}
             </p>
 
-            <div className="w-full mb-6">
+            <div className="w-full mb-3">
               <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
                 <span>Processing</span>
                 <span>{loadingProgress}%</span>
@@ -359,7 +371,7 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
               </div>
             </div>
 
-            <div className="flex justify-center space-x-2 mb-8">
+            <div className="flex justify-center space-x-2 mb-4">
               {loadingSteps.map((_, index) => (
                 <div
                   key={index}
@@ -402,15 +414,15 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
       {/* Success Popup */}
       {showSuccessPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-8 animate-in zoom-in-95 duration-300">
+          <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-4 animate-in zoom-in-95 duration-300">
             {/* Decorative elements */}
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-t-2xl"></div>
 
             {/* Success icon */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-3">
               <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <Check className="text-green-600 dark:text-green-400" size={40} />
+                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <Check className="text-green-600 dark:text-green-400" size={16} />
                 </div>
                 <div className="absolute -top-1 -right-1">
                   <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center animate-ping">
@@ -421,8 +433,8 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
             </div>
 
             {/* Content */}
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">
                 Business Listed Successfully!
               </h3>
               <p className="text-slate-600 dark:text-slate-300">
@@ -431,7 +443,7 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
             </div>
 
             {/* Business details summary */}
-            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-6">
+            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-3">
               <div className="flex items-center mb-2">
                 <Building2 className="text-blue-500 mr-2" size={16} />
                 <span className="font-medium text-slate-800 dark:text-white">{formData.name || 'Business Name'}</span>
@@ -466,28 +478,28 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
 
       {/* Success/Error Message */}
       {submitStatus !== 'idle' && !showSuccessPopup && (
-        <div className={`mb-6 p-4 rounded-xl flex items-center ${submitStatus === 'success'
+        <div className={`mb-3 p-4 rounded-xl flex items-center ${submitStatus === 'success'
           ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800/30'
           : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800/30'
           }`}>
           {submitStatus === 'success' ? (
-            <CheckCircle className="mr-3 text-green-500" size={20} />
+            <CheckCircle className="mr-3 text-green-500" size={14} />
           ) : (
-            <XCircle className="mr-3 text-red-500" size={20} />
+            <XCircle className="mr-3 text-red-500" size={14} />
           )}
           <span className="font-medium">{submitMessage}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div className="pb-2 border-b border-slate-100 dark:border-slate-700">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
-            <Building2 className="mr-2 text-blue-500" size={20} /> Business Details
+            <Building2 className="mr-2 text-blue-500" size={14} /> Business Details
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">Enter the core information for the business listing.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div className={inputWrapperClass}>
             <label className={labelClass}>Business Name *</label>
             <div className="relative">
@@ -547,7 +559,7 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div className={inputWrapperClass}>
             <label className={labelClass}>Email Address *</label>
             <div className="relative">
@@ -613,7 +625,7 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <div className={inputWrapperClass}>
             <label className={labelClass}>Website Link</label>
             <div className="relative">
@@ -643,20 +655,81 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
           </div>
         </div>
 
+        {/* Slug + Location */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className={inputWrapperClass}>
+            <label className={labelClass}>Slug</label>
+            <div className="relative">
+              <Hash className={iconClass} />
+              <input
+                name="slug"
+                value={formData.slug}
+                onChange={handleChange}
+                className={inputClass('slug')}
+                placeholder="e.g. habesha-coffee"
+              />
+            </div>
+          </div>
+          <div className={inputWrapperClass}>
+            <label className={labelClass}>Location</label>
+            <div className="relative">
+              <MapPin className={iconClass} />
+              <input
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                className={inputClass('location')}
+                placeholder="e.g. Addis Ababa, Ethiopia"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Opening & Closing Hours */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className={inputWrapperClass}>
+            <label className={labelClass}>Opening Hours</label>
+            <div className="relative">
+              <Clock className={iconClass} />
+              <input
+                name="openingHours"
+                value={formData.openingHours}
+                onChange={handleChange}
+                className={inputClass('openingHours')}
+                placeholder="e.g. 08:00 AM"
+              />
+            </div>
+          </div>
+          <div className={inputWrapperClass}>
+            <label className={labelClass}>Closing Hours</label>
+            <div className="relative">
+              <Clock className={iconClass} />
+              <input
+                name="closingHours"
+                value={formData.closingHours}
+                onChange={handleChange}
+                className={inputClass('closingHours')}
+                placeholder="e.g. 09:00 PM"
+              />
+            </div>
+          </div>
+        </div>
+
+
         <div>
           <label className={labelClass}>Business Images (at least 2) *</label>
-          <div className="mt-1 flex items-center px-4 py-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
-            <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-4 group-hover:scale-110 transition-transform">
-              <ImageIcon size={24} />
+          <div className="mt-1 flex items-center px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
+            <div className="h-9 w-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-3 flex-shrink-0 group-hover:scale-110 transition-transform">
+              <ImageIcon size={14} />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Select Images</p>
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleImageChange}
-                className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"
+                className="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"
               />
             </div>
           </div>
@@ -721,11 +794,11 @@ const B2BForm: React.FC<B2BFormProps> = ({ onSubmit, onCancel }) => {
           )}
         </div>
 
-        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
-          <button type="button" onClick={onCancel} className="px-6 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
+          <button type="button" onClick={onCancel} className="px-3 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
             Cancel
           </button>
-          <button type="submit" disabled={isSubmitting} className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed">
+          <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed">
             <UploadCloud size={18} className="mr-2" /> Submit Listing
           </button>
         </div>

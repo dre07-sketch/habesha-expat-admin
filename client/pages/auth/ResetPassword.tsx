@@ -121,19 +121,19 @@ export const ResetPassword: React.FC = () => {
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
 
             <div className="relative z-10 w-full max-w-[420px] mx-auto p-4">
-                <div className="glass-panel p-8 md:p-10 rounded-[2rem] shadow-2xl border border-white/10 w-full bg-slate-900/60 backdrop-blur-xl relative overflow-hidden transition-all duration-500">
+                <div className="glass-panel p-4 md:p-5 rounded-[2rem] shadow-2xl border border-white/10 w-full bg-slate-900/60 backdrop-blur-xl relative overflow-hidden transition-all duration-500">
                     
                     {success ? (
                         <div className="text-center animate-fade-in py-4">
-                            <div className="relative w-20 h-20 mx-auto mb-6">
+                            <div className="relative w-12 h-12 mx-auto mb-3">
                                 <div className="absolute inset-0 bg-green-500/20 rounded-full blur-xl animate-pulse"></div>
                                 <div className="relative w-full h-full bg-gradient-to-tr from-green-500/20 to-emerald-500/10 rounded-full flex items-center justify-center border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
                                     <CheckCircle2 className="w-10 h-10 text-green-400 drop-shadow-md" />
                                 </div>
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Password Updated</h3>
+                            <h3 className="text-lg font-bold text-white mb-2 tracking-tight">Password Updated</h3>
                             <p className="text-slate-400 text-sm mb-2">Your security has been restored.</p>
-                            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-indigo-400 uppercase tracking-widest font-semibold">
+                            <div className="mt-3 flex items-center justify-center gap-2 text-xs text-indigo-400 uppercase tracking-widest font-semibold">
                                 <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
                                 Redirecting to login...
                             </div>
@@ -142,14 +142,14 @@ export const ResetPassword: React.FC = () => {
                         <div className="animate-fade-in-up">
                             <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-                            <div className="mb-8 relative z-10">
-                                <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">New Credentials</h2>
+                            <div className="mb-4 relative z-10">
+                                <h2 className="text-lg font-bold text-white mb-2 tracking-tight">New Credentials</h2>
                                 <p className="text-slate-400 text-sm font-light">
                                     Resetting password for <span className='text-indigo-400 font-medium'>{email}</span>
                                 </p>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                            <form onSubmit={handleSubmit} className="space-y-3 relative z-10">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">New Password</label>
                                     <div className="relative group">

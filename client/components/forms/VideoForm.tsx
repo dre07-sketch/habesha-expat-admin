@@ -91,8 +91,8 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
   };
 
   const inputWrapperClass = "relative group";
-  const inputClass = "w-full pl-10 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400";
-  const textAreaClass = "w-full pl-10 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400 resize-none";
+  const inputClass = "w-full pl-5 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400";
+  const textAreaClass = "w-full pl-5 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400 resize-none";
   const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1";
   const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors h-4 w-4 pointer-events-none";
   const iconTextAreaClass = "absolute left-3 top-4 text-slate-400 group-focus-within:text-blue-500 transition-colors h-4 w-4 pointer-events-none";
@@ -102,23 +102,23 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
         {/* Cool Loading Overlay */}
         {isSubmitting && (
             <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
-                <div className="relative mb-6">
-                    <div className="w-20 h-20 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
-                    <div className="w-20 h-20 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
-                    <Film className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={24} />
+                <div className="relative mb-3">
+                    <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
+                    <Film className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={16} />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Processing Video...</h3>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Processing Video...</h3>
                 <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Encoding and uploading content</p>
             </div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
         {/* Left Column: Video Details */}
-        <div className="space-y-6">
+        <div className="space-y-3">
             <div className="pb-2 border-b border-slate-100 dark:border-slate-700">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
-                    <Film className="mr-2 text-blue-500" size={20} /> Metadata & Info
+                    <Film className="mr-2 text-blue-500" size={14} /> Metadata & Info
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Details about the video content.</p>
             </div>
@@ -195,10 +195,10 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
         </div>
 
         {/* Right Column: Media Assets */}
-        <div className="space-y-6">
+        <div className="space-y-3">
             <div className="pb-2 border-b border-slate-100 dark:border-slate-700">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
-                    <UploadCloud className="mr-2 text-indigo-500" size={20} /> Media Files
+                    <UploadCloud className="mr-2 text-indigo-500" size={14} /> Media Files
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Upload video file and thumbnail.</p>
             </div>
@@ -206,7 +206,7 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
             {/* Video File Upload */}
             <div>
                 <label className={labelClass}>Video File (MP4/MOV)</label>
-                <div className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors cursor-pointer group bg-slate-50/30 dark:bg-slate-900/30">
+                <div className="mt-1 flex justify-center px-3 pt-4 pb-4 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors cursor-pointer group bg-slate-50/30 dark:bg-slate-900/30">
                     <div className="space-y-2 text-center">
                         <div className="mx-auto h-12 w-12 text-slate-400 group-hover:text-blue-500 transition-colors bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center">
                             <Film className="h-6 w-6" />
@@ -226,8 +226,8 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
             <div>
                 <label className={labelClass}>Thumbnail Image (16:9)</label>
                 <div className="mt-1 flex items-center px-4 py-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900">
-                    <div className="h-12 w-16 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-4 overflow-hidden">
-                        <ImageIcon size={20} />
+                    <div className="h-12 w-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-4 overflow-hidden">
+                        <ImageIcon size={14} />
                     </div>
                     <div className="flex-1">
                         <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Select Image</p>
@@ -239,11 +239,11 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="col-span-1 lg:col-span-2 pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
-            <button type="button" onClick={onCancel} className="px-6 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+        <div className="col-span-1 lg:col-span-2 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
+            <button type="button" onClick={onCancel} className="px-3 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 Cancel
             </button>
-            <button type="submit" className="px-8 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all">
+            <button type="submit" className="px-4 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all">
                 Publish Video
             </button>
         </div>

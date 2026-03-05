@@ -141,7 +141,7 @@ const Settings: React.FC = () => {
         }
     };
 
-    const inputClass = "w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all";
+    const inputClass = "w-full pl-5 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all";
     const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2";
 
     // Show loading state while fetching admin data
@@ -154,7 +154,7 @@ const Settings: React.FC = () => {
     }
 
     return (
-        <div className="animate-in fade-in duration-500 max-w-4xl mx-auto space-y-8">
+        <div className="animate-in fade-in duration-500 max-w-4xl mx-auto space-y-4">
             {/* Error display for initial fetch */}
             {error && !isSaving && !togglingService && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-4 rounded-xl">
@@ -162,8 +162,8 @@ const Settings: React.FC = () => {
                 </div>
             )}
 
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Platform Settings</h1>
+            <div className="mb-4">
+                <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Platform Settings</h1>
                 <p className="text-slate-500 dark:text-slate-400 mt-2">Manage your admin credentials and critical system configurations.</p>
             </div>
 
@@ -173,12 +173,12 @@ const Settings: React.FC = () => {
                 {/* Cool Loading Overlay */}
                 {isSaving && (
                     <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
-                        <div className="relative mb-6">
-                            <div className="w-20 h-20 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
-                            <div className="w-20 h-20 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
-                            <User className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={24} />
+                        <div className="relative mb-3">
+                            <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
+                            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
+                            <User className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={16} />
                         </div>
-                        <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Saving Changes...</h3>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Saving Changes...</h3>
                         <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Updating account profile</p>
                     </div>
                 )}
@@ -186,22 +186,22 @@ const Settings: React.FC = () => {
                 {/* Success Overlay */}
                 {saveSuccess && (
                     <div className="absolute inset-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
-                        <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(16,185,129,0.5)] border border-emerald-200 dark:border-emerald-800">
-                            <CheckCircle className="text-emerald-600 dark:text-emerald-400" size={40} />
+                        <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.5)] border border-emerald-200 dark:border-emerald-800">
+                            <CheckCircle className="text-emerald-600 dark:text-emerald-400" size={16} />
                         </div>
-                        <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Saved Successfully</h3>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Saved Successfully</h3>
                         <p className="text-slate-500 dark:text-slate-400 font-medium">Your profile has been updated</p>
                     </div>
                 )}
 
-                <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+                <div className="p-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
                     <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
-                        <User className="mr-2 text-blue-500" size={20} /> Account Information
+                        <User className="mr-2 text-blue-500" size={14} /> Account Information
                     </h2>
                     <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full uppercase">Super Admin</span>
                 </div>
-                <div className="p-8">
-                    <form className="space-y-6" onSubmit={handleSave}>
+                <div className="p-4">
+                    <form className="space-y-3" onSubmit={handleSave}>
                         <div>
                             <label className={labelClass}>Admin Email</label>
                             <div className="relative">
@@ -215,7 +215,7 @@ const Settings: React.FC = () => {
                                 />
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <label className={labelClass}>New Password</label>
                                 <div className="relative">
@@ -251,10 +251,10 @@ const Settings: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="pt-6 mt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+                        <div className="pt-3 mt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
                             <button
                                 type="submit"
-                                className="flex items-center bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center bg-blue-600 hover:bg-blue-500 text-white px-3 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={isSaving || !adminId}
                             >
                                 <Save size={18} className="mr-2" /> Save Changes
@@ -269,26 +269,26 @@ const Settings: React.FC = () => {
                 {/* Background Pattern */}
                 <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(220,38,38,0.03)_25%,transparent_25%,transparent_50%,rgba(220,38,38,0.03)_50%,rgba(220,38,38,0.03)_75%,transparent_75%,transparent_100%)] bg-[length:24px_24px]"></div>
 
-                <div className="p-8 relative z-10">
-                    <div className="flex items-start space-x-5 mb-10">
+                <div className="p-4 relative z-10">
+                    <div className="flex items-start space-x-5 mb-5">
                         <div className="p-3.5 bg-red-50 dark:bg-slate-800/80 rounded-2xl border border-red-200 dark:border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.15)] backdrop-blur-sm">
-                            <AlertTriangle className="text-red-600 dark:text-red-500" size={32} />
+                            <AlertTriangle className="text-red-600 dark:text-red-500" size={14} />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">Emergency Shutdown Zone</h2>
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight mb-1">Emergency Shutdown Zone</h2>
                             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed">Restricted Area. Actions here have immediate global impact on system availability.</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         {systemStatus.filter(service => service.serviceName !== 'Admin Panel').map((service) => (
-                            <div key={service.id} className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-6 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-lg flex flex-col sm:flex-row justify-between items-center gap-6">
+                            <div key={service.id} className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-lg flex flex-col sm:flex-row justify-between items-center gap-3">
                                 <div className="flex-1">
                                     <div className="flex items-center space-x-3 mb-2">
                                         {service.serviceName === 'Public Website' ? (
-                                            <Globe className={`text-${service.status === 'activated' ? 'emerald' : 'slate'}-500`} size={22} />
+                                            <Globe className={`text-${service.status === 'activated' ? 'emerald' : 'slate'}-500`} size={15} />
                                         ) : (
-                                            <LayoutDashboard className={`text-${service.status === 'activated' ? 'emerald' : 'slate'}-500`} size={22} />
+                                            <LayoutDashboard className={`text-${service.status === 'activated' ? 'emerald' : 'slate'}-500`} size={15} />
                                         )}
                                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">{service.serviceName}</h3>
                                     </div>
@@ -309,7 +309,7 @@ const Settings: React.FC = () => {
                                 <div className="flex flex-col items-end gap-3">
                                     {togglingService === service.id ? (
                                         <div className="flex items-center justify-center w-12 h-7">
-                                            <Loader2 className="animate-spin text-blue-500" size={20} />
+                                            <Loader2 className="animate-spin text-blue-500" size={14} />
                                         </div>
                                     ) : (
                                         <button

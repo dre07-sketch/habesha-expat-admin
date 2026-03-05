@@ -157,24 +157,24 @@ const Ads: React.FC = () => {
 
     return (
         <div className="animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Ad Campaigns</h1>
+                    <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Ad Campaigns</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage banners, promotions, and sponsorships.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
                     <div className="relative w-full md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                         <input
                             type="text"
                             placeholder="Search ads..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+                            className="w-full pl-5 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
                         />
                     </div>
-                    <button onClick={() => setIsFormOpen(true)} className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap">
-                        <Plus size={20} className="mr-2" /> Create Campaign
+                    <button onClick={() => setIsFormOpen(true)} className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-3 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap">
+                        <Plus size={14} className="mr-2" /> Create Campaign
                     </button>
                 </div>
             </div>
@@ -189,7 +189,7 @@ const Ads: React.FC = () => {
 
             {/* Error State */}
             {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-6">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 mb-3">
                     <p className="text-red-800 dark:text-red-200 font-medium">Error: {error}</p>
                     <button
                         onClick={() => window.location.reload()}
@@ -206,7 +206,7 @@ const Ads: React.FC = () => {
                     {filteredAds.map((ad) => (
                         <div
                             key={ad.id}
-                            className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col md:flex-row gap-6 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
+                            className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col md:flex-row gap-3 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
                             onClick={() => setSelectedAd(ad)}
                         >
                             {/* Status Bar */}
@@ -216,7 +216,7 @@ const Ads: React.FC = () => {
                             <div className="shrink-0 w-full md:w-48 h-28 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 relative border border-slate-200 dark:border-slate-700">
                                 {ad.type === 'Video' ? (
                                     <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                        <PlayCircle size={32} />
+                                        <PlayCircle size={14} />
                                     </div>
                                 ) : (
                                     <img src={getImageUrl(ad.mediaFile)} alt="Ad" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -247,7 +247,7 @@ const Ads: React.FC = () => {
                             </div>
 
                             {/* Stats & Action */}
-                            <div className="flex flex-col md:items-end justify-between border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-4 md:pt-0 md:pl-6 w-full md:w-40">
+                            <div className="flex flex-col md:items-end justify-between border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 pt-4 md:pt-0 md:pl-3 w-full md:w-40">
                                 <div className="text-right hidden md:block">
                                     <div className="text-xs text-slate-400 uppercase font-bold flex items-center justify-end"><Calendar size={10} className="mr-1" /> Duration</div>
                                     <div className="text-lg font-bold text-slate-800 dark:text-white">{ad.durationDays} <span className="text-xs font-medium text-slate-500">Days</span></div>
@@ -270,7 +270,7 @@ const Ads: React.FC = () => {
                         </div>
                     ))}
                     {filteredAds.length === 0 && (
-                        <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                        <div className="p-4 text-center text-slate-500 dark:text-slate-400">
                             No ad campaigns found.
                         </div>
                     )}
@@ -286,13 +286,13 @@ const Ads: React.FC = () => {
                 {selectedAd && (
                     <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden flex flex-col">
                         {/* Preview Area */}
-                        <div className="w-full bg-slate-100 dark:bg-black border-b border-slate-200 dark:border-slate-800 p-8 flex items-center justify-center min-h-[300px] relative group">
+                        <div className="w-full bg-slate-100 dark:bg-black border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-center min-h-[160px] relative group">
                             <div className="absolute inset-0 bg-[linear-gradient(45deg,#0000000d_25%,transparent_25%,transparent_75%,#0000000d_75%,#0000000d),linear-gradient(45deg,#0000000d_25%,transparent_25%,transparent_75%,#0000000d_75%,#0000000d)] bg-[length:20px_20px] bg-[position:0_0,10px_10px] opacity-20 pointer-events-none"></div>
 
                             <div className="relative max-w-full max-h-full shadow-2xl rounded-lg overflow-hidden ring-4 ring-white dark:ring-slate-700">
                                 {selectedAd.type === 'Video' ? (
                                     <div className="w-[500px] aspect-video bg-black flex items-center justify-center">
-                                        <PlayCircle size={48} className="text-white opacity-50" />
+                                        <PlayCircle size={18} className="text-white opacity-50" />
                                     </div>
                                 ) : (
                                     <img src={getImageUrl(selectedAd.mediaFile)} alt="Ad Preview" className="max-w-full h-auto object-contain" />
@@ -304,11 +304,11 @@ const Ads: React.FC = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="p-8">
-                            <div className="flex justify-between items-start mb-6">
+                        <div className="p-4">
+                            <div className="flex justify-between items-start mb-3">
                                 <div>
                                     <span className="text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-1 block">Campaign Name</span>
-                                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{selectedAd.title}</h2>
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{selectedAd.title}</h2>
                                 </div>
                                 <div className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide flex items-center ${selectedAd.status === 'active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                                     <span className={`w-2 h-2 rounded-full mr-2 ${selectedAd.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
@@ -316,7 +316,7 @@ const Ads: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
                                     <div className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-2 flex items-center"><Layout size={14} className="mr-1.5" /> Placement</div>
                                     <div className="font-bold text-slate-800 dark:text-white text-lg">{selectedAd.placement}</div>
@@ -332,19 +332,19 @@ const Ads: React.FC = () => {
                             </div>
 
                             {/* Analytics Mockup */}
-                            <div className="border-t border-slate-100 dark:border-slate-700 pt-6">
+                            <div className="border-t border-slate-100 dark:border-slate-700 pt-3">
                                 <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide mb-4">Performance Overview</h3>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="text-center p-4 bg-blue-50/50 dark:bg-slate-800/30 rounded-xl">
-                                        <div className="text-2xl font-bold text-slate-800 dark:text-white">12.5k</div>
+                                        <div className="text-lg font-bold text-slate-800 dark:text-white">12.5k</div>
                                         <div className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase mt-1">Impressions</div>
                                     </div>
                                     <div className="text-center p-4 bg-emerald-50/50 dark:bg-slate-800/30 rounded-xl">
-                                        <div className="text-2xl font-bold text-slate-800 dark:text-white">482</div>
+                                        <div className="text-lg font-bold text-slate-800 dark:text-white">482</div>
                                         <div className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase mt-1">Clicks</div>
                                     </div>
                                     <div className="text-center p-4 bg-indigo-50/50 dark:bg-slate-800/30 rounded-xl">
-                                        <div className="text-2xl font-bold text-slate-800 dark:text-white">3.8%</div>
+                                        <div className="text-lg font-bold text-slate-800 dark:text-white">3.8%</div>
                                         <div className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase mt-1">CTR</div>
                                     </div>
                                 </div>
@@ -352,7 +352,7 @@ const Ads: React.FC = () => {
                         </div>
 
                         {/* Footer Action Bar */}
-                        <div className="bg-slate-50 dark:bg-slate-800 p-6 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center sticky bottom-0 z-20">
+                        <div className="bg-slate-50 dark:bg-slate-800 p-3 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center sticky bottom-0 z-20">
                             <div className="flex items-center">
                                 <span className="text-slate-500 dark:text-slate-400 text-sm font-medium mr-3">Status:</span>
                                 <span className={`flex items-center text-sm font-bold px-3 py-1 rounded-full ${selectedAd.status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
@@ -363,7 +363,7 @@ const Ads: React.FC = () => {
                             <button
                                 onClick={handleToggleStatus}
                                 disabled={actionLoading[selectedAd.id]}
-                                className={`px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${selectedAd.status === 'active' ? 'bg-slate-200 hover:bg-red-100 text-slate-700 hover:text-red-600 dark:bg-slate-700 dark:hover:bg-red-900/20 dark:text-slate-300 dark:hover:text-red-400 border border-transparent dark:border-slate-600 hover:border-red-200 dark:hover:border-red-800' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'}`}
+                                className={`px-3 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${selectedAd.status === 'active' ? 'bg-slate-200 hover:bg-red-100 text-slate-700 hover:text-red-600 dark:bg-slate-700 dark:hover:bg-red-900/20 dark:text-slate-300 dark:hover:text-red-400 border border-transparent dark:border-slate-600 hover:border-red-200 dark:hover:border-red-800' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'}`}
                             >
                                 {actionLoading[selectedAd.id] ? (
                                     <>

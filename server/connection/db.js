@@ -3,11 +3,11 @@ require('dotenv').config();
 const { Pool, Client } = require('pg');
 
 const dbConfig = {
-    host: 'localhost',
-    user: 'postgres',
-    password: '1234',
-    database: 'habesha-expat',
-    port: 5432,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
     max: 20, // Increased max connections
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,

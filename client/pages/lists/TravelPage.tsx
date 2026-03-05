@@ -27,7 +27,7 @@ const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) =
                     <img src={destination.hero_image} alt={destination.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
-                    <div className="absolute bottom-0 left-0 p-8 w-full text-white">
+                    <div className="absolute bottom-0 left-0 p-4 w-full text-white">
                         {/* Badges Row */}
                         <div className="flex items-center gap-3 mb-2">
                             <span className="bg-blue-600 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{destination.duration}</span>
@@ -41,7 +41,7 @@ const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) =
                         </div>
 
                         {/* Title & Location */}
-                        <h2 className="text-3xl font-bold tracking-tight mb-1">{destination.name}</h2>
+                        <h2 className="text-xl font-bold tracking-tight mb-1">{destination.name}</h2>
                         <div className="flex items-center text-slate-300 text-xs font-medium">
                             <MapPin size={14} className="mr-1.5 text-blue-500" />
                             {destination.location}
@@ -50,8 +50,8 @@ const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) =
                 </div>
 
                 {/* Content Body */}
-                <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
                         {/* Left Column: Main Info */}
                         <div className="lg:col-span-2 space-y-9">
@@ -82,9 +82,9 @@ const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) =
                             {destination.itinerary && destination.itinerary.length > 0 && (
                                 <div>
                                     <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">Itinerary</h3>
-                                    <div className="relative border-l-2 border-slate-100 dark:border-slate-800 ml-2 space-y-6 pb-2">
+                                    <div className="relative border-l-2 border-slate-100 dark:border-slate-800 ml-2 space-y-3 pb-2">
                                         {destination.itinerary.map((day, i) => (
-                                            <div key={i} className="pl-6 relative">
+                                            <div key={i} className="pl-3 relative">
                                                 <div className="absolute -left-[7px] top-1 w-3.5 h-3.5 rounded-full border-2 border-blue-500 bg-white dark:bg-slate-900" />
                                                 <h4 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
                                                     Day {day.day}: <span className="font-normal text-slate-500 dark:text-slate-400">{day.title}</span>
@@ -98,11 +98,11 @@ const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) =
                         </div>
 
                         {/* Right Column: Sidebar Stats */}
-                        <div className="space-y-6">
+                        <div className="space-y-3">
                             {/* Price Card */}
-                            <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                                <div className="mb-6">
-                                    <div className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{destination.price}</div>
+                            <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
+                                <div className="mb-3">
+                                    <div className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{destination.price}</div>
                                     <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1">Per Person</div>
                                 </div>
 
@@ -131,7 +131,7 @@ const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) =
                                 </div>
 
                                 {/* Status Toggle Button */}
-                                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <div className="mt-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <button
                                         onClick={() => onToggleVisibility(destination.id)}
                                         disabled={isUpdating}
@@ -296,17 +296,17 @@ export default function TravelPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-slate-950 p-8">
+        <div className="min-h-screen bg-white dark:bg-slate-950 p-4">
             {/* Header Section */}
-            <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="max-w-7xl mx-auto mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Travel Destinations</h1>
+                    <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Travel Destinations</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your tours and travel packages.</p>
                 </div>
 
                 <button
                     onClick={handleOpenCreate}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 font-medium text-sm text-white transition-all duration-200 bg-blue-600 rounded-lg hover:bg-blue-500 shadow-lg shadow-blue-900/20"
+                    className="inline-flex items-center justify-center gap-2 px-3 py-2.5 font-medium text-sm text-white transition-all duration-200 bg-blue-600 rounded-lg hover:bg-blue-500 shadow-lg shadow-blue-900/20"
                 >
                     <Plus size={18} />
                     <span>New Destination</span>
@@ -331,7 +331,7 @@ export default function TravelPage() {
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="7" className="p-10 text-center text-slate-500">
+                                    <td colSpan="7" className="p-5 text-center text-slate-500">
                                         <div className="flex justify-center">
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                                         </div>
@@ -340,13 +340,13 @@ export default function TravelPage() {
                                 </tr>
                             ) : error ? (
                                 <tr>
-                                    <td colSpan="7" className="p-10 text-center text-red-500">
+                                    <td colSpan="7" className="p-5 text-center text-red-500">
                                         Error: {error}
                                     </td>
                                 </tr>
                             ) : destinations.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="p-10 text-center text-slate-500">
+                                    <td colSpan="7" className="p-5 text-center text-slate-500">
                                         No destinations found. Add one to get started.
                                     </td>
                                 </tr>

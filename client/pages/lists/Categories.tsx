@@ -128,23 +128,23 @@ const Categories: React.FC = () => {
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Content Categories</h1>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Content Categories</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Organize your platform's taxonomy and tags.</p>
         </div>
         <button
           onClick={() => setIsFormOpen(true)}
-          className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200"
+          className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-3 py-3 rounded-xl flex items-center font-semibold shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-0.5 transition-all duration-200"
         >
-          <Plus size={20} className="mr-2" /> Add Category
+          <Plus size={14} className="mr-2" /> Add Category
         </button>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 p-4 rounded-xl mb-6 flex items-center">
-          <AlertCircle size={20} className="mr-3" />
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 p-4 rounded-xl mb-3 flex items-center">
+          <AlertCircle size={14} className="mr-3" />
           <span>{error}</span>
           <button
             onClick={() => setError(null)}
@@ -181,11 +181,11 @@ const Categories: React.FC = () => {
 
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <RefreshCw size={24} className="animate-spin text-slate-400" />
+            <RefreshCw size={16} className="animate-spin text-slate-400" />
           </div>
         ) : categories.length === 0 ? (
           <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-            <Tag size={48} className="mx-auto mb-4 text-slate-300 dark:text-slate-600" />
+            <Tag size={18} className="mx-auto mb-4 text-slate-300 dark:text-slate-600" />
             <p>No categories found. Create your first category to get started.</p>
           </div>
         ) : (
@@ -204,7 +204,7 @@ const Categories: React.FC = () => {
                   {/* Name & Icon */}
                   <div className="w-5/12 flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${style.color} shadow-sm`}>
-                      <Icon size={20} />
+                      <Icon size={14} />
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{cat.name}</h3>
@@ -266,13 +266,13 @@ const Categories: React.FC = () => {
         {selectedCategory && (
           <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
             {/* Header Gradient */}
-            <div className={`h-40 w-full bg-gradient-to-r relative overflow-hidden flex items-center px-8 ${selectedCategory.type === 'Article' ? 'from-indigo-600 to-blue-600' :
+            <div className={`h-40 w-full bg-gradient-to-r relative overflow-hidden flex items-center px-4 ${selectedCategory.type === 'Article' ? 'from-indigo-600 to-blue-600' :
                 selectedCategory.type === 'Video' ? 'from-sky-600 to-cyan-600' :
                   selectedCategory.type === 'Podcast' ? 'from-rose-600 to-pink-600' :
                     'from-emerald-600 to-green-600'
               }`}>
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
-              <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white/10 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-white/10 to-transparent"></div>
 
               <div className="relative z-10 flex items-center w-full">
                 <div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl text-white shadow-xl border border-white/20 mr-6">
@@ -283,55 +283,55 @@ const Categories: React.FC = () => {
                     <span className="text-white/80 text-xs font-bold uppercase tracking-widest border border-white/30 px-2 py-0.5 rounded-full">{selectedCategory.type}</span>
                     <span className="text-white/60 text-xs flex items-center"><Hash size={12} className="mr-0.5" /> ID: {selectedCategory.id}</span>
                   </div>
-                  <h2 className="text-4xl font-bold text-white shadow-black drop-shadow-md">{selectedCategory.name}</h2>
+                  <h2 className="text-lg font-bold text-white shadow-black drop-shadow-md">{selectedCategory.name}</h2>
                 </div>
               </div>
             </div>
 
-            <div className="p-8">
+            <div className="p-4">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
-                  <Layers className="text-blue-500 mb-2" size={24} />
-                  <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTotalCount(selectedCategory.name)}</span>
+                  <Layers className="text-blue-500 mb-2" size={16} />
+                  <span className="text-lg font-bold text-slate-800 dark:text-white">{getCategoryTotalCount(selectedCategory.name)}</span>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Total Items</span>
                 </div>
 
                 {selectedCategory.type === 'Article' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
-                    <FileText className="text-indigo-500 mb-2" size={24} />
-                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'articles')}</span>
+                    <FileText className="text-indigo-500 mb-2" size={16} />
+                    <span className="text-lg font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'articles')}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Articles</span>
                   </div>
                 )}
 
                 {selectedCategory.type === 'Podcast' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
-                    <Mic className="text-rose-500 mb-2" size={24} />
-                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'podcasts')}</span>
+                    <Mic className="text-rose-500 mb-2" size={16} />
+                    <span className="text-lg font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'podcasts')}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Podcasts</span>
                   </div>
                 )}
 
                 {selectedCategory.type === 'Video' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
-                    <Video className="text-sky-500 mb-2" size={24} />
-                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'videos')}</span>
+                    <Video className="text-sky-500 mb-2" size={16} />
+                    <span className="text-lg font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'videos')}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Videos</span>
                   </div>
                 )}
 
                 {selectedCategory.type === 'Business' && (
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
-                    <Briefcase className="text-emerald-500 mb-2" size={24} />
-                    <span className="text-2xl font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'businesses')}</span>
+                    <Briefcase className="text-emerald-500 mb-2" size={16} />
+                    <span className="text-lg font-bold text-slate-800 dark:text-white">{getCategoryTypeCount(selectedCategory.name, 'businesses')}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Businesses</span>
                   </div>
                 )}
 
                 <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-center items-center text-center">
-                  <BarChart3 className="text-emerald-500 mb-2" size={24} />
-                  <span className="text-2xl font-bold text-slate-800 dark:text-white">12.5k</span>
+                  <BarChart3 className="text-emerald-500 mb-2" size={16} />
+                  <span className="text-lg font-bold text-slate-800 dark:text-white">12.5k</span>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Monthly Views</span>
                 </div>
               </div>

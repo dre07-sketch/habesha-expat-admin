@@ -27,21 +27,25 @@ router.post('/businesses-post', upload.any(), async (req, res) => {
             address,
             mapPin,
             website,
-            description
+            description,
+            slug,
+            location,
+            openingHours,
+            closingHours
         } = req.body;
 
         // Convert uploaded files to array of paths
-        // Since we use upload.any(), req.files contains all files. 
-        // We filter for those that start with 'image_' which is how the client sends them.
         const imagePaths = req.files
             ? req.files.filter(f => f.fieldname.startsWith('image_')).map(file => `/upload/${file.filename}`)
             : [];
 
         const sql = `
             INSERT INTO businesses 
-                (name, category, email, phone, address, map_pin, website_url, description, image_url, status)
+                (name, category, email, phone, address, map_pin, website_url, description, image_url, status,
+                 slug, location, opening_hours, closing_hours)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending',
+                 $10, $11, $12, $13)
             RETURNING id
         `;
 
@@ -54,7 +58,11 @@ router.post('/businesses-post', upload.any(), async (req, res) => {
             mapPin,
             website,
             description,
-            JSON.stringify(imagePaths) // Store as JSON string in image_url column
+            JSON.stringify(imagePaths),
+            slug || null,
+            location || null,
+            openingHours || null,
+            closingHours || null
         ]);
 
         res.status(201).json({
@@ -73,13 +81,22 @@ router.post('/businesses-post', upload.any(), async (req, res) => {
 
 router.get('/businesses-get', async (req, res) => {
     try {
-        // Fetch image_url which now might contain a JSON array of paths
         const sql = `
-            SELECT id, name, category, email, phone, address, 
-                   map_pin as mapPin, website_url, description, image_url, 
-                   status, rating 
-            FROM businesses 
-            ORDER BY created_at DESC
+            SELECT b.id, b.name, b.category, b.email, b.phone, b.address, 
+                   b.map_pin as mapPin, b.website_url, b.description, b.image_url, 
+                   b.status, b.slug, b.location, b.opening_hours, b.closing_hours,
+                   b.review_count as listing_views,
+                   COALESCE(r.avg_rating, 0) as average_rating,
+                   COALESCE(r.total_reviews, 0) as rating_count
+            FROM businesses b
+            LEFT JOIN (
+                SELECT business_id, 
+                       AVG(rating)::numeric(3,2) as avg_rating, 
+                       COUNT(*) as total_reviews 
+                FROM business_reviews 
+                GROUP BY business_id
+            ) r ON b.id = r.business_id
+            ORDER BY b.created_at DESC
         `;
         const { rows } = await query(sql);
 
@@ -158,8 +175,10 @@ router.get('/business-rating-comment/:id', async (req, res) => {
 
         // 1. GET BUSINESS
         const businessSql = `
-            SELECT id, name, category, email, phone, address, map_pin,
-                   website_url, description, image_url, status, created_at
+            SELECT id, name, category, email, phone, address, 
+                   map_pin as mapPin, website_url, description, image_url, 
+                   status, slug, location, opening_hours, closing_hours, created_at,
+                   review_count
             FROM businesses
             WHERE id = $1
         `;
@@ -172,11 +191,38 @@ router.get('/business-rating-comment/:id', async (req, res) => {
             });
         }
 
-        const business = businessResult.rows[0];
+        const b = businessResult.rows[0];
+
+        // Process images for detail view
+        let images = [];
+        let mainImage = null;
+        const host = req.protocol + '://' + req.get('host');
+
+        if (b.image_url) {
+            try {
+                const parsed = JSON.parse(b.image_url);
+                if (Array.isArray(parsed)) {
+                    images = parsed.map(path => `${host}${path}`);
+                    mainImage = images[0] || null;
+                } else {
+                    mainImage = `${host}${b.image_url}`;
+                    images = [mainImage];
+                }
+            } catch (e) {
+                mainImage = `${host}${b.image_url}`;
+                images = [mainImage];
+            }
+        }
+
+        const business = {
+            ...b,
+            image: mainImage,
+            images: images
+        };
 
         // 2. AVERAGE RATING
         const avgRatingSql = `
-            SELECT AVG(rating)::numeric(3,2) AS average_rating,
+            SELECT COALESCE(AVG(rating), 0)::numeric(3,2) AS average_rating,
                    COUNT(*) AS total_reviews
             FROM business_reviews
             WHERE business_id = $1
@@ -189,7 +235,8 @@ router.get('/business-rating-comment/:id', async (req, res) => {
         // 3. COMMENTS WITH USER DETAILS
         const commentsSql = `
             SELECT br.id, br.rating, br.comment, br.created_at,
-                   u.id AS user_id, u.name AS user_name, 
+                   u.id AS user_id, 
+                   TRIM(u.first_name || ' ' || COALESCE(u.last_name, '')) AS user_name, 
                    u.avatar_url AS user_avatar
             FROM business_reviews br
             LEFT JOIN users u ON br.user_id = u.id
@@ -204,6 +251,7 @@ router.get('/business-rating-comment/:id', async (req, res) => {
             business,
             averageRating,
             totalReviews,
+            listingViews: business.review_count || 0,
             comments: commentsResult.rows
         });
 

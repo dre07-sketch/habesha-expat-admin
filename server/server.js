@@ -33,7 +33,8 @@ app.use(helmet({
 // Security Middleware: CORS
 const allowedOrigins = [
     'http://localhost:5173', // Vite default
-    'http://localhost:3000', // React default
+    'http://localhost:3000',
+    'http://localhost:3001', // React default
     process.env.CLIENT_URL   // Production URL
 ].filter(Boolean);
 

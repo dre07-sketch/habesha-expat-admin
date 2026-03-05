@@ -107,36 +107,36 @@ const ForgotPassword: React.FC = () => {
 
       {/* Main Content */}
       <div className="relative z-10 w-full max-w-[400px] mx-auto p-4">
-        <div className="glass-panel p-8 md:p-10 rounded-[2rem] shadow-2xl border border-white/10 w-full text-center relative overflow-hidden backdrop-blur-xl bg-slate-900/60">
+        <div className="glass-panel p-4 md:p-5 rounded-[2rem] shadow-2xl border border-white/10 w-full text-center relative overflow-hidden backdrop-blur-xl bg-slate-900/60">
 
           {/* Icon Container */}
-          <div className="mx-auto w-16 h-16 bg-[#1e293b]/50 rounded-2xl flex items-center justify-center mb-6 relative border border-white/5 group">
+          <div className="mx-auto w-10 h-10 bg-[#1e293b]/50 rounded-2xl flex items-center justify-center mb-3 relative border border-white/5 group">
             <div className="absolute inset-0 bg-indigo-500/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="absolute top-3 right-4 w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.6)] animate-pulse"></div>
             <KeyRound className="w-7 h-7 text-indigo-400 relative z-10" strokeWidth={1.5} />
           </div>
 
-          <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Forgot Password?</h2>
-          <p className="text-slate-400 text-sm mb-8 leading-relaxed px-2 font-light">
+          <h2 className="text-lg font-bold text-white mb-2 tracking-tight">Forgot Password?</h2>
+          <p className="text-slate-400 text-sm mb-4 leading-relaxed px-2 font-light">
             Enter your email and we'll send you<br />instructions to reset your password.
           </p>
 
           {/* Status Messages */}
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
+            <div className="mb-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
               <p className="text-red-400 text-sm font-medium">{error}</p>
             </div>
           )}
 
           {success && (
-            <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl flex items-start gap-3">
+            <div className="mb-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
               <p className="text-green-400 text-sm font-medium">{success}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="text-left space-y-6">
+          <form onSubmit={handleSubmit} className="text-left space-y-3">
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
                 Registered Email
@@ -175,7 +175,7 @@ const ForgotPassword: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-8 pt-4 border-t border-white/5">
+          <div className="mt-4 pt-4 border-t border-white/5">
             <button
               onClick={() => navigate('/login')}
               className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-white transition-colors"

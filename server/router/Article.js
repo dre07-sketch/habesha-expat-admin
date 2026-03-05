@@ -24,21 +24,26 @@ const upload = multer({
     const imageAllowed = /jpeg|jpg|png|webp/;
     // Regex for videos
     const videoAllowed = /mp4|webm|ogg|mov/;
+    // Regex for PDFs
+    const pdfAllowed = /pdf/;
 
     const ext = path.extname(file.originalname).toLowerCase();
 
     // Check based on fieldname
     if (file.fieldname === 'image') {
-      const isImage = imageAllowed.test(ext);
-      // Optional: check mimetype as well
-      if (isImage) return cb(null, true);
+      if (imageAllowed.test(ext)) return cb(null, true);
       cb(new Error('Only image files are allowed for the image field'));
     } else if (file.fieldname === 'video') {
-      const isVideo = videoAllowed.test(ext);
-      if (isVideo) return cb(null, true);
-      cb(new Error('Only video files (mp4, webm, ogg, mov) are allowed for the video field'));
+      if (videoAllowed.test(ext)) return cb(null, true);
+      cb(new Error('Only video files are allowed for the video field'));
+    } else if (file.fieldname.startsWith('attachment_')) {
+      // Allow images and PDFs for attachments
+      if (imageAllowed.test(ext) || pdfAllowed.test(ext)) {
+        return cb(null, true);
+      }
+      cb(new Error('Only images and PDFs are allowed for attachments'));
     } else {
-      cb(new Error('Unexpected field'));
+      cb(new Error('Unexpected field: ' + file.fieldname));
     }
   }
 });
@@ -62,11 +67,8 @@ const buildMediaURL = (path, baseURL) => {
 };
 
 
-// Configure for multiple fields: 'image' and 'video'
-router.post('/articles-post', upload.fields([
-  { name: 'image', maxCount: 1 },
-  { name: 'video', maxCount: 1 }
-]), async (req, res) => {
+// Configure for multiple fields: 'image', 'video' and dynamic attachments
+router.post('/articles-post', upload.any(), async (req, res) => {
   try {
     const {
       title,
@@ -79,7 +81,8 @@ router.post('/articles-post', upload.fields([
       status,
       tags,
       url,
-      video_url
+      video_url,
+      attachments_meta
     } = req.body;
 
     /* =========================
@@ -116,17 +119,42 @@ router.post('/articles-post', upload.fields([
       }
     }
 
-    // req.files is now an object because of upload.fields()
-    // e.g. req.files['image'] -> [fileObject], req.files['video'] -> [fileObject]
-
+    // req.files is an array because of upload.any()
     let imagePath = null;
-    if (req.files && req.files['image'] && req.files['image'][0]) {
-      imagePath = `/upload/${req.files['image'][0].filename}`;
+    let uploadedVideoPath = null;
+    let processedAttachments = [];
+
+    if (req.files) {
+      req.files.forEach(file => {
+        if (file.fieldname === 'image') {
+          imagePath = `/upload/${file.filename}`;
+        } else if (file.fieldname === 'video') {
+          uploadedVideoPath = `/upload/${file.filename}`;
+        }
+      });
     }
 
-    let uploadedVideoPath = null;
-    if (req.files && req.files['video'] && req.files['video'][0]) {
-      uploadedVideoPath = `/upload/${req.files['video'][0].filename}`;
+    // Process dynamic attachments if they exist
+    if (attachments_meta) {
+      try {
+        const meta = JSON.parse(attachments_meta);
+        meta.forEach(item => {
+          if (item.type === 'video_url') {
+            processedAttachments.push({ type: 'video_url', url: item.url });
+          } else if (item.fieldName) {
+            const file = req.files.find(f => f.fieldname === item.fieldName);
+            if (file) {
+              processedAttachments.push({
+                type: item.type,
+                url: `/upload/${file.filename}`,
+                originalName: item.originalName
+              });
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Error parsing attachments_meta:', err);
+      }
     }
 
     // If an actual video file is uploaded, it takes precedence over the video_url string
@@ -148,12 +176,13 @@ router.post('/articles-post', upload.fields([
         status,
         tags,
         url,
-        video_url
+        video_url,
+        attachments
       )
       VALUES (
         $1,$2,$3,$4,$5,
         $6,$7,$8,$9,$10,
-        $11,$12
+        $11,$12,$13
       )
       RETURNING *;
     `;
@@ -170,7 +199,8 @@ router.post('/articles-post', upload.fields([
       status || 'draft',
       parsedTags,
       url || null,
-      finalVideoUrl
+      finalVideoUrl,
+      JSON.stringify(processedAttachments)
     ];
 
     const result = await query(sql, values);
@@ -217,7 +247,8 @@ router.get("/articles-get", async (req, res) => {
         created_at,
         tags,
         url,
-        video_url
+        video_url,
+        attachments
       FROM articles
       ORDER BY publish_date DESC;
     `;
@@ -240,7 +271,11 @@ router.get("/articles-get", async (req, res) => {
         tags: article.tags || [],
         url: article.url || null,
         image: buildMediaURL(article.image_url, baseURL),
-        video_url: buildMediaURL(article.video_url, baseURL)
+        video_url: buildMediaURL(article.video_url, baseURL),
+        attachments: (article.attachments || []).map(att => ({
+          ...att,
+          url: buildMediaURL(att.url, baseURL)
+        }))
       };
     });
 
@@ -355,7 +390,7 @@ router.get('/articles/:id/comments', async (req, res) => {
                 c.id,
                 c.content,
                 c.created_at,
-                u.name AS user_name
+                TRIM(u.first_name || ' ' || COALESCE(u.last_name, '')) AS user_name
             FROM comments c
             INNER JOIN users u ON u.id = c.user_id
             WHERE c.article_id = $1
@@ -386,7 +421,7 @@ router.get('/articles/:id/likes', async (req, res) => {
             SELECT 
                 l.id,
                 l.created_at,
-                u.name AS user_name
+                TRIM(u.first_name || ' ' || COALESCE(u.last_name, '')) AS user_name
             FROM likes l
             INNER JOIN users u ON u.id = l.user_id
             WHERE l.article_id = $1
@@ -425,7 +460,7 @@ router.get('/articles/:id/full', async (req, res) => {
                 c.id,
                 c.content,
                 c.created_at,
-                u.full_name AS user_name
+                TRIM(u.first_name || ' ' || COALESCE(u.last_name, '')) AS user_name
             FROM comments c
             INNER JOIN users u ON u.id = c.user_id
             WHERE c.article_id = $1
@@ -436,7 +471,7 @@ router.get('/articles/:id/full', async (req, res) => {
             SELECT 
                 l.id,
                 l.created_at,
-                u.full_name AS user_name
+                TRIM(u.first_name || ' ' || COALESCE(u.last_name, '')) AS user_name
             FROM likes l
             INNER JOIN users u ON u.id = l.user_id
             WHERE l.article_id = $1

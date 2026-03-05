@@ -24,7 +24,7 @@ const SuspendedAccount: React.FC = () => {
       </div>
 
       {/* Main Glass Content Wrapper */}
-      <div className="relative z-10 w-full max-w-6xl px-4 flex flex-col items-center justify-center gap-8 h-full max-h-[900px]">
+      <div className="relative z-10 w-full max-w-6xl px-4 flex flex-col items-center justify-center gap-4 h-full max-h-[900px]">
         
         {/* The Master Glass Card */}
         <div className="relative w-full backdrop-blur-[40px] bg-white/[0.02] border border-white/10 rounded-[3rem] shadow-[0_48px_96px_-24px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in zoom-in duration-1000">
@@ -35,8 +35,8 @@ const SuspendedAccount: React.FC = () => {
           {/* Top Visual Accent Strip */}
           <div className="relative h-1.5 w-full bg-gradient-to-r from-habesha-green via-habesha-gold to-habesha-red opacity-40"></div>
 
-          <div className="p-8 md:p-12 lg:p-16">
-            <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
+          <div className="p-4 md:p-12 lg:p-16">
+            <div className="flex flex-col lg:flex-row items-center gap-5 lg:gap-20">
               
               {/* Left Side: Visual / Icon */}
               <div className="flex-shrink-0">
@@ -60,12 +60,12 @@ const SuspendedAccount: React.FC = () => {
               </div>
 
               {/* Right Side: Information */}
-              <div className="flex-1 text-center lg:text-left space-y-6">
+              <div className="flex-1 text-center lg:text-left space-y-3">
                 <div className="space-y-3">
                   <span className="inline-block px-3 py-1 rounded-full bg-habesha-red/10 border border-habesha-red/20 text-habesha-red text-[10px] font-bold tracking-[0.2em] uppercase">
                     Security Lockdown
                   </span>
-                  <h1 className="text-4xl md:text-6xl font-serif font-bold tracking-tight text-white leading-[1.1]">
+                  <h1 className="text-lg md:text-6xl font-serif font-bold tracking-tight text-white leading-[1.1]">
                     Access <span className="bg-clip-text text-transparent bg-gradient-to-r from-habesha-gold via-white to-habesha-gold animate-gradient-x">Paused</span>
                   </h1>
                 </div>
@@ -107,7 +107,7 @@ const SuspendedAccount: React.FC = () => {
           </div>
 
           {/* Bottom Visual Data Strip */}
-          <div className="px-10 py-5 bg-black/40 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="px-5 py-5 bg-black/40 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4 text-[10px] font-mono text-gray-500 tracking-wider">
                <span className="flex items-center gap-2">
                  <div className="w-1.5 h-1.5 bg-habesha-green rounded-full shadow-[0_0_8px_rgba(46,93,75,0.8)]"></div> 
@@ -125,7 +125,7 @@ const SuspendedAccount: React.FC = () => {
 
         {/* Global Footer Elements - Compact */}
         <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
-          <div className="flex items-center gap-8 text-white/30 text-[10px] font-semibold uppercase tracking-[0.4em]">
+          <div className="flex items-center gap-4 text-white/30 text-[10px] font-semibold uppercase tracking-[0.4em]">
              <a href="#" className="hover:text-habesha-gold transition-all duration-300">Terms</a>
              <div className="w-1 h-1 bg-white/10 rounded-full"></div>
              <a href="#" className="hover:text-habesha-gold transition-all duration-300">Privacy</a>

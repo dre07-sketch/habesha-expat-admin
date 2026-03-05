@@ -23,6 +23,12 @@ export interface Business {
   status: 'pending' | 'approved' | 'rejected';
   rating?: number;
   reviews?: Review[];
+  description?: string;
+  website_url?: string;
+  images?: string[];
+  listing_views?: number;
+  rating_count?: number;
+  average_rating?: number;
 }
 
 export interface Like {
@@ -90,6 +96,7 @@ export interface Article {
   views?: number;
   likedBy?: Like[];
   commentList?: Comment[];
+  attachments?: any[];
 }
 
 export interface Subscriber {

@@ -231,30 +231,30 @@ export const OTP: React.FC = () => {
 
             {/* Main Card */}
             <div className="relative z-10 w-full max-w-[440px] mx-auto p-4">
-                <div className="glass-panel w-full p-8 md:p-12 rounded-[2rem] border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl relative overflow-hidden animate-fade-in-up">
+                <div className="glass-panel w-full p-4 md:p-12 rounded-[2rem] border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl relative overflow-hidden animate-fade-in-up">
                     {/* Decorative glow inside card */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-indigo-500/10 blur-[60px] pointer-events-none"></div>
 
                     <button
                         onClick={() => navigate('/forgot-password')}
-                        className="flex items-center text-xs font-medium text-slate-500 hover:text-white transition-colors mb-8 group uppercase tracking-wider relative z-20"
+                        className="flex items-center text-xs font-medium text-slate-500 hover:text-white transition-colors mb-4 group uppercase tracking-wider relative z-20"
                     >
                         <ArrowLeft className="w-3 h-3 mr-1 group-hover:-translate-x-1 transition-transform" />
                         Back
                     </button>
 
-                    <div className="mb-10 text-center relative z-20">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-blue-500/20 border border-white/5 mb-6 shadow-inner">
+                    <div className="mb-5 text-center relative z-20">
+                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-blue-500/20 border border-white/5 mb-3 shadow-inner">
                             <ShieldCheck className="w-8 h-8 text-indigo-400 drop-shadow-md" />
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Security Check</h2>
+                        <h2 className="text-lg font-bold text-white mb-2 tracking-tight">Security Check</h2>
                         <p className="text-slate-400 text-sm">
                             Please enter the 6-digit code sent to<br />
                             <span className="text-indigo-300">{email}</span>
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-8 relative z-20">
+                    <form onSubmit={handleSubmit} className="space-y-4 relative z-20">
                         <div className="flex justify-center gap-2 md:gap-3 mx-auto">
                             {otp.map((data, index) => (
                                 <input
@@ -265,7 +265,7 @@ export const OTP: React.FC = () => {
                                     value={data}
                                     onChange={e => handleChange(e.target, index)}
                                     onKeyDown={e => handleKeyDown(e, index)}
-                                    className={`w-11 h-14 md:w-12 md:h-16 bg-slate-950/50 border rounded-xl text-center text-xl md:text-2xl font-bold text-white transition-all duration-200 shadow-inner
+                                    className={`w-11 h-14 md:w-12 md:h-10 bg-slate-950/50 border rounded-xl text-center text-xl md:text-lg font-bold text-white transition-all duration-200 shadow-inner
                                         ${data
                                             ? 'border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.2)] scale-105'
                                             : 'border-slate-800 hover:border-slate-700'
@@ -281,7 +281,7 @@ export const OTP: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="text-center space-y-6">
+                        <div className="text-center space-y-3">
                             <button
                                 type="submit"
                                 disabled={otp.join('').length !== 6 || loading}
