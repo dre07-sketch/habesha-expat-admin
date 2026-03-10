@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Power, User, Lock, Mail, ShieldAlert, Globe, AlertTriangle, CheckCircle, LayoutDashboard, Loader2 } from 'lucide-react';
-import { MOCK_SYSTEM_STATUS } from '../../constants';
+import { Save, Power, User, Lock, Mail, ShieldAlert, Globe, AlertTriangle, CheckCircle, LayoutDashboard, Loader2, MessageCircle, Settings as SettingsIcon, Bell, Database, HardDrive, ShieldCheck } from 'lucide-react';
 
 const Settings: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -9,7 +8,7 @@ const Settings: React.FC = () => {
     const [error, setError] = useState('');
     const [adminId, setAdminId] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [systemStatus, setSystemStatus] = useState(MOCK_SYSTEM_STATUS);
+    const [systemStatus, setSystemStatus] = useState<any[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [togglingService, setTogglingService] = useState<number | null>(null);
@@ -19,35 +18,43 @@ const Settings: React.FC = () => {
         return localStorage.getItem('authToken');
     };
 
-    // Fetch admin data on component mount
+    // Fetch admin data and system status on component mount
     useEffect(() => {
-        const fetchAdminData = async () => {
+        const fetchData = async () => {
             try {
                 const token = getAuthToken();
                 if (!token) {
                     throw new Error('Authentication required');
                 }
 
-                const response = await fetch('http://localhost:5000/api/login/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                // Fetch admin account info
+                const adminResponse = await fetch('http://localhost:5000/api/login/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch admin data');
+
+                if (adminResponse.ok) {
+                    const adminData = await adminResponse.json();
+                    setEmail(adminData.email);
+                    setAdminId(adminData.id);
                 }
-                const data = await response.json();
-                setEmail(data.email);
-                setAdminId(data.id);
+
+                // Fetch real system statuses
+                const statusResponse = await fetch('http://localhost:5000/api/system/system-status', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (statusResponse.ok) {
+                    const statusData = await statusResponse.json();
+                    setSystemStatus(statusData);
+                }
+
             } catch (err) {
-                setError(err.message || 'Failed to load admin data');
+                setError(err.message || 'Failed to load platform data');
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchAdminData();
+        fetchData();
     }, []);
 
     const handleSave = async (e: React.FormEvent) => {
@@ -55,7 +62,6 @@ const Settings: React.FC = () => {
         setIsSaving(true);
         setError('');
 
-        // Validate passwords if provided
         if (password && password !== confirmPassword) {
             setError('Passwords do not match');
             setIsSaving(false);
@@ -64,17 +70,8 @@ const Settings: React.FC = () => {
 
         try {
             const token = getAuthToken();
-            if (!token) {
-                throw new Error('Authentication required');
-            }
+            const updateData = { email, ...(password && { password }) };
 
-            // Prepare data for API
-            const updateData = {
-                email,
-                ...(password && { password }) // Only include password if provided
-            };
-
-            // Make API call to update account settings
             const response = await fetch('http://localhost:5000/api/login/settings/account', {
                 method: 'PUT',
                 headers: {
@@ -89,15 +86,13 @@ const Settings: React.FC = () => {
                 throw new Error(errorData.error || 'Failed to update account settings');
             }
 
-            const result = await response.json();
-
             setIsSaving(false);
             setSaveSuccess(true);
             setPassword('');
             setConfirmPassword('');
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (err) {
-            setError(err.message || 'Failed to update settings. Please try again.');
+            setError(err.message || 'Failed to update settings');
             setIsSaving(false);
         }
     };
@@ -105,231 +100,303 @@ const Settings: React.FC = () => {
     const toggleService = async (id: number) => {
         setTogglingService(id);
         setError('');
-        
+
         try {
             const token = getAuthToken();
-            if (!token) {
-                throw new Error('Authentication required');
-            }
-
             const response = await fetch(`http://localhost:5000/api/system/system-status/${id}/toggle`, {
                 method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to toggle service status');
+                throw new Error(errorData.error || 'Failed to toggle service');
             }
 
             const result = await response.json();
-            
-            // Update the local state with the response from the API
+
             setSystemStatus(prev => prev.map(service =>
-                service.id === id ? { 
-                    ...service, 
+                service.id === id ? {
+                    ...service,
                     status: result.service.status,
-                    maintenanceMessage: result.service.maintenanceMessage 
+                    maintenanceMessage: result.service.maintenanceMessage
                 } : service
             ));
         } catch (err) {
-            setError(err.message || 'Failed to toggle service status. Please try again.');
+            setError(err.message || 'Failed to update system status');
         } finally {
             setTogglingService(null);
         }
     };
 
-    const inputClass = "w-full pl-5 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all";
-    const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2";
+    const inputClass = "w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white outline-none focus:border-indigo-500 dark:focus:border-indigo-500 transition-all font-bold shadow-sm placeholder:text-slate-400 dark:placeholder:text-slate-600";
+    const labelClass = "block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3 ml-2";
+    const iconClass = "absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600 group-focus-within:text-indigo-500 transition-colors h-5 w-5 pointer-events-none";
 
-    // Show loading state while fetching admin data
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="flex flex-col items-center justify-center h-screen space-y-4">
+                <div className="w-16 h-16 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Initializing Secure Core...</p>
             </div>
         );
     }
 
+    const loungeService = systemStatus.find(s => s.serviceName === 'Lounge');
+    const coreServices = systemStatus.filter(s => s.serviceName === 'Public Website' && s.id === 1);
+
     return (
-        <div className="animate-in fade-in duration-500 max-w-4xl mx-auto space-y-4">
-            {/* Error display for initial fetch */}
-            {error && !isSaving && !togglingService && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 p-4 rounded-xl">
-                    {error}
-                </div>
-            )}
-
-            <div className="mb-4">
-                <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Platform Settings</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-2">Manage your admin credentials and critical system configurations.</p>
-            </div>
-
-            {/* Account Information Section */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden relative">
-
-                {/* Cool Loading Overlay */}
-                {isSaving && (
-                    <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
-                        <div className="relative mb-3">
-                            <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
-                            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
-                            <User className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={16} />
+        <div className="max-w-6xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 px-2">
+                <div>
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2.5 bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-600/20 text-white">
+                            <SettingsIcon size={20} />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Saving Changes...</h3>
-                        <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Updating account profile</p>
+                        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em]">Control Center</span>
                     </div>
-                )}
-
-                {/* Success Overlay */}
-                {saveSuccess && (
-                    <div className="absolute inset-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
-                        <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.5)] border border-emerald-200 dark:border-emerald-800">
-                            <CheckCircle className="text-emerald-600 dark:text-emerald-400" size={16} />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Saved Successfully</h3>
-                        <p className="text-slate-500 dark:text-slate-400 font-medium">Your profile has been updated</p>
-                    </div>
-                )}
-
-                <div className="p-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
-                    <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
-                        <User className="mr-2 text-blue-500" size={14} /> Account Information
-                    </h2>
-                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full uppercase">Super Admin</span>
+                    <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight">Platform Configuration</h1>
                 </div>
-                <div className="p-4">
-                    <form className="space-y-3" onSubmit={handleSave}>
-                        <div>
-                            <label className={labelClass}>Admin Email</label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={inputClass}
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                                <label className={labelClass}>New Password</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className={inputClass}
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className={labelClass}>Confirm Password</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                    <input
-                                        type="password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className={inputClass}
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Error message display */}
-                        {error && (
-                            <div className="text-red-500 text-sm font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
-                                {error}
-                            </div>
-                        )}
-
-                        <div className="pt-3 mt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
-                            <button
-                                type="submit"
-                                className="flex items-center bg-blue-600 hover:bg-blue-500 text-white px-3 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={isSaving || !adminId}
-                            >
-                                <Save size={18} className="mr-2" /> Save Changes
-                            </button>
-                        </div>
-                    </form>
+                <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-900/80 p-4 rounded-[2rem] border border-slate-200 dark:border-slate-800 mb-1">
+                    <ShieldCheck className="text-emerald-500" size={20} />
+                    <div className="pr-4 border-r border-slate-200 dark:border-slate-800">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Security Level</p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">Encrypted / Root</p>
+                    </div>
+                    <div className="pl-2">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Admin</p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{email}</p>
+                    </div>
                 </div>
             </div>
 
-            {/* Danger Zone: Emergency Shutdown */}
-            <div className="bg-white dark:bg-[#0f172a] rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden relative">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(220,38,38,0.03)_25%,transparent_25%,transparent_50%,rgba(220,38,38,0.03)_50%,rgba(220,38,38,0.03)_75%,transparent_75%,transparent_100%)] bg-[length:24px_24px]"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left Column: Account & Lounge */}
+                <div className="lg:col-span-12 space-y-8">
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                        {/* Account Info - Spans 2 cols */}
+                        <div className="xl:col-span-2 bg-white dark:bg-slate-900/60 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-10 relative overflow-hidden group shadow-2xl transition-all">
+                            {/* Loading Overlay */}
+                            {isSaving && (
+                                <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300">
+                                    <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                                    <p className="text-xs font-black text-indigo-500 uppercase tracking-[0.2em]">Syncing Credentials</p>
+                                </div>
+                            )}
 
-                <div className="p-4 relative z-10">
-                    <div className="flex items-start space-x-5 mb-5">
-                        <div className="p-3.5 bg-red-50 dark:bg-slate-800/80 rounded-2xl border border-red-200 dark:border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.15)] backdrop-blur-sm">
-                            <AlertTriangle className="text-red-600 dark:text-red-500" size={14} />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight mb-1">Emergency Shutdown Zone</h2>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed">Restricted Area. Actions here have immediate global impact on system availability.</p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        {systemStatus.filter(service => service.serviceName !== 'Admin Panel').map((service) => (
-                            <div key={service.id} className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-lg flex flex-col sm:flex-row justify-between items-center gap-3">
-                                <div className="flex-1">
-                                    <div className="flex items-center space-x-3 mb-2">
-                                        {service.serviceName === 'Public Website' ? (
-                                            <Globe className={`text-${service.status === 'activated' ? 'emerald' : 'slate'}-500`} size={15} />
-                                        ) : (
-                                            <LayoutDashboard className={`text-${service.status === 'activated' ? 'emerald' : 'slate'}-500`} size={15} />
-                                        )}
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{service.serviceName}</h3>
+                            {/* Success Overlay */}
+                            {saveSuccess && (
+                                <div className="absolute inset-0 z-50 bg-emerald-500/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300 text-white">
+                                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
+                                        <CheckCircle size={32} />
                                     </div>
+                                    <h3 className="text-2xl font-black uppercase tracking-widest">Saved Successfully</h3>
+                                    <p className="font-bold opacity-80 mt-2">Core profile has been updated</p>
+                                </div>
+                            )}
 
-                                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                                        {service.serviceName === 'Public Website'
-                                            ? <span className="text-slate-700 dark:text-slate-300 font-mono">www.habeshaexpat.com</span>
-                                            : <span className="text-slate-700 dark:text-slate-300 font-mono">admin.habeshaexpat.com</span>
-                                        }
-                                    </p>
-                                    {service.status === 'deactivated' && (
-                                        <p className="text-red-500 text-xs mt-2 font-bold italic">
-                                            Maintenance Mode Active: "{service.maintenanceMessage}"
-                                        </p>
-                                    )}
+                            <div className="flex items-center gap-4 mb-10">
+                                <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-500 dark:text-slate-400">
+                                    <User size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Account Identity</h2>
+                                    <p className="text-sm font-bold text-slate-500">Master access credentials for the platform</p>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleSave} className="space-y-8">
+                                <div className="group relative">
+                                    <label className={labelClass}>Operational Email</label>
+                                    <div className="relative">
+                                        <Mail className={iconClass} />
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className={inputClass}
+                                            required
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="flex flex-col items-end gap-3">
-                                    {togglingService === service.id ? (
-                                        <div className="flex items-center justify-center w-12 h-7">
-                                            <Loader2 className="animate-spin text-blue-500" size={14} />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="group relative">
+                                        <label className={labelClass}>New Secret Key</label>
+                                        <div className="relative">
+                                            <Lock className={iconClass} />
+                                            <input
+                                                type="password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                className={inputClass}
+                                                placeholder="••••••••••••"
+                                            />
                                         </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => toggleService(service.id)}
-                                            disabled={togglingService !== null}
-                                            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 ${service.status === 'activated' ? 'bg-emerald-500 focus:ring-emerald-500' : 'bg-slate-200 dark:bg-slate-700 focus:ring-slate-500'}`}
-                                        >
-                                            <span className={`${service.status === 'activated' ? 'translate-x-6' : 'translate-x-1'} inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm`}>
-                                                <Power size={10} className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${service.status === 'activated' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                                            </span>
-                                        </button>
-                                    )}
-
-                                    <div className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border w-fit ${service.status === 'activated' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600'}`}>
-                                        <span className={`w-1.5 h-1.5 rounded-full mr-2 ${service.status === 'activated' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}></span>
-                                        {service.status === 'activated' ? 'System Online' : 'System Offline'}
+                                    </div>
+                                    <div className="group relative">
+                                        <label className={labelClass}>Verify Secret Key</label>
+                                        <div className="relative">
+                                            <Lock className={iconClass} />
+                                            <input
+                                                type="password"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                className={inputClass}
+                                                placeholder="••••••••••••"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
+
+                                {error && (
+                                    <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 p-6 rounded-3xl flex items-center gap-4 animate-in slide-in-from-top-2">
+                                        <AlertTriangle size={24} />
+                                        <p className="font-bold">{error}</p>
+                                    </div>
+                                )}
+
+                                <div className="pt-6 flex justify-end">
+                                    <button
+                                        type="submit"
+                                        disabled={isSaving || !adminId}
+                                        className="px-12 py-5 bg-indigo-600 hover:bg-white text-white hover:text-indigo-600 rounded-3xl font-black uppercase text-xs tracking-[0.2em] transition-all shadow-2xl shadow-indigo-600/30 active:scale-95 disabled:opacity-50 border-2 border-transparent hover:border-indigo-600 whitespace-nowrap"
+                                    >
+                                        Deploy Identity Update
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* Lounge Control - Right Side Panel */}
+                        <div className="xl:col-span-1 flex flex-col gap-8">
+                            <div className="bg-indigo-600 p-10 rounded-[2.5rem] shadow-2xl shadow-indigo-600/40 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+                                    <MessageCircle size={120} className="rotate-12" />
+                                </div>
+                                <div className="relative z-10 h-full flex flex-col">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="p-3 bg-white/20 rounded-2xl text-white">
+                                            <MessageCircle size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Lounge Status</p>
+                                            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Group Chat</h2>
+                                        </div>
+                                    </div>
+
+                                    <div className="my-8 flex-1">
+                                        <div className={`p-6 bg-white/10 rounded-3xl border border-white/20 backdrop-blur-md`}>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <span className="text-xs font-black text-white uppercase tracking-widest">Real-time Comms</span>
+                                                <div className={`w-3 h-3 rounded-full ${loungeService?.status === 'activated' ? 'bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]' : 'bg-rose-500'}`}></div>
+                                            </div>
+                                            <p className="text-sm font-bold text-white/80 leading-relaxed mb-6">
+                                                Control the availability of the global group chat lounge for all expatriate members.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => loungeService && toggleService(loungeService.id)}
+                                        disabled={togglingService !== null}
+                                        className={`w-full py-5 rounded-3xl font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 ${loungeService?.status === 'activated'
+                                            ? 'bg-rose-500 hover:bg-rose-400 text-white'
+                                            : 'bg-emerald-500 hover:bg-emerald-400 text-white'
+                                            }`}
+                                    >
+                                        {togglingService === loungeService?.id ? (
+                                            <Loader2 className="animate-spin" size={18} />
+                                        ) : loungeService?.status === 'activated' ? (
+                                            <><Power size={18} /> Shutdown Lounge</>
+                                        ) : (
+                                            <><Globe size={18} /> Initialize Lounge</>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
-                        ))}
+
+                            {/* Notification Block */}
+                            <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2rem] flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-slate-800 rounded-2xl text-slate-400"><Bell size={20} /></div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Alerts</p>
+                                        <p className="text-sm font-bold text-white">System Logs</p>
+                                    </div>
+                                </div>
+                                <div className="px-3 py-1 bg-slate-800 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest underline cursor-pointer hover:text-white">View All</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Emergency Shutdown Grid */}
+                    <div className="bg-slate-950 rounded-[3rem] border border-slate-900 p-10 relative overflow-hidden">
+                        {/* Danger Gradient */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-600 to-transparent opacity-50"></div>
+
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
+                            <div className="flex items-center gap-5">
+                                <div className="p-4 bg-rose-600/10 rounded-3xl border border-rose-600/20 text-rose-500">
+                                    <ShieldAlert size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Emergency Kill Switches</h2>
+                                    <p className="text-sm font-bold text-slate-500">Immediate global suspension of core platform services</p>
+                                </div>
+                            </div>
+                            <div className="px-6 py-2 bg-rose-600/20 text-rose-500 rounded-full border border-rose-600/30 text-[10px] font-black uppercase tracking-widest">
+                                Critical Access Only
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-8">
+                            {coreServices.map((service) => (
+                                <div key={service.id} className="bg-slate-900/40 border-2 border-slate-800 rounded-[2.5rem] p-8 flex items-center justify-between group hover:border-slate-700 transition-all">
+                                    <div className="flex items-center gap-6">
+                                        <div className={`p-4 rounded-3xl transition-colors ${service.status === 'activated' ? 'bg-emerald-600/10 text-emerald-500' : 'bg-rose-600/10 text-rose-500'}`}>
+                                            {service.serviceName === 'Public Website' ? <Globe size={24} /> : <Database size={24} />}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-black text-white uppercase tracking-tight">{service.serviceName}</h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <div className={`w-2 h-2 rounded-full ${service.status === 'activated' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                                    {service.status === 'activated' ? 'Operational' : 'Offline'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => toggleService(service.id)}
+                                        disabled={togglingService !== null}
+                                        className={`p-4 rounded-2xl transition-all shadow-lg active:scale-90 ${service.status === 'activated'
+                                            ? 'bg-slate-800 text-rose-500 hover:bg-rose-600 hover:text-white'
+                                            : 'bg-emerald-600 text-white shadow-emerald-600/20'
+                                            }`}
+                                    >
+                                        {togglingService === service.id ? (
+                                            <Loader2 className="animate-spin h-6 w-6" />
+                                        ) : service.status === 'activated' ? (
+                                            <Power size={24} />
+                                        ) : (
+                                            <CheckCircle size={24} />
+                                        )}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-12 p-8 bg-slate-900/60 rounded-[2rem] border border-slate-800 flex items-start gap-4">
+                            <AlertTriangle className="text-amber-500 mt-1 shrink-0" size={20} />
+                            <div>
+                                <p className="text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-wider italic">
+                                    Warning: Suspending services will immediately disconnect active users and may lead to data inconsistency if not handled through proper maintenance windows.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

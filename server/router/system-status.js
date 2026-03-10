@@ -4,6 +4,16 @@ const { query, DB_TYPE } = require('../connection/db');
 const { authenticateToken } = require('../middleware/auth');
 const { logAction } = require('../utils/auditLogger');
 
+router.get('/system-status', authenticateToken, async (req, res) => {
+  try {
+    const sql = `SELECT id, service_name as "serviceName", status, maintenance_message as "maintenanceMessage", updated_by as "updatedBy", updated_at as "updatedAt" FROM system_status ORDER BY id ASC`;
+    const result = await query(sql);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.put('/system-status/:id/toggle', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;

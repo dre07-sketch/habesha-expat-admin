@@ -55,6 +55,7 @@ export interface Podcast {
   coverImage: string;
   audioFile: string;
   duration: string;
+  description?: string;
   likes?: number;
   comments?: number;
   status?: 'visible' | 'hidden';
@@ -139,6 +140,8 @@ export interface Event {
   date: string;
   time?: string;
   location: string;
+  city?: string;
+  category?: string;
   attendees: number;
   image: string;
   description: string;

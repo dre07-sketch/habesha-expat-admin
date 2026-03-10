@@ -34,6 +34,19 @@ router.get('/categories-get', async (req, res) => {
   }
 });
 
+router.get('/categories/type/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+    // Normalize type (remove trailing 's' if any) to match both singular/plural entries like 'podcast' and 'podcasts'
+    const normalizedType = type.toLowerCase().endsWith('s') ? type.slice(0, -1) : type;
+    const sql = `SELECT id, name FROM categories WHERE LOWER(type) LIKE LOWER($1) || '%' ORDER BY name ASC`;
+    const { rows } = await query(sql, [normalizedType]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE Category
 router.delete('/categories/:id', async (req, res) => {
   try {

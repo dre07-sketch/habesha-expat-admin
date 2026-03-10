@@ -19,16 +19,16 @@ const upload = multer({ storage: storage });
 // THE ROUTE
 router.post('/events-post', upload.single('image'), async (req, res) => {
     try {
-        const { title, date, time, location, attendees, price, organizer, description } = req.body;
+        const { title, date, time, location, attendees, price, organizer, description, city, category } = req.body;
 
         // Handle image logic
         const image_url = req.file ? `/upload/${req.file.filename}` : null;
 
         const sql = `
             INSERT INTO events 
-                (title, date, time, location, attendees_count, price, organizer, description, image_url, status)
+                (title, date, time, location, attendees_count, price, organizer, description, image_url, status, city, category)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'visible')
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'visible', $10, $11)
             RETURNING id
         `;
 
@@ -41,7 +41,9 @@ router.post('/events-post', upload.single('image'), async (req, res) => {
             price,
             organizer,
             description,
-            image_url
+            image_url,
+            city,
+            category
         ]);
 
         await logAction(req, 'CREATE', 'EVENT', result.insertId, `Created Event: ${title}`);
@@ -70,7 +72,7 @@ router.get('/events-get', async (req, res) => {
         const sql = `
             SELECT id, title, date, time, location, 
             attendees_count as attendees, price, organizer, description, 
-            image_url as image, status 
+            image_url as image, status, city, category 
             FROM events 
             ORDER BY date ASC
         `;

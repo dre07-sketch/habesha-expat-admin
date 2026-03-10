@@ -3,16 +3,16 @@
 import { Business, Podcast, Video, Article, Subscriber, Newsletter, Event, Ad, Category, User, Job, JobApplicant, SystemStatus } from './types';
 
 export const MOCK_BUSINESSES: Business[] = [
-  { 
-    id: 1, 
-    name: 'Abyssinia Coffee', 
-    category: 'Food & Drink', 
-    email: 'contact@abyssinia.com', 
-    phone: '+1 555-0123', 
-    address: '123 Main St, DC', 
-    mapPin: '38.9072,-77.0369', 
-    image: 'https://picsum.photos/200/300', 
-    website: 'https://abyssinia.com', 
+  {
+    id: 1,
+    name: 'Abyssinia Coffee',
+    category: 'Food & Drink',
+    email: 'contact@abyssinia.com',
+    phone: '+1 555-0123',
+    address: '123 Main St, DC',
+    mapPin: '38.9072,-77.0369',
+    image: 'https://picsum.photos/200/300',
+    website: 'https://abyssinia.com',
     status: 'pending',
     rating: 4.8,
     reviews: [
@@ -21,49 +21,49 @@ export const MOCK_BUSINESSES: Business[] = [
       { id: 3, user: 'John D.', avatar: 'https://i.pravatar.cc/150?u=52', rating: 5, date: '2 weeks ago', comment: 'Authentic taste.' }
     ]
   },
-  { 
-    id: 2, 
-    name: 'Addis Tech Solutions', 
-    category: 'Technology', 
-    email: 'info@addistech.com', 
-    phone: '+251 911-0000', 
-    address: 'Bole Road, Addis Ababa', 
-    mapPin: '9.0300,38.7400', 
-    image: 'https://picsum.photos/200/301', 
-    website: 'https://addistech.com', 
+  {
+    id: 2,
+    name: 'Addis Tech Solutions',
+    category: 'Technology',
+    email: 'info@addistech.com',
+    phone: '+251 911-0000',
+    address: 'Bole Road, Addis Ababa',
+    mapPin: '9.0300,38.7400',
+    image: 'https://picsum.photos/200/301',
+    website: 'https://addistech.com',
     status: 'approved',
     rating: 4.2
   },
-  { 
-    id: 3, 
-    name: 'Nile Legal Services', 
-    category: 'Professional Services', 
-    email: 'legal@nile.com', 
-    phone: '+44 20-1234', 
-    address: 'London, UK', 
-    mapPin: '51.5074,-0.1278', 
-    image: 'https://picsum.photos/200/302', 
-    website: 'https://nilelegal.com', 
+  {
+    id: 3,
+    name: 'Nile Legal Services',
+    category: 'Professional Services',
+    email: 'legal@nile.com',
+    phone: '+44 20-1234',
+    address: 'London, UK',
+    mapPin: '51.5074,-0.1278',
+    image: 'https://picsum.photos/200/302',
+    website: 'https://nilelegal.com',
     status: 'rejected',
     rating: 3.5
   },
-  { 
-    id: 4, 
-    name: 'Habesha Market', 
-    category: 'Retail', 
-    email: 'shop@habeshamarket.com', 
-    phone: '+1 206-555-0199', 
-    address: 'Seattle, WA', 
-    mapPin: '47.6062,-122.3321', 
-    image: 'https://picsum.photos/200/303', 
-    website: 'https://habeshamarket.com', 
+  {
+    id: 4,
+    name: 'Habesha Market',
+    category: 'Retail',
+    email: 'shop@habeshamarket.com',
+    phone: '+1 206-555-0199',
+    address: 'Seattle, WA',
+    mapPin: '47.6062,-122.3321',
+    image: 'https://picsum.photos/200/303',
+    website: 'https://habeshamarket.com',
     status: 'approved',
     rating: 4.9
   }
 ];
 
 export const MOCK_PODCASTS: Podcast[] = [
-  { id: 1, title: 'Diaspora Voices', host: 'Alem T.', slug: 'diaspora-voices', category: 'Culture', coverImage: 'https://picsum.photos/300/300', audioFile: 'sample.mp3', duration: '45:00', status: 'visible', likes: 124, comments: 32, likedBy: [{id: 1, name: 'User 1', avatar: 'https://i.pravatar.cc/150?u=1', date: '2h ago'}], commentList: [{id: 1, name: 'User 2', avatar: 'https://i.pravatar.cc/150?u=2', text: 'Great episode!', date: '1d ago'}] },
+  { id: 1, title: 'Diaspora Voices', host: 'Alem T.', slug: 'diaspora-voices', category: 'Culture', coverImage: 'https://picsum.photos/300/300', audioFile: 'sample.mp3', duration: '45:00', status: 'visible', likes: 124, comments: 32, likedBy: [{ id: 1, name: 'User 1', avatar: 'https://i.pravatar.cc/150?u=1', date: '2h ago' }], commentList: [{ id: 1, name: 'User 2', avatar: 'https://i.pravatar.cc/150?u=2', text: 'Great episode!', date: '1d ago' }] },
   { id: 2, title: 'Tech in Africa', host: 'Samuel B.', slug: 'tech-africa', category: 'Tech', coverImage: 'https://picsum.photos/300/301', audioFile: 'sample2.mp3', duration: '30:00', status: 'hidden', likes: 85, comments: 12 },
   { id: 3, title: 'Investing Home', host: 'Liya K.', slug: 'investing-home', category: 'Business', coverImage: 'https://picsum.photos/300/302', audioFile: 'sample3.mp3', duration: '50:00', status: 'visible', likes: 210, comments: 56 }
 ];
@@ -95,45 +95,45 @@ export const MOCK_NEWSLETTERS: Newsletter[] = [
 ];
 
 export const MOCK_EVENTS: Event[] = [
-  { 
-    id: 1, 
-    title: 'Global Diaspora Conference 2025', 
-    date: '2025-11-15', 
-    time: '09:00 AM', 
-    location: 'Millennium Hall, Addis Ababa', 
-    attendees: 1200, 
-    image: 'https://picsum.photos/600/400', 
-    description: 'Annual gathering of the diaspora community.', 
+  {
+    id: 1,
+    title: 'Global Diaspora Conference 2025',
+    date: '2025-11-15',
+    time: '09:00 AM',
+    location: 'Millennium Hall, Addis Ababa',
+    attendees: 1200,
+    image: 'https://picsum.photos/600/400',
+    description: 'Annual gathering of the diaspora community.',
     status: 'visible',
     price: '$50.00',
     organizer: 'Habesha Expat Team',
     attendeeList: [
-        { id: 1, name: 'Abebe Bikila', email: 'abebe@example.com', avatar: 'https://i.pravatar.cc/150?u=10', ticketType: 'VIP', purchaseDate: '2025-10-01', status: 'Confirmed' },
-        { id: 2, name: 'Derartu Tulu', email: 'derartu@example.com', avatar: 'https://i.pravatar.cc/150?u=11', ticketType: 'Standard', purchaseDate: '2025-10-05', status: 'Confirmed' }
+      { id: 1, name: 'Abebe Bikila', email: 'abebe@example.com', avatar: 'https://i.pravatar.cc/150?u=10', ticketType: 'VIP', purchaseDate: '2025-10-01', status: 'Confirmed' },
+      { id: 2, name: 'Derartu Tulu', email: 'derartu@example.com', avatar: 'https://i.pravatar.cc/150?u=11', ticketType: 'Standard', purchaseDate: '2025-10-05', status: 'Confirmed' }
     ]
   },
-  { 
-    id: 2, 
-    title: 'Tech Summit & Expo', 
-    date: '2025-12-01', 
-    time: '10:00 AM', 
-    location: 'Sheraton Addis', 
-    attendees: 500, 
-    image: 'https://picsum.photos/600/401', 
-    description: 'Showcasing the latest in tech.', 
+  {
+    id: 2,
+    title: 'Tech Summit & Expo',
+    date: '2025-12-01',
+    time: '10:00 AM',
+    location: 'Sheraton Addis',
+    attendees: 500,
+    image: 'https://picsum.photos/600/401',
+    description: 'Showcasing the latest in tech.',
     status: 'visible',
     price: 'Free',
     organizer: 'Tech Association'
   },
-  { 
-    id: 3, 
-    title: 'Cultural Art Exhibition', 
-    date: '2025-10-20', 
-    time: '02:00 PM', 
-    location: 'National Museum', 
-    attendees: 300, 
-    image: 'https://picsum.photos/600/402', 
-    description: 'Displaying contemporary art.', 
+  {
+    id: 3,
+    title: 'Cultural Art Exhibition',
+    date: '2025-10-20',
+    time: '02:00 PM',
+    location: 'National Museum',
+    attendees: 300,
+    image: 'https://picsum.photos/600/402',
+    description: 'Displaying contemporary art.',
     status: 'hidden',
     price: '$10.00',
     organizer: 'Art Collective'
@@ -162,67 +162,68 @@ export const MOCK_USERS: User[] = [
 ];
 
 export const MOCK_JOBS: Job[] = [
-    { 
-      id: 1, 
-      title: 'Senior Frontend Developer', 
-      company: 'TechGlobal Solutions', 
-      location: 'Remote (US/EU)', 
-      type: 'Full-time', 
-      salary: '$80k - $120k', 
-      industry: 'Technology', 
-      description: 'We are looking for an experienced React developer to join our global team.', 
-      responsibilities: ['Build reusable components', 'Optimize performance', 'Collaborate with design team'], 
-      requirements: ['5+ years React', 'TypeScript mastery', 'Experience with Tailwind'], 
-      benefits: ['Remote work', 'Health insurance', 'Annual retreat'], 
-      postedDate: '2025-10-20', 
-      status: 'visible' 
-    },
-    { 
-      id: 2, 
-      title: 'Marketing Manager', 
-      company: 'Abyssinia Coffee Co.', 
-      location: 'Addis Ababa, ET', 
-      type: 'Full-time', 
-      salary: 'Competitive', 
-      industry: 'Food & Beverage', 
-      description: 'Lead our marketing initiatives and brand growth.', 
-      responsibilities: ['Social media strategy', 'Brand partnerships', 'Event management'], 
-      requirements: ['3+ years marketing exp', 'Bilingual (Amharic/English)', 'Creative mindset'], 
-      benefits: ['Free coffee', 'Transport allowance'], 
-      postedDate: '2025-10-18', 
-      status: 'visible' 
-    }
-  ];
-  
-  export const MOCK_APPLICANTS: JobApplicant[] = [
-    { 
-      id: 1, 
-      jobId: 1, 
-      name: 'Elias Tekle', 
-      email: 'elias.tekle@gmail.com', 
-      phone: '+1 555 0123', 
-      linkedin: 'linkedin.com/in/eliastekle', 
-      resumeUrl: 'resume.pdf', 
-      coverLetter: 'I am excited to apply for this position...', 
-      appliedDate: '2025-10-21', 
-      status: 'Pending', 
-      avatar: 'https://i.pravatar.cc/150?u=30' 
-    },
-    { 
-      id: 2, 
-      jobId: 1, 
-      name: 'Sarah Jones', 
-      email: 'sarah.j@outlook.com', 
-      phone: '+44 7700 900000', 
-      linkedin: 'linkedin.com/in/sarahjones', 
-      resumeUrl: 'cv.pdf', 
-      appliedDate: '2025-10-22', 
-      status: 'Reviewed', 
-      avatar: 'https://i.pravatar.cc/150?u=31' 
-    }
-  ];
+  {
+    id: 1,
+    title: 'Senior Frontend Developer',
+    company: 'TechGlobal Solutions',
+    location: 'Remote (US/EU)',
+    type: 'Full-time',
+    salary: '$80k - $120k',
+    industry: 'Technology',
+    description: 'We are looking for an experienced React developer to join our global team.',
+    responsibilities: ['Build reusable components', 'Optimize performance', 'Collaborate with design team'],
+    requirements: ['5+ years React', 'TypeScript mastery', 'Experience with Tailwind'],
+    benefits: ['Remote work', 'Health insurance', 'Annual retreat'],
+    postedDate: '2025-10-20',
+    status: 'visible'
+  },
+  {
+    id: 2,
+    title: 'Marketing Manager',
+    company: 'Abyssinia Coffee Co.',
+    location: 'Addis Ababa, ET',
+    type: 'Full-time',
+    salary: 'Competitive',
+    industry: 'Food & Beverage',
+    description: 'Lead our marketing initiatives and brand growth.',
+    responsibilities: ['Social media strategy', 'Brand partnerships', 'Event management'],
+    requirements: ['3+ years marketing exp', 'Bilingual (Amharic/English)', 'Creative mindset'],
+    benefits: ['Free coffee', 'Transport allowance'],
+    postedDate: '2025-10-18',
+    status: 'visible'
+  }
+];
+
+export const MOCK_APPLICANTS: JobApplicant[] = [
+  {
+    id: 1,
+    jobId: 1,
+    name: 'Elias Tekle',
+    email: 'elias.tekle@gmail.com',
+    phone: '+1 555 0123',
+    linkedin: 'linkedin.com/in/eliastekle',
+    resumeUrl: 'resume.pdf',
+    coverLetter: 'I am excited to apply for this position...',
+    appliedDate: '2025-10-21',
+    status: 'Pending',
+    avatar: 'https://i.pravatar.cc/150?u=30'
+  },
+  {
+    id: 2,
+    jobId: 1,
+    name: 'Sarah Jones',
+    email: 'sarah.j@outlook.com',
+    phone: '+44 7700 900000',
+    linkedin: 'linkedin.com/in/sarahjones',
+    resumeUrl: 'cv.pdf',
+    appliedDate: '2025-10-22',
+    status: 'Reviewed',
+    avatar: 'https://i.pravatar.cc/150?u=31'
+  }
+];
 
 export const MOCK_SYSTEM_STATUS: SystemStatus[] = [
-    { id: 1, serviceName: 'Public Website', status: 'activated', maintenanceMessage: 'We are currently performing scheduled maintenance. We will be back shortly.', updatedBy: 'Admin User', updatedAt: '2025-10-24 10:00 AM' },
-    { id: 2, serviceName: 'Admin Panel', status: 'activated', maintenanceMessage: 'Admin access is temporarily restricted for security updates.', updatedBy: 'Admin User', updatedAt: '2025-10-24 10:00 AM' }
+  { id: 1, serviceName: 'Public Website', status: 'activated', maintenanceMessage: 'We are currently performing scheduled maintenance. We will be back shortly.', updatedBy: 'Admin User', updatedAt: '2025-10-24 10:00 AM' },
+  { id: 2, serviceName: 'Admin Panel', status: 'activated', maintenanceMessage: 'Admin access is temporarily restricted for security updates.', updatedBy: 'Admin User', updatedAt: '2025-10-24 10:00 AM' },
+  { id: 3, serviceName: 'Lounge', status: 'activated', maintenanceMessage: 'The lounge is currently shut down for maintenance.', updatedBy: 'Admin User', updatedAt: '2026-03-04 12:10 PM' }
 ];

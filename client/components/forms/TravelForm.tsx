@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2, MapPin, Calendar, Users, Globe, Save, Image as ImageIcon } from 'lucide-react';
+import { X, Plus, Trash2, MapPin, Calendar, Users, Globe, Save, Image as ImageIcon, Layout, ListChecks, Map, AlertCircle, CheckCircle2, ChevronRight, Star } from 'lucide-react';
 
 export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) {
+    const [activeTab, setActiveTab] = useState('general');
+    
     // Default Initial State based on DB Schema
     const defaultState = {
         slug: '',
@@ -14,35 +16,31 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
         duration: '',
         group_size: '',
         languages: 'English',
-        highlights: [], // jsonb
-        itinerary: [], // jsonb
-        status: 'active', // Added status field
-        // Files are now handled separately
-        hero_image: null, // Will be a File object
-        gallery: [] // Will be an array of File objects
+        highlights: [] as string[],
+        itinerary: [] as { day: number; title: string; description: string }[],
+        status: 'active',
+        hero_image: null as File | string | null,
+        gallery: [] as (File | string)[]
     };
 
     const [formData, setFormData] = useState(defaultState);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
 
-    // State for image previews
     const [heroPreview, setHeroPreview] = useState(null);
     const [galleryPreviews, setGalleryPreviews] = useState([]);
-
-    // Ref for the hidden gallery file input
     const galleryFileInputRef = useRef(null);
 
     useEffect(() => {
         if (isOpen) {
             setFormData(initialData || defaultState);
-            // Reset previews when form opens with new data
             setHeroPreview(null);
             setGalleryPreviews([]);
+            setActiveTab('general');
+            setError('');
         }
     }, [isOpen, initialData]);
 
-    // Clean up object URLs to avoid memory leaks
     useEffect(() => {
         return () => {
             if (heroPreview) URL.revokeObjectURL(heroPreview);
@@ -55,43 +53,46 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // --- Dynamic Field Handlers (Highlights & Itinerary remain the same) ---
     const addHighlight = () => {
         setFormData(prev => ({ ...prev, highlights: [...(prev.highlights || []), ""] }));
     };
+    
     const updateHighlight = (index, value) => {
         const newHighlights = [...(formData.highlights || [])];
         newHighlights[index] = value;
         setFormData(prev => ({ ...prev, highlights: newHighlights }));
     };
+    
     const removeHighlight = (index) => {
         const newHighlights = [...(formData.highlights || [])];
         newHighlights.splice(index, 1);
         setFormData(prev => ({ ...prev, highlights: newHighlights }));
     };
+    
     const addItineraryItem = () => {
         setFormData(prev => ({
             ...prev,
             itinerary: [...(prev.itinerary || []), { day: (prev.itinerary?.length || 0) + 1, title: "", description: "" }]
         }));
     };
+    
     const updateItinerary = (index, field, value) => {
         const newItinerary = [...(formData.itinerary || [])];
         newItinerary[index] = { ...newItinerary[index], [field]: value };
         setFormData(prev => ({ ...prev, itinerary: newItinerary }));
     };
+    
     const removeItinerary = (index) => {
         const newItinerary = [...(formData.itinerary || [])];
         newItinerary.splice(index, 1);
         setFormData(prev => ({ ...prev, itinerary: newItinerary }));
     };
 
-    // --- File Handlers ---
-    const handleHeroImageChange = (e) => {
-        const file = e.target.files[0];
+    const handleHeroImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (file) {
             setFormData(prev => ({ ...prev, hero_image: file }));
-            setHeroPreview(URL.createObjectURL(file));
+            setHeroPreview(URL.createObjectURL(file as Blob));
         } else {
             setFormData(prev => ({ ...prev, hero_image: null }));
             setHeroPreview(null);
@@ -100,7 +101,7 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
 
     const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            const files = Array.from(e.target.files) as File[];
+            const files: File[] = Array.from(e.target.files);
             setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ...files] }));
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setGalleryPreviews(prev => [...prev, ...newPreviews]);
@@ -108,13 +109,10 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
     };
 
     const removeGalleryImage = (index) => {
-        // Revoke object URL to free up memory
         URL.revokeObjectURL(galleryPreviews[index]);
-
         const newGallery = [...formData.gallery];
         newGallery.splice(index, 1);
         setFormData(prev => ({ ...prev, gallery: newGallery }));
-
         const newPreviews = [...galleryPreviews];
         newPreviews.splice(index, 1);
         setGalleryPreviews(newPreviews);
@@ -126,53 +124,31 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
         setError('');
 
         try {
-            // Create FormData object for file upload
             const formDataToSubmit = new FormData();
+            Object.keys(formData).forEach(key => {
+                if (key === 'highlights' || key === 'itinerary') {
+                    formDataToSubmit.append(key, JSON.stringify(formData[key]));
+                } else if (key !== 'hero_image' && key !== 'gallery') {
+                    formDataToSubmit.append(key, formData[key]);
+                }
+            });
 
-            // Append all text fields
-            formDataToSubmit.append('slug', formData.slug);
-            formDataToSubmit.append('name', formData.name);
-            formDataToSubmit.append('title', formData.title);
-            formDataToSubmit.append('description', formData.description);
-            formDataToSubmit.append('price', formData.price);
-            formDataToSubmit.append('rating', formData.rating);
-            formDataToSubmit.append('location', formData.location);
-            formDataToSubmit.append('duration', formData.duration);
-            formDataToSubmit.append('group_size', formData.group_size);
-            formDataToSubmit.append('languages', formData.languages);
-            formDataToSubmit.append('status', formData.status);
-
-            // Append JSON fields
-            formDataToSubmit.append('highlights', JSON.stringify(formData.highlights));
-            formDataToSubmit.append('itinerary', JSON.stringify(formData.itinerary));
-
-            // Append files
-            if (formData.hero_image) {
-                formDataToSubmit.append('hero_image', formData.hero_image);
-            }
-
+            if (formData.hero_image) formDataToSubmit.append('hero_image', formData.hero_image);
             if (formData.gallery && formData.gallery.length > 0) {
-                formData.gallery.forEach(file => {
-                    formDataToSubmit.append('gallery', file); // 'gallery' matches the name in multer
-                });
+                formData.gallery.forEach(file => formDataToSubmit.append('gallery', file));
             }
 
             const token = localStorage.getItem('authToken');
             const response = await fetch('http://localhost:5000/api/travel-destinations/travel-destinations-post', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                // Do NOT set the 'Content-Type' header. The browser does it automatically for FormData.
+                headers: { 'Authorization': `Bearer ${token}` },
                 body: formDataToSubmit,
             });
 
             const result = await response.json();
-
             if (result.success) {
                 if (onSuccess) onSuccess(result.data);
                 onClose();
-                // You might want to show a success notification here
             } else {
                 setError(result.message || 'Failed to create destination');
             }
@@ -185,244 +161,311 @@ export default function TravelForm({ isOpen, onClose, initialData, onSuccess }) 
 
     if (!isOpen) return null;
 
+    const tabs = [
+        { id: 'general', label: 'General', icon: Layout },
+        { id: 'logistics', label: 'Logistics', icon: MapPin },
+        { id: 'experience', label: 'Experience', icon: ListChecks },
+        { id: 'media', label: 'Media', icon: ImageIcon }
+    ];
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-3">
-            <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md transition-opacity" onClick={onClose}></div>
 
-            {/* Modal Container */}
-            <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 transform transition-all">
-
+            <div className="relative w-full max-w-6xl h-[90vh] flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="flex items-center justify-between px-3 py-5 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 rounded-t-2xl z-10 backdrop-blur-md">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                        {initialData ? 'Edit Destination' : 'New Destination'}
-                    </h2>
-                    <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors">
-                        <X size={14} />
+                <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                            {initialData ? 'Refine Destination' : 'Craft New Adventure'}
+                        </h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Fill in the details to curate a unique travel experience.</p>
+                    </div>
+                    <button onClick={onClose} className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                        <X size={20} />
                     </button>
                 </div>
 
-                {/* Error Message */}
-                {error && (
-                    <div className="mx-3 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
-                        {error}
+                <div className="flex flex-1 overflow-hidden">
+                    {/* Sidebar Tabs */}
+                    <div className="w-64 border-r border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-6 flex flex-col gap-2">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+                                    activeTab === tab.id
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                                        : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800'
+                                }`}
+                            >
+                                <tab.icon size={18} />
+                                {tab.label}
+                                {activeTab === tab.id && <ChevronRight size={14} className="ml-auto opacity-70" />}
+                            </button>
+                        ))}
                     </div>
-                )}
 
-                {/* Scrollable Form Content */}
-                <div className="flex-1 overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-
-                        {/* Section 1: General Info */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold mb-2">General Information</h3>
-                            {/* ... (Name, Title, Slug, Price inputs remain the same) ... */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Destination Name</label>
-                                    <input type="text" name="name" value={formData.name} onChange={handleChange} required
-                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Marketing Title</label>
-                                    <input type="text" name="title" value={formData.title} onChange={handleChange}
-                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Slug</label>
-                                    <input type="text" name="slug" value={formData.slug} onChange={handleChange} required
-                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Price</label>
-                                    <input type="text" name="price" value={formData.price} onChange={handleChange} placeholder="$2,400"
-                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Status</label>
-                                    <select name="status" value={formData.status} onChange={handleChange}
-                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                        <option value="draft">Draft</option>
-                                    </select>
-                                </div>
+                    {/* Form Content */}
+                    <div className="flex-1 overflow-y-auto p-10 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                        {error && (
+                            <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl flex items-center gap-3 text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-top-4">
+                                <AlertCircle size={20} />
+                                <span className="text-sm font-medium">{error}</span>
                             </div>
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Description</label>
-                                <textarea name="description" value={formData.description} onChange={handleChange} rows={3}
-                                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
-                            </div>
-                        </div>
+                        )}
 
-                        {/* Section 2: Details & Stats */}
-                        <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-                            <h3 className="text-sm uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold mb-2">Details & Logistics</h3>
-                            {/* ... (Location, Duration, Group Size, Languages, Rating inputs remain the same) ... */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Location</label>
-                                    <div className="relative">
-                                        <MapPin size={16} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
-                                        <input type="text" name="location" value={formData.location} onChange={handleChange}
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-5 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
+                        <form onSubmit={handleSubmit} id="travel-form">
+                            {activeTab === 'general' && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
+                                    <div className="grid grid-cols-2 gap-8 font-primary">
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Destination Name</label>
+                                            <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="e.g. Historic Axum Tour"
+                                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 font-medium" />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Marketing Headline</label>
+                                            <input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="Explore the ancient ruins and stelae"
+                                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 font-medium" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">URL Slug</label>
+                                            <input type="text" name="slug" value={formData.slug} onChange={handleChange} required placeholder="historic-axum-tour"
+                                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-mono text-sm" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Price Point</label>
+                                            <input type="text" name="price" value={formData.price} onChange={handleChange} placeholder="$1,200"
+                                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Narrative Description</label>
+                                            <textarea name="description" value={formData.description} onChange={handleChange} rows={6} placeholder="Tell the story of this journey..."
+                                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all resize-none leading-relaxed" />
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Duration</label>
-                                    <div className="relative">
-                                        <Calendar size={16} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
-                                        <input type="text" name="duration" value={formData.duration} onChange={handleChange} placeholder="7 Days"
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-5 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Group Size</label>
-                                    <div className="relative">
-                                        <Users size={16} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
-                                        <input type="text" name="group_size" value={formData.group_size} onChange={handleChange} placeholder="Max 12"
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-5 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Languages</label>
-                                    <div className="relative">
-                                        <Globe size={16} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
-                                        <input type="text" name="languages" value={formData.languages} onChange={handleChange}
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-5 pr-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Rating (1-5)</label>
-                                <input type="number" step="0.1" max="5" name="rating" value={formData.rating} onChange={handleChange}
-                                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" />
-                            </div>
-                        </div>
+                            )}
 
-                        {/* Section 3: Media - REVISED */}
-                        <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-                            <h3 className="text-sm uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold mb-2">Media</h3>
-
-                            {/* Hero Image Upload */}
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase">Hero Image</label>
-                                <div className="flex items-center gap-4">
-                                    <label className="flex-1 cursor-pointer">
-                                        <input type="file" name="hero_image" onChange={handleHeroImageChange} accept="image/*" className="hidden" />
-                                        <div className="bg-slate-50 dark:bg-slate-950 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-4 text-center hover:border-blue-500 transition-colors">
-                                            {heroPreview ? (
-                                                <img src={heroPreview} alt="Hero preview" className="h-32 mx-auto object-cover rounded" />
-                                            ) : (
-                                                <div className="text-slate-500 dark:text-slate-400 flex flex-col items-center gap-2">
-                                                    <ImageIcon size={16} />
-                                                    <span className="text-sm">Click to upload hero image</span>
+                            {activeTab === 'logistics' && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <div className="group">
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Base Location</label>
+                                            <div className="relative">
+                                                <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                                                <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="Ethiopia • Amhara Region"
+                                                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl pl-14 pr-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" />
+                                            </div>
+                                        </div>
+                                        <div className="group">
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Total Duration</label>
+                                            <div className="relative">
+                                                <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                                                <input type="text" name="duration" value={formData.duration} onChange={handleChange} placeholder="7 Days / 6 Nights"
+                                                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl pl-14 pr-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" />
+                                            </div>
+                                        </div>
+                                        <div className="group">
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Group Size</label>
+                                            <div className="relative">
+                                                <Users className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                                                <input type="text" name="group_size" value={formData.group_size} onChange={handleChange} placeholder="2 - 12 Guests"
+                                                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl pl-14 pr-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" />
+                                            </div>
+                                        </div>
+                                        <div className="group">
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Languages</label>
+                                            <div className="relative">
+                                                <Globe className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                                                <input type="text" name="languages" value={formData.languages} onChange={handleChange} placeholder="English, Amharic"
+                                                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl pl-14 pr-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Experience Rating</label>
+                                            <div className="flex items-center gap-4">
+                                                <input type="range" min="1" max="5" step="0.1" name="rating" value={formData.rating} onChange={handleChange}
+                                                    className="flex-1 accent-yellow-500" />
+                                                <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-4 py-2 rounded-xl border border-yellow-200 dark:border-yellow-800/50 font-bold flex items-center gap-2">
+                                                    <Star size={16} fill="currentColor" /> {formData.rating}
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5">Publish Status</label>
+                                            <div className="flex gap-4">
+                                                {['active', 'inactive', 'draft'].map((status) => (
+                                                    <button
+                                                        key={status}
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, status }))}
+                                                        className={`flex-1 py-4 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all border ${
+                                                            formData.status === status
+                                                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-600 dark:text-blue-400'
+                                                                : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-500'
+                                                        }`}
+                                                    >
+                                                        {status}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'experience' && (
+                                <div className="space-y-12 animate-in fade-in slide-in-from-right-4">
+                                    {/* Highlights Section */}
+                                    <div className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800 p-8">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                                    <CheckCircle2 size={20} />
+                                                </div>
+                                                Highlights
+                                            </h3>
+                                            <button type="button" onClick={addHighlight} className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all">
+                                                <Plus size={16} /> Add Highlight
+                                            </button>
+                                        </div>
+                                        <div className="grid gap-4">
+                                            {(formData.highlights || []).map((hl, idx) => (
+                                                <div key={idx} className="group flex gap-3 animate-in zoom-in-95">
+                                                    <div className="w-10 h-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all">{idx + 1}</div>
+                                                    <input type="text" value={hl} onChange={(e) => updateHighlight(idx, e.target.value)} placeholder="What makes this journey special?"
+                                                        className="flex-1 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-3 text-sm text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" />
+                                                    <button type="button" onClick={() => removeHighlight(idx)} className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {formData.highlights?.length === 0 && (
+                                                <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-slate-400 text-sm">No highlights added yet.</div>
                                             )}
                                         </div>
-                                    </label>
-                                </div>
-                            </div>
+                                    </div>
 
-                            {/* Gallery Upload */}
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase">Gallery Images</label>
-                                <input
-                                    type="file"
-                                    ref={galleryFileInputRef}
-                                    onChange={handleGalleryChange}
-                                    multiple
-                                    accept="image/*"
-                                    className="hidden"
-                                />
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {galleryPreviews.map((preview, idx) => (
-                                        <div key={idx} className="relative group">
-                                            <img src={preview} alt={`Gallery preview ${idx + 1} `} className="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeGalleryImage(idx)}
-                                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <Trash2 size={14} />
+                                    {/* Itinerary Section */}
+                                    <div className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800 p-8">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                                                    <Map size={20} />
+                                                </div>
+                                                The Itinerary
+                                            </h3>
+                                            <button type="button" onClick={addItineraryItem} className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all">
+                                                <Plus size={16} /> Add New Day
                                             </button>
                                         </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => galleryFileInputRef.current.click()}
-                                        className="w-full h-24 bg-slate-50 dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 transition-colors"
-                                    >
-                                        <Plus size={14} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Section 4: JSON Data (Highlights & Itinerary) - REMAINS THE SAME */}
-                        <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-                            <h3 className="text-sm uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold mb-2">Experience Details</h3>
-                            {/* Highlights */}
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase">Highlights</label>
-                                <div className="space-y-2">
-                                    {(formData.highlights || []).map((hl, idx) => (
-                                        <div key={idx} className="flex gap-2 items-center">
-                                            <span className="text-xs text-slate-500 dark:text-slate-600 w-4">{idx + 1}.</span>
-                                            <input type="text" value={hl} onChange={(e) => updateHighlight(idx, e.target.value)}
-                                                className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none" />
-                                            <button type="button" onClick={() => removeHighlight(idx)} className="text-slate-500 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400">
-                                                <Trash2 size={16} />
-                                            </button>
+                                        <div className="space-y-6">
+                                            {(formData.itinerary || []).map((item, idx) => (
+                                                <div key={idx} className="relative pl-12 pb-6 border-l-2 border-slate-100 dark:border-slate-800 group animate-in slide-in-from-left-4 last:pb-0 last:border-0">
+                                                    <div className="absolute -left-[11px] top-0 w-5 h-5 bg-white dark:bg-slate-900 border-4 border-blue-500 rounded-full transition-transform group-hover:scale-125 group-hover:bg-blue-500" />
+                                                    <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 hover:border-blue-500/30 transition-all">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <span className="text-xs font-black text-blue-500 uppercase tracking-widest">Day {idx + 1}</span>
+                                                            <button type="button" onClick={() => removeItinerary(idx)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                        <input type="text" placeholder="Day Title (e.g. Arrival & Welcome Dinner)"
+                                                            value={item.title} onChange={(e) => updateItinerary(idx, 'title', e.target.value)}
+                                                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white mb-3 focus:border-blue-500 outline-none" />
+                                                        <textarea placeholder="Describe the day's events and highlights..." rows={3}
+                                                            value={item.description} onChange={(e) => updateItinerary(idx, 'description', e.target.value)}
+                                                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-slate-400 focus:border-blue-500 outline-none resize-none leading-relaxed" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {formData.itinerary?.length === 0 && (
+                                                <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-slate-400 text-sm">No itinerary days mapped yet.</div>
+                                            )}
                                         </div>
-                                    ))}
-                                    <button type="button" onClick={addHighlight} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 flex items-center gap-1 mt-2">
-                                        <Plus size={14} /> Add Highlight
-                                    </button>
+                                    </div>
                                 </div>
-                            </div>
-                            {/* Itinerary */}
-                            <div className="pt-4">
-                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase">Itinerary</label>
-                                <div className="space-y-4">
-                                    {(formData.itinerary || []).map((item, idx) => (
-                                        <div key={idx} className="bg-slate-50 dark:bg-slate-950/50 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded">Day {idx + 1}</span>
-                                                <button type="button" onClick={() => removeItinerary(idx)} className="text-slate-500 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400">
-                                                    <Trash2 size={16} />
-                                                </button>
+                            )}
+
+                            {activeTab === 'media' && (
+                                <div className="space-y-12 animate-in fade-in slide-in-from-right-4">
+                                    {/* Hero Upload */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Hero Experience Image</label>
+                                        <label className="relative group cursor-pointer block">
+                                            <input type="file" onChange={handleHeroImageChange} accept="image/*" className="hidden" />
+                                            <div className="w-full h-80 bg-slate-50 dark:bg-slate-800/50 border-4 border-dashed border-slate-200 dark:border-slate-700 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 group-hover:border-blue-500 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/10 transition-all overflow-hidden">
+                                                {heroPreview ? (
+                                                    <img src={heroPreview} alt="Hero" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <>
+                                                        <div className="p-5 bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none text-blue-600 transition-transform group-hover:scale-110">
+                                                            <ImageIcon size={40} />
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <p className="text-slate-900 dark:text-white font-bold">Select Hero Image</p>
+                                                            <p className="text-slate-400 text-sm mt-1">PNG, JPG or WebP (Max 10MB)</p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {heroPreview && <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold backdrop-blur-sm transition-all">Replace Image</div>}
                                             </div>
-                                            <input type="text" placeholder="Day Title (e.g. Arrival in Addis)"
-                                                value={item.title} onChange={(e) => updateItinerary(idx, 'title', e.target.value)}
-                                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded mb-2 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none" />
-                                            <textarea placeholder="Description of activities..." rows={2}
-                                                value={item.description} onChange={(e) => updateItinerary(idx, 'description', e.target.value)}
-                                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-blue-500 outline-none resize-none" />
+                                        </label>
+                                    </div>
+
+                                    {/* Gallery Upload */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-6">
+                                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Experience Gallery</label>
+                                            <button type="button" onClick={() => galleryFileInputRef.current.click()} className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-bold transition-transform hover:scale-105 active:scale-95">Add Images</button>
                                         </div>
-                                    ))}
-                                    <button type="button" onClick={addItineraryItem} className="w-full py-3 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex justify-center items-center gap-2">
-                                        <Plus size={18} /> Add Day to Itinerary
-                                    </button>
+                                        <input type="file" ref={galleryFileInputRef} onChange={handleGalleryChange} multiple accept="image/*" className="hidden" />
+                                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                                            {galleryPreviews.map((preview, idx) => (
+                                                <div key={idx} className="relative group aspect-square">
+                                                    <img src={preview} alt="Gallery" className="w-full h-full object-cover rounded-3xl border border-slate-100 dark:border-slate-800 transition-transform group-hover:scale-105" />
+                                                    <button type="button" onClick={() => removeGalleryImage(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-2xl shadow-xl opacity-0 group-hover:opacity-100 hover:scale-110 transition-all scale-75">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <button type="button" onClick={() => galleryFileInputRef.current.click()} className="aspect-square bg-slate-50 dark:bg-slate-800/50 border-4 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-blue-500 hover:text-blue-500 transition-all group">
+                                                <Plus size={24} className="group-hover:scale-125 transition-transform" />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">Upload</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
+                            )}
+                        </form>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-8 py-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-4 bg-white dark:bg-slate-900">
+                    <button onClick={onClose} className="px-8 py-3.5 rounded-2xl text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Cancel</button>
+                    <button
+                        type="submit"
+                        form="travel-form"
+                        disabled={isSubmitting}
+                        className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-600 text-white font-bold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-1 transition-all flex items-center gap-3 disabled:opacity-50 disabled:translate-y-0"
+                    >
+                        {isSubmitting ? (
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Curating...</span>
                             </div>
-                        </div>
-
-                    </form>
-                </div>
-
-                {/* Footer Actions */}
-                <div className="border-t border-slate-200 dark:border-slate-800 p-3 bg-white/50 dark:bg-slate-900/50 rounded-b-2xl flex justify-end gap-3 z-10 backdrop-blur-md">
-                    <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium">
-                        Cancel
-                    </button>
-                    <button onClick={handleSubmit} disabled={isSubmitting} className="px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 transition-all font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-                        <Save size={18} />
-                        {isSubmitting ? 'Saving...' : (initialData ? 'Update Destination' : 'Create Destination')}
+                        ) : (
+                            <>
+                                <Save size={20} />
+                                <span>{initialData ? 'Update Experience' : 'Publish Adventure'}</span>
+                            </>
+                        )}
                     </button>
                 </div>
-
             </div>
         </div>
     );
-}
+}

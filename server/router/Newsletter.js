@@ -46,7 +46,7 @@ router.post('/send-newsletters', upload.single('imageUrl'), async (req, res) => 
         const newsletterId = newsletterResult.rows[0].id;
 
         // B. Fetch subscribers
-        const subscriberResult = await query('SELECT * FROM subscribers');
+        const subscriberResult = await query('SELECT email FROM newsletter_signups WHERE is_active = true');
         const subscribersList = subscriberResult.rows;
 
         // C. Build email HTML with absolute URL for image
@@ -117,8 +117,9 @@ router.get('/newsletters-get', async (req, res) => {
         const sql = `
             SELECT id, subject, recipient_segment as segment, content, 
             image_url as image, status, sent_date as sentDate, 
-            recipient_count as recipientCount, open_rate as openRate, 
-            click_rate as clickRate 
+            recipient_count as recipientCount, 
+            0 as openRate, 
+            0 as clickRate 
             FROM newsletters 
             ORDER BY created_at DESC
         `;

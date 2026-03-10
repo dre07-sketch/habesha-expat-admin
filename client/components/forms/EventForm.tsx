@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Calendar, Type, AlignLeft, Users, Image as ImageIcon, UploadCloud, Clock, DollarSign, User as UserIcon, X } from 'lucide-react';
+import { MapPin, Calendar, Type, AlignLeft, Users, Image as ImageIcon, UploadCloud, Clock, DollarSign, User as UserIcon, X, Globe, Tag } from 'lucide-react';
 
 interface EventFormProps {
     onCancel: () => void;
@@ -17,7 +17,9 @@ const EventForm: React.FC<EventFormProps> = ({ onCancel, onSuccess }) => {
         attendees: '', // Changed to string to handle empty input easier
         price: '',
         organizer: '',
-        description: ''
+        description: '',
+        city: '',
+        category: ''
     });
 
     // New state for the file
@@ -99,149 +101,201 @@ const EventForm: React.FC<EventFormProps> = ({ onCancel, onSuccess }) => {
     };
 
     const inputWrapperClass = "relative group";
-    const inputClass = "w-full pl-5 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400";
-    const textAreaClass = "w-full pl-5 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400 resize-none";
+    const inputClass = "w-full pl-10 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400";
+    const textAreaClass = "w-full pl-10 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400 resize-none";
     const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1";
     const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors h-4 w-4 pointer-events-none";
     const iconTextAreaClass = "absolute left-3 top-4 text-slate-400 group-focus-within:text-blue-500 transition-colors h-4 w-4 pointer-events-none";
 
     return (
-        <div className="relative">
-            {/* Loading Overlay */}
+        <div className="relative p-1">
+            {/* Loading Overlay - More Premium */}
             {isSubmitting && (
-                <div className="absolute inset-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center rounded-xl animate-in fade-in duration-300">
-                    <div className="relative mb-3">
-                        <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
-                        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
-                        <Calendar className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={16} />
+                <div className="absolute inset-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl flex flex-col items-center justify-center rounded-3xl animate-in fade-in duration-500">
+                    <div className="relative mb-6">
+                        <div className="w-20 h-20 border-4 border-indigo-500/10 rounded-full"></div>
+                        <div className="w-20 h-20 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin absolute inset-0 shadow-[0_0_20px_rgba(79,70,229,0.3)]"></div>
+                        <UploadCloud className="absolute inset-0 m-auto text-indigo-600 animate-bounce" size={24} />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight mb-2">Creating Event...</h3>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Uploading data to server</p>
+                    <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-widest uppercase mb-2">Publishing Event</h3>
+                    <p className="text-slate-500 dark:text-indigo-400 font-bold animate-pulse text-xs tracking-widest uppercase">Syncing with secure server...</p>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="pb-2 border-b border-slate-100 dark:border-slate-700">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
-                        <Calendar className="mr-2 text-blue-500" size={14} /> Event Details
-                    </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Basic information about the gathering.</p>
-                </div>
-
+            <form onSubmit={handleSubmit} className="space-y-8">
                 {error && (
-                    <div className="p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
+                    <div className="p-4 bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/50 text-rose-600 dark:text-rose-400 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3">
+                        <div className="w-6 h-6 bg-rose-100 dark:bg-rose-900/30 rounded-lg flex items-center justify-center shrink-0">
+                            <X size={14} />
+                        </div>
                         {error}
                     </div>
                 )}
 
-                <div className={inputWrapperClass}>
-                    <label className={labelClass}>Event Title</label>
-                    <div className="relative">
-                        <Type className={iconClass} />
-                        <input required name="title" onChange={handleChange} className={inputClass} placeholder="e.g. Grand Run 2025" />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className={inputWrapperClass}>
-                        <label className={labelClass}>Date</label>
-                        <div className="relative">
-                            <Calendar className={iconClass} />
-                            <input required type="date" name="date" onChange={handleChange} className={inputClass} />
-                        </div>
-                    </div>
-                    <div className={inputWrapperClass}>
-                        <label className={labelClass}>Time</label>
-                        <div className="relative">
-                            <Clock className={iconClass} />
-                            <input type="time" name="time" onChange={handleChange} className={inputClass} />
-                        </div>
-                    </div>
-                </div>
-
-                <div className={inputWrapperClass}>
-                    <label className={labelClass}>Location</label>
-                    <div className="relative">
-                        <MapPin className={iconClass} />
-                        <input required name="location" onChange={handleChange} className={inputClass} placeholder="e.g. Meskel Square, Addis Ababa" />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className={inputWrapperClass}>
-                        <label className={labelClass}>Capacity</label>
-                        <div className="relative">
-                            <Users className={iconClass} />
-                            <input type="number" name="attendees" onChange={handleChange} className={inputClass} placeholder="0" />
-                        </div>
-                    </div>
-                    <div className={inputWrapperClass}>
-                        <label className={labelClass}>Ticket Price</label>
-                        <div className="relative">
-                            <DollarSign className={iconClass} />
-                            <input name="price" onChange={handleChange} className={inputClass} placeholder="Free or $25.00" />
-                        </div>
-                    </div>
-                    <div className={inputWrapperClass}>
-                        <label className={labelClass}>Organizer</label>
-                        <div className="relative">
-                            <UserIcon className={iconClass} />
-                            <input name="organizer" onChange={handleChange} className={inputClass} placeholder="Host Name" />
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label className={labelClass}>Event Banner</label>
-                    <div className={`mt-1 flex items-center px-4 py-4 border-2 border-dashed ${selectedImage ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900'} rounded-xl transition-colors relative`}>
-
-                        {previewUrl ? (
-                            <div className="flex items-center w-full">
-                                <img src={previewUrl} alt="Preview" className="h-10 w-10 object-cover rounded-lg border border-slate-300 shadow-sm" />
-                                <div className="ml-4 flex-1">
-                                    <p className="text-sm font-bold text-slate-700 dark:text-white truncate">{selectedImage?.name}</p>
-                                    <p className="text-xs text-blue-500">Image selected</p>
-                                </div>
-                                <button type="button" onClick={removeImage} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-500">
-                                    <X size={14} />
-                                </button>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column: Image Upload & Basics */}
+                    <div className="lg:col-span-4 space-y-6">
+                        <div className="group relative">
+                            <label className={labelClass}>Event Banner</label>
+                            <div className={`mt-2 h-64 rounded-[2rem] border-2 border-dashed transition-all duration-500 relative overflow-hidden flex flex-col items-center justify-center group ${selectedImage
+                                    ? 'border-indigo-500 bg-indigo-50/10'
+                                    : 'border-slate-200 dark:border-slate-800 hover:border-indigo-400 bg-slate-50/50 dark:bg-slate-900/50'
+                                }`}>
+                                {previewUrl ? (
+                                    <>
+                                        <img src={previewUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                            <button type="button" onClick={removeImage} className="bg-rose-600 text-white p-3 rounded-2xl shadow-xl hover:bg-rose-700 transition-all active:scale-90">
+                                                <X size={20} />
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center p-6">
+                                        <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl shadow-lg flex items-center justify-center text-slate-400 group-hover:text-indigo-500 group-hover:scale-110 transition-all mx-auto mb-4 border border-slate-100 dark:border-slate-700">
+                                            <ImageIcon size={28} />
+                                        </div>
+                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Upload Photo</div>
+                                        <p className="text-[9px] text-slate-500 mb-4 px-4 font-bold">1200x630 highly recommended</p>
+                                        <label className="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl cursor-pointer hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 inline-block">
+                                            Pick Image
+                                            <input type="file" name="image" accept="image/*" onChange={handleFileChange} className="hidden" />
+                                        </label>
+                                    </div>
+                                )}
                             </div>
-                        ) : (
-                            <>
-                                <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-4">
-                                    <ImageIcon size={16} />
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Pricing & Host</p>
+                            <div className={inputWrapperClass}>
+                                <label className={labelClass}>Ticket Price</label>
+                                <div className="relative">
+                                    <DollarSign className={iconClass} />
+                                    <input name="price" value={formData.price} onChange={handleChange} className={inputClass} placeholder="e.g. $25.00" />
                                 </div>
-                                <div className="flex-1">
-                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Upload Image</p>
-                                    <input
-                                        type="file"
-                                        name="image"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-0 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-transparent file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer"
-                                    />
+                            </div>
+                            <div className={inputWrapperClass}>
+                                <label className={labelClass}>Organizer</label>
+                                <div className="relative">
+                                    <UserIcon className={iconClass} />
+                                    <input name="organizer" value={formData.organizer} onChange={handleChange} className={inputClass} placeholder="Host Name" />
                                 </div>
-                            </>
-                        )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Key Details */}
+                    <div className="lg:col-span-8 space-y-8">
+                        {/* Section 1: Identity */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Identity</h3>
+                            </div>
+                            <div className={inputWrapperClass}>
+                                <label className={labelClass}>Event Title</label>
+                                <div className="relative">
+                                    <Type className={iconClass} />
+                                    <input required name="title" value={formData.title} onChange={handleChange} className={inputClass} placeholder="e.g. Tech Conference 2025" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className={inputWrapperClass}>
+                                    <label className={labelClass}>Category</label>
+                                    <div className="relative">
+                                        <Tag className={iconClass} />
+                                        <input required name="category" value={formData.category} onChange={handleChange} className={inputClass} placeholder="e.g. Networking" />
+                                    </div>
+                                </div>
+                                <div className={inputWrapperClass}>
+                                    <label className={labelClass}>Guest Capacity</label>
+                                    <div className="relative">
+                                        <Users className={iconClass} />
+                                        <input type="number" name="attendees" value={formData.attendees} onChange={handleChange} className={inputClass} placeholder="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Section 2: Logistics */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-1.5 h-6 bg-sky-400 rounded-full"></div>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Logistics</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className={inputWrapperClass}>
+                                    <label className={labelClass}>Date</label>
+                                    <div className="relative">
+                                        <Calendar className={iconClass} />
+                                        <input required type="date" name="date" value={formData.date} onChange={handleChange} className={inputClass} />
+                                    </div>
+                                </div>
+                                <div className={inputWrapperClass}>
+                                    <label className={labelClass}>Time</label>
+                                    <div className="relative">
+                                        <Clock className={iconClass} />
+                                        <input type="time" name="time" value={formData.time} onChange={handleChange} className={inputClass} />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className={inputWrapperClass}>
+                                    <label className={labelClass}>City</label>
+                                    <div className="relative">
+                                        <Globe className={iconClass} />
+                                        <input required name="city" value={formData.city} onChange={handleChange} className={inputClass} placeholder="Addis Ababa" />
+                                    </div>
+                                </div>
+                                <div className={inputWrapperClass}>
+                                    <label className={labelClass}>Address Detail</label>
+                                    <div className="relative">
+                                        <MapPin className={iconClass} />
+                                        <input required name="location" value={formData.location} onChange={handleChange} className={inputClass} placeholder="e.g. Hilton Hotel" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Section 3: Description */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-1.5 h-6 bg-emerald-400 rounded-full"></div>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Narrative</h3>
+                            </div>
+                            <div className={inputWrapperClass}>
+                                <label className={labelClass}>Agenda & Details</label>
+                                <div className="relative">
+                                    <AlignLeft className={iconTextAreaClass} />
+                                    <textarea name="description" value={formData.description} rows={5} onChange={handleChange} className={textAreaClass} placeholder="What should people expect from this event?"></textarea>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className={inputWrapperClass}>
-                    <label className={labelClass}>Description</label>
-                    <div className="relative">
-                        <AlignLeft className={iconTextAreaClass} />
-                        <textarea name="description" rows={4} onChange={handleChange} className={textAreaClass} placeholder="Event agenda and details..."></textarea>
+                <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/5 backdrop-blur-md p-6 rounded-[2rem]">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-8 py-3 text-slate-500 hover:text-rose-500 font-black text-xs uppercase tracking-widest transition-all"
+                    >
+                        Dismiss
+                    </button>
+                    <div className="flex gap-4">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="group relative px-10 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-2xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:-translate-y-1 transition-all disabled:opacity-50 active:scale-95 flex items-center overflow-hidden"
+                        >
+                            <span className="relative z-10 flex items-center">
+                                <UploadCloud size={18} className="mr-3 group-hover:animate-bounce" />
+                                {isSubmitting ? 'Uploading...' : 'Publish Event'}
+                            </span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                        </button>
                     </div>
-                </div>
-
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-end space-x-3">
-                    <button type="button" onClick={onCancel} className="px-3 py-2.5 text-slate-700 dark:text-slate-300 font-medium bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" disabled={isSubmitting} className="px-4 py-2.5 text-white font-bold bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed">
-                        <UploadCloud size={18} className="mr-2" />
-                        {isSubmitting ? 'Uploading...' : 'Create Event'}
-                    </button>
                 </div>
             </form>
         </div>

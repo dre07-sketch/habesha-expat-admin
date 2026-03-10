@@ -16,7 +16,7 @@ router.get('/summary', async (req, res) => {
         (SELECT COUNT(*) FROM events WHERE status <> 'hidden') AS events,
         (SELECT COUNT(*) FROM businesses WHERE status <> 'hidden') AS businesses,
         (SELECT COUNT(*) FROM jobs WHERE status = 'visible') AS jobs,
-        (SELECT COUNT(*) FROM subscribers WHERE status = 'active') AS subscribers
+        (SELECT COUNT(*) FROM newsletter_signups WHERE is_active = true) AS subscribers
     `;
 
     const { rows } = await query(sql);
@@ -123,68 +123,42 @@ router.get('/membership', async (req, res) => {
     const totalResult = await query('SELECT COUNT(*) FROM users');
     const totalUsers = parseInt(totalResult.rows[0].count);
 
-    // 2. Get counts grouped by location (Top 5) for Pie Chart
-    const locationResult = await query(`
-            SELECT 
-                COALESCE(NULLIF(location, ''), 'Unknown') as location_name, 
-                COUNT(*) as count
-            FROM users
-            GROUP BY location_name
-            ORDER BY count DESC
-        `);
-
-    // 3. Get counts specific to Roles (Free, Member, Author)
-    // Adjust logic: assuming 'free' is default/null, and specific roles for others
+    // 2. Get counts specific to Roles (User, Member, Author)
     const rolesResult = await query(`
             SELECT
-                COUNT(*) FILTER (WHERE role ILIKE 'member') AS member_count,
-                COUNT(*) FILTER (WHERE role ILIKE 'author') AS author_count,
-                COUNT(*) FILTER (WHERE role IS NULL OR role = '' OR role ILIKE 'free' OR role ILIKE 'user') AS free_count
+                COUNT(*) FILTER (WHERE role ILIKE 'Member') AS member_count,
+                COUNT(*) FILTER (WHERE role ILIKE 'Author') AS author_count,
+                COUNT(*) FILTER (WHERE role IS NULL OR role = '' OR role NOT ILIKE 'Member' AND role NOT ILIKE 'Author' AND role NOT ILIKE 'Admin') AS user_count,
+                COUNT(*) FILTER (WHERE status ILIKE 'Active') AS active_count,
+                COUNT(*) FILTER (WHERE status ILIKE 'Banned') AS banned_count
             FROM users
         `);
 
-    const { member_count, author_count, free_count } = rolesResult.rows[0];
+    const { member_count, author_count, user_count, active_count, banned_count } = rolesResult.rows[0];
 
-    // 4. Process Location Data (Top 4 + Others)
-    let distribution = [];
-    let processedCount = 0;
-    const topLimit = 4;
-    const rows = locationResult.rows;
-
-    for (let i = 0; i < Math.min(rows.length, topLimit); i++) {
-      const count = parseInt(rows[i].count);
-      distribution.push({
-        name: rows[i].location_name,
-        value: count,
-        percentage: Math.round((count / totalUsers) * 100)
-      });
-      processedCount += count;
-    }
-
-    if (processedCount < totalUsers) {
-      const otherCount = totalUsers - processedCount;
-      distribution.push({
-        name: 'Others',
-        value: otherCount,
-        percentage: Math.round((otherCount / totalUsers) * 100)
-      });
-    }
+    // 3. Role Distribution for Pie Chart
+    const distribution = [
+      { name: 'User', value: parseInt(user_count || 0) },
+      { name: 'Member', value: parseInt(member_count || 0) },
+      { name: 'Author', value: parseInt(author_count || 0) }
+    ];
 
     res.json({
       success: true,
       data: {
         total: totalUsers,
         distribution: distribution,
-        // New Role Data
         roles: {
-          free: parseInt(free_count),
-          member: parseInt(member_count),
-          author: parseInt(author_count)
+          user: parseInt(user_count || 0),
+          member: parseInt(member_count || 0),
+          author: parseInt(author_count || 0)
+        },
+        status: {
+          active: parseInt(active_count || 0),
+          banned: parseInt(banned_count || 0)
         },
         trends: {
-          active_regions: rows.length,
-          // Mock trends for the UI
-          free_growth: "+5%",
+          user_growth: "+5%",
           member_growth: "+12%",
           author_growth: "+3%"
         }
@@ -260,11 +234,12 @@ router.get('/business', async (req, res) => {
     const total = await query(`SELECT COUNT(*) AS total FROM businesses WHERE status <> 'hidden'`);
 
     const categories = await query(`
-      SELECT category, COUNT(*) AS count
-      FROM businesses
-      GROUP BY category
+      SELECT c.name as category, COUNT(b.id) AS count
+      FROM categories c
+      LEFT JOIN businesses b ON b.category = c.name AND b.status <> 'hidden'
+      WHERE c.type = 'businesses'
+      GROUP BY c.name
       ORDER BY count DESC
-      LIMIT 8
     `);
 
     const reviews = await query(`

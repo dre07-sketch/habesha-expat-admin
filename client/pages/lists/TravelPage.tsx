@@ -1,176 +1,201 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, MapPin, Star, Users, Clock, Trash2, Eye, MoreHorizontal, Globe, X, CalendarCheck, EyeOff } from 'lucide-react';
+import { Plus, MapPin, Star, Users, Clock, Trash2, Eye, MoreHorizontal, Globe, X, CalendarCheck, EyeOff, Search } from 'lucide-react';
 import TravelForm from '../../components/forms/TravelForm';
 
 const API_BASE_URL = 'http://localhost:5000';
 
 // --- Internal Detail Modal Component ---
-const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating }) => {
+const DetailModal = ({ destination, onClose, onToggleVisibility, isUpdating, onEdit }) => {
     if (!destination) return null;
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            {/* Backdrop: Neutral Gray Transparency */}
-            <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
+            {/* Backdrop: Ultra-Deep Glassmorphism */}
+            <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-xl transition-opacity animate-in fade-in duration-300" onClick={onClose} />
 
-            {/* Modal Container with highest z-index */}
-            <div className="relative z-[80] w-full max-w-5xl h-[85vh] bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col transition-all">
-
-                {/* Close Button */}
-                <button onClick={onClose} className="absolute top-4 right-4 z-20 p-2 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md transition-all">
-                    <X size={18} />
-                </button>
-
-                {/* Hero Image Section */}
-                <div className="relative h-72 w-full shrink-0">
-                    <img src={destination.hero_image} alt={destination.name} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-
-                    <div className="absolute bottom-0 left-0 p-4 w-full text-white">
-                        {/* Badges Row */}
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="bg-blue-600 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{destination.duration}</span>
-                            <div className="flex items-center text-yellow-500 gap-1 text-[11px] font-bold">
-                                <Star size={12} fill="currentColor" /> {destination.rating}
-                            </div>
-                            {/* Status Badge */}
-                            <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${destination.status === 'visible' ? 'bg-green-600' : 'bg-gray-600'}`}>
-                                {destination.status === 'visible' ? 'Visible' : 'Hidden'}
-                            </span>
-                        </div>
-
-                        {/* Title & Location */}
-                        <h2 className="text-xl font-bold tracking-tight mb-1">{destination.name}</h2>
-                        <div className="flex items-center text-slate-300 text-xs font-medium">
-                            <MapPin size={14} className="mr-1.5 text-blue-500" />
-                            {destination.location}
-                        </div>
-                    </div>
+            {/* Modal Container */}
+            <div className="relative z-10 w-full max-w-6xl h-[92vh] bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] flex flex-col transition-all border border-white/20 dark:border-slate-800 animate-in zoom-in-95 duration-300">
+                
+                {/* Top Action Bar - Floating Style */}
+                <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+                    <button 
+                        onClick={() => onEdit(destination)}
+                        className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-2xl backdrop-blur-md border border-white/20 transition-all hover:scale-105 active:scale-95 group"
+                        title="Edit Destination"
+                    >
+                        <MoreHorizontal size={20} className="group-hover:rotate-90 transition-transform" />
+                    </button>
+                    <button 
+                        onClick={onClose} 
+                        className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-2xl backdrop-blur-md border border-white/20 transition-all hover:scale-105 active:scale-95"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
-                {/* Content Body */}
-                <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div className="flex flex-col md:flex-row h-full">
+                    {/* Left Side: Immersive Hero & Gallery */}
+                    <div className="md:w-[45%] h-full bg-slate-100 dark:bg-slate-950 relative border-r border-slate-200 dark:border-slate-800 flex flex-col">
+                        {/* Immersive Hero */}
+                        <div className="relative h-[65%] w-full overflow-hidden">
+                            <img src={destination.hero_image} alt={destination.name} className="w-full h-full object-cover transition-transform duration-1000 hover:scale-110" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                            
+                            <div className="absolute bottom-0 left-0 p-8 w-full">
+                                <div className="flex flex-wrap items-center gap-3 mb-4">
+                                    <span className="bg-blue-600/90 backdrop-blur-md text-white px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-blue-900/40 border border-blue-400/30">
+                                        {destination.duration}
+                                    </span>
+                                    <div className="flex items-center bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl text-yellow-400 gap-1.5 text-[11px] font-bold border border-white/10">
+                                        <Star size={14} fill="currentColor" /> {destination.rating}
+                                    </div>
+                                    <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] backdrop-blur-md border ${destination.status === 'visible' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-slate-500/20 text-slate-400 border-slate-500/30'}`}>
+                                        {destination.status === 'visible' ? 'Active' : 'Private'}
+                                    </span>
+                                </div>
+                                <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2 leading-tight">
+                                    {destination.name}
+                                </h2>
+                                <div className="flex items-center text-slate-300 text-sm font-medium">
+                                    <MapPin size={16} className="mr-2 text-blue-500" />
+                                    {destination.location}
+                                </div>
+                            </div>
+                        </div>
 
-                        {/* Left Column: Main Info */}
-                        <div className="lg:col-span-2 space-y-9">
-                            {/* Overview */}
-                            <div>
-                                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">Overview</h3>
-                                <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
+                        {/* Side Gallery */}
+                        <div className="flex-1 p-6 overflow-hidden">
+                            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Discovery Gallery</h4>
+                            <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-full scrollbar-hide">
+                                {destination.gallery && destination.gallery.map((img, idx) => (
+                                    <div key={idx} className="aspect-square rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-800 border border-slate-200/50 dark:border-white/5 relative group cursor-zoom-in">
+                                        <img src={img} alt="Gallery" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                    </div>
+                                ))}
+                                {(!destination.gallery || destination.gallery.length === 0) && (
+                                    <div className="col-span-3 aspect-[3/1] rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-800 flex items-center justify-center text-slate-400 text-xs font-medium">
+                                        No additional photos available
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Side: Detailed Content */}
+                    <div className="flex-1 h-full bg-white dark:bg-slate-900 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                        <div className="p-8 lg:p-12 space-y-12">
+                            {/* Overview Section */}
+                            <section className="animate-in slide-in-from-bottom-4 duration-500 delay-150">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                        <Globe size={18} />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Adventure Overview</h3>
+                                </div>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-base font-medium opacity-90">
                                     {destination.description}
                                 </p>
+                            </section>
+
+                            {/* Logistics Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-in slide-in-from-bottom-4 duration-500 delay-200">
+                                {[
+                                    { icon: <Users size={18} />, label: "Group Size", value: destination.group_size },
+                                    { icon: <Globe size={18} />, label: "Languages", value: destination.languages },
+                                    { icon: <Clock size={18} />, label: "Duration", value: destination.duration },
+                                    { icon: <CalendarCheck size={18} />, label: "Date Added", value: new Date(destination.created_at).toLocaleDateString() }
+                                ].map((item, idx) => (
+                                    <div key={idx} className="p-4 rounded-[2rem] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center group hover:bg-white dark:hover:bg-slate-800 transition-all hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none">
+                                        <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors mb-2 shadow-sm">
+                                            {item.icon}
+                                        </div>
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{item.label}</div>
+                                        <div className="text-sm font-bold text-slate-900 dark:text-white">{item.value || 'N/A'}</div>
+                                    </div>
+                                ))}
                             </div>
 
-                            {/* Highlights */}
-                            {destination.highlights && destination.highlights.length > 0 && (
-                                <div>
-                                    <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">Highlights</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {destination.highlights.map((h, i) => (
-                                            <div key={i} className="flex items-center gap-2.5 text-slate-600 dark:text-slate-300 text-xs font-medium bg-gray-100 dark:bg-gray-800 px-3 py-2.5 rounded-md border border-gray-200 dark:border-gray-700">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                                                {h}
+                            {/* Main Grid: Highlights & Itinerary */}
+                            <div className="grid lg:grid-cols-12 gap-10">
+                                {/* Highlights */}
+                                <div className="lg:col-span-5 space-y-6">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                                        Premium Highlights
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {destination.highlights && destination.highlights.map((h, i) => (
+                                            <div key={i} className="group flex items-start gap-4 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 hover:border-blue-500/30 transition-all hover:translate-x-1">
+                                                <div className="mt-1 w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-[10px] font-bold text-blue-600 dark:text-blue-400 shrink-0">
+                                                    {i + 1}
+                                                </div>
+                                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-snug">{h}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                            )}
 
-                            {/* Itinerary */}
-                            {destination.itinerary && destination.itinerary.length > 0 && (
-                                <div>
-                                    <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">Itinerary</h3>
-                                    <div className="relative border-l-2 border-slate-100 dark:border-slate-800 ml-2 space-y-3 pb-2">
-                                        {destination.itinerary.map((day, i) => (
-                                            <div key={i} className="pl-3 relative">
-                                                <div className="absolute -left-[7px] top-1 w-3.5 h-3.5 rounded-full border-2 border-blue-500 bg-white dark:bg-slate-900" />
-                                                <h4 className="text-slate-900 dark:text-white text-sm font-bold mb-0.5">
-                                                    Day {day.day}: <span className="font-normal text-slate-500 dark:text-slate-400">{day.title}</span>
-                                                </h4>
-                                                <p className="text-slate-400 dark:text-slate-500 text-xs leading-normal mt-1">{day.description}</p>
+                                {/* Itinerary */}
+                                <div className="lg:col-span-12 lg:order-last space-y-8">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                                        Planned Journey
+                                    </h3>
+                                    <div className="relative space-y-4">
+                                        {destination.itinerary && destination.itinerary.map((day, i) => (
+                                            <div key={i} className="relative pl-12 pb-8 last:pb-0">
+                                                {/* Timeline Line */}
+                                                {i !== destination.itinerary.length - 1 && (
+                                                    <div className="absolute left-[19px] top-8 bottom-0 w-[2px] bg-gradient-to-b from-blue-500/20 via-blue-500/10 to-transparent" />
+                                                )}
+                                                {/* Timeline Point */}
+                                                <div className="absolute left-0 top-0 w-10 h-10 rounded-[1.25rem] bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 flex items-center justify-center z-10 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                                                    <span className="text-[10px] font-black text-blue-600 dark:text-blue-400">D{day.day}</span>
+                                                </div>
+                                                <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-800 transition-all hover:shadow-xl hover:shadow-slate-200/50">
+                                                    <h4 className="text-slate-900 dark:text-white text-base font-bold mb-2">
+                                                        {day.title}
+                                                    </h4>
+                                                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{day.description}</p>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Right Column: Sidebar Stats */}
-                        <div className="space-y-3">
-                            {/* Price Card */}
-                            <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
-                                <div className="mb-3">
-                                    <div className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{destination.price}</div>
-                                    <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1">Per Person</div>
-                                </div>
-
-                                <div className="space-y-3.5">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="flex items-center text-slate-500 dark:text-slate-400 gap-2"><Users size={14} className="text-slate-400" /> Group Size</span>
-                                        <span className="text-slate-700 dark:text-slate-200 font-medium">{destination.group_size}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="flex items-center text-slate-500 dark:text-slate-400 gap-2"><Globe size={14} className="text-slate-400" /> Languages</span>
-                                        <span className="text-slate-700 dark:text-slate-200 font-medium">{destination.languages}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="flex items-center text-slate-500 dark:text-slate-400 gap-2"><CalendarCheck size={14} className="text-slate-400" /> Created</span>
-                                        <span className="text-slate-700 dark:text-slate-200 font-medium">{new Date(destination.created_at).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="flex items-center text-slate-500 dark:text-slate-400 gap-2">
-                                            {destination.status === 'visible' ? <Eye size={14} className="text-green-500" /> : <EyeOff size={14} className="text-gray-500" />}
-                                            Status
-                                        </span>
-                                        <span className={`font-medium ${destination.status === 'visible' ? 'text-green-600' : 'text-gray-500'}`}>
-                                            {destination.status === 'visible' ? 'Visible' : 'Hidden'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Status Toggle Button */}
-                                <div className="mt-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <button
-                                        onClick={() => onToggleVisibility(destination.id)}
-                                        disabled={isUpdating}
-                                        className={`w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${destination.status === 'visible'
-                                            ? 'bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200'
-                                            : 'bg-green-600 hover:bg-green-500 text-white'
-                                            } ${isUpdating ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                    >
-                                        {isUpdating ? (
-                                            <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                                Updating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                {destination.status === 'visible' ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                {destination.status === 'visible' ? 'Hide Destination' : 'Show Destination'}
-                                            </>
-                                        )}
-                                    </button>
                                 </div>
                             </div>
-
-                            {/* Gallery Header */}
-                            {destination.gallery && destination.gallery.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Gallery</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {destination.gallery.map((img, idx) => (
-                                            <div key={idx} className="aspect-[4/3] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 relative group">
-                                                <img src={img} alt="Gallery" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
+                        {/* Footer: Dynamic Price & Publishing */}
+                        <div className="sticky bottom-0 w-full p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center justify-between z-20">
+                            <div className="flex flex-col">
+                                <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                    {destination.price}
+                                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400 ml-1">/ traveler</span>
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => onToggleVisibility(destination.id)}
+                                    disabled={isUpdating}
+                                    className={`px-8 py-3.5 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-3 active:scale-95 ${destination.status === 'visible'
+                                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white'
+                                        : 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:shadow-lg hover:shadow-emerald-500/30 text-white'
+                                    } ${isUpdating ? 'opacity-70 cursor-wait' : ''}`}
+                                >
+                                    {isUpdating ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                                    ) : (
+                                        <>
+                                            {destination.status === 'visible' ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            {destination.status === 'visible' ? 'Depublish' : 'Go Live Now'}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -188,6 +213,7 @@ export default function TravelPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [updatingStatus, setUpdatingStatus] = useState(null); // Track which destination is being updated
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Fetch destinations from API
     useEffect(() => {
@@ -220,6 +246,12 @@ export default function TravelPage() {
     const handleOpenCreate = () => {
         setEditingItem(null);
         setIsFormOpen(true);
+    };
+
+    const handleOpenEdit = (item) => {
+        setEditingItem(item);
+        setIsFormOpen(true);
+        setSelectedDetail(null); // Close detail modal when editing
     };
 
     const handleViewDetail = (item) => {
@@ -295,26 +327,44 @@ export default function TravelPage() {
         }
     };
 
+    const filteredDestinations = destinations.filter(dest => 
+        dest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dest.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dest.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="min-h-screen bg-white dark:bg-slate-950 p-4">
             {/* Header Section */}
-            <div className="max-w-7xl mx-auto mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="w-full mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
                 <div>
                     <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Travel Destinations</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your tours and travel packages.</p>
                 </div>
 
-                <button
-                    onClick={handleOpenCreate}
-                    className="inline-flex items-center justify-center gap-2 px-3 py-2.5 font-medium text-sm text-white transition-all duration-200 bg-blue-600 rounded-lg hover:bg-blue-500 shadow-lg shadow-blue-900/20"
-                >
-                    <Plus size={18} />
-                    <span>New Destination</span>
-                </button>
+                <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
+                    <div className="relative w-full md:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Search destinations..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+                        />
+                    </div>
+                    <button
+                        onClick={handleOpenCreate}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-sm text-white transition-all duration-200 bg-gradient-to-r from-blue-700 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-900/20 hover:-translate-y-0.5"
+                    >
+                        <Plus size={18} />
+                        <span>New Destination</span>
+                    </button>
+                </div>
             </div>
 
             {/* List View (Table) */}
-            <div className="max-w-7xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xl">
+            <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xl">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -346,12 +396,18 @@ export default function TravelPage() {
                                 </tr>
                             ) : destinations.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="p-5 text-center text-slate-500">
-                                        No destinations found. Add one to get started.
+                                    <td colSpan="7" className="p-12 text-center text-slate-500">
+                                        <div className="flex flex-col items-center">
+                                            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                                                <MapPin size={24} className="text-slate-300" />
+                                            </div>
+                                            <p className="text-lg font-medium text-slate-900 dark:text-white">No destinations found</p>
+                                            <p className="text-sm mt-1">Add one to get started with your travel packages.</p>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
-                                destinations.map((dest) => (
+                                filteredDestinations.map((dest) => (
                                     <tr
                                         key={dest.id}
                                         onClick={() => handleViewDetail(dest)}
@@ -441,6 +497,7 @@ export default function TravelPage() {
                 onClose={() => setSelectedDetail(null)}
                 onToggleVisibility={handleToggleVisibility}
                 isUpdating={updatingStatus === selectedDetail?.id}
+                onEdit={handleOpenEdit}
             />
         </div>
     );

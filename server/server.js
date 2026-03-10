@@ -20,6 +20,8 @@ const VideoRoutes = require('./router/Video');
 const LoginRoutes = require('./auth/login');
 const DashboardRoutes = require('./router/Dashboard.js');
 const UserRoutes = require('./router/user');
+const AuthorRoutes = require('./router/authors');
+const LoungeRoutes = require('./router/lounge');
 const TravelDestinationsRoutes = require('./router/travelDestinations.js');
 const ForgetPassRoutes = require('./auth/forgetpass');
 
@@ -102,6 +104,8 @@ app.use('/api/system', systemStatusRoutes);
 app.use('/api/podcasts', authenticateToken, PodcastRoutes);
 app.use('/api/videos', authenticateToken, VideoRoutes);
 app.use('/api/users', authenticateToken, UserRoutes);
+app.use('/api/authors', authenticateToken, AuthorRoutes);
+app.use('/api/lounge', authenticateToken, LoungeRoutes);
 app.use('/api/travel-destinations', authenticateToken, TravelDestinationsRoutes);
 
 

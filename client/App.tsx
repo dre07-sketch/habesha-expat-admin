@@ -20,6 +20,8 @@ import AdminPanelShutdown from './pages/shutdown/AdminPanelShutdown';
 import SuspendedAccount from './pages/shutdown/SuspendedAccount';
 import Jobs from './pages/lists/Jobs';
 import Travel from './pages/lists/TravelPage';
+import Authors from './pages/lists/Authors';
+import LoungeMembers from './pages/lists/LoungeMembers';
 
 const App: React.FC = () => {
   const [systemStatus, setSystemStatus] = useState<'activated' | 'deactivated' | 'loading'>('loading');
@@ -99,6 +101,8 @@ const App: React.FC = () => {
             <Route path="/podcasts" element={<Layout><Podcasts /></Layout>} />
             <Route path="/videos" element={<Layout><Videos /></Layout>} />
             <Route path="/users" element={<Layout><Users /></Layout>} />
+            <Route path="/authors" element={<Layout><Authors /></Layout>} />
+            <Route path="/lounge" element={<Layout><LoungeMembers /></Layout>} />
             <Route path="/articles" element={<Layout><Articles /></Layout>} />
             <Route path="/subscribers" element={<Layout><Subscribers /></Layout>} />
             <Route path="/events" element={<Layout><Events /></Layout>} />

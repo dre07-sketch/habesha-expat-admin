@@ -1,34 +1,147 @@
 
 
-import React, { useState } from 'react';
-import { Plus, Play, Calendar, Eye, Heart, MessageCircle, EyeOff, Trash2, MoreVertical, ThumbsUp, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Play, Calendar, Eye, Heart, MessageCircle, EyeOff, Trash2, MoreVertical, ThumbsUp, Search, Loader2 } from 'lucide-react';
 import Modal from '../../components/Modal';
 import VideoForm from '../../components/forms/VideoForm';
-import { MOCK_VIDEOS } from '../../constants';
 import { Video } from '../../types';
 
 const Videos: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [videos, setVideos] = useState<Video[]>(MOCK_VIDEOS);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [activeTab, setActiveTab] = useState<'details' | 'likes' | 'comments'>('details');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleDelete = (id: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this video?')) {
-        setVideos(videos.filter(v => v.id !== id));
+  const fetchVideos = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/videos/videos-get', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setVideos(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleToggleVisibility = () => {
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const handleDelete = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this video?')) {
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`/api/videos/videos/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                setVideos(videos.filter(v => v.id !== id));
+            }
+        } catch (error) {
+            console.error('Error deleting video:', error);
+        }
+    }
+  };
+
+  const handleToggleVisibility = async () => {
     if (selectedVideo) {
-      const updatedVideo = {
-        ...selectedVideo,
-        status: selectedVideo.status === 'visible' ? 'hidden' : 'visible' as 'visible' | 'hidden'
-      };
-      setSelectedVideo(updatedVideo);
-      setVideos(videos.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+      const newStatus = selectedVideo.status === 'visible' ? 'hidden' : 'visible';
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`/api/videos/videos/${selectedVideo.id}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (response.ok) {
+            const updatedVideo = { ...selectedVideo, status: newStatus as 'visible' | 'hidden' };
+            setSelectedVideo(updatedVideo);
+            setVideos(videos.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+        }
+      } catch (error) {
+        console.error('Error toggling video visibility:', error);
+      }
+    }
+  };
+
+  const handleVideoSubmit = async (formData: FormData) => {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/videos/videos-post', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        if (response.ok) {
+            fetchVideos();
+            setIsFormOpen(false);
+        } else {
+            console.error('Failed to upload video');
+        }
+    } catch (error) {
+        console.error('Error uploading video:', error);
+    }
+  };
+
+  const renderVideoPlayer = (url: string) => {
+    if (!url) return null;
+    
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        let videoId = '';
+        if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
+        else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+
+        return (
+            <iframe 
+                width="100%" 
+                height="100%" 
+                src={`https://www.youtube.com/embed/${videoId}`} 
+                title="YouTube video player" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+            ></iframe>
+        );
+    } else if (url.includes('vimeo.com')) {
+        const videoId = url.split('/').pop()?.split('?')[0];
+        return (
+            <iframe 
+                src={`https://player.vimeo.com/video/${videoId}`} 
+                width="100%" 
+                height="100%" 
+                frameBorder="0" 
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+            ></iframe>
+        );
+    } else {
+        return (
+            <video controls className="w-full h-full object-contain">
+                <source src={url} type="video/mp4" />
+                Your browser does not support the video tag.
+            </video>
+        );
     }
   };
 
@@ -52,7 +165,7 @@ const Videos: React.FC = () => {
                     placeholder="Search videos..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-5 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
+                    className="w-full pl-9 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 dark:text-white placeholder-slate-400 transition-all shadow-sm"
                 />
             </div>
             <button 
@@ -69,12 +182,19 @@ const Videos: React.FC = () => {
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-900/20 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             <div className="w-5/12 pl-4">Video</div>
             <div className="w-2/12">Category</div>
-            <div className="w-2/12">Stats</div>
+            <div className="w-2/12">Released Date</div>
             <div className="w-2/12">Status</div>
             <div className="w-1/12 text-right pr-4">Action</div>
         </div>
         <div className="divide-y divide-slate-100 dark:divide-slate-700/60">
-            {filteredVideos.map((vid) => (
+            {isLoading ? (
+                <div className="flex items-center justify-center p-20">
+                     <div className="flex flex-col items-center gap-4">
+                        <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading Videos...</p>
+                     </div>
+                </div>
+            ) : filteredVideos.map((vid) => (
                  <div 
                     key={vid.id} 
                     onClick={() => { setSelectedVideo(vid); setActiveTab('details'); }}
@@ -91,9 +211,6 @@ const Videos: React.FC = () => {
                         </div>
                         <div>
                             <h3 className="font-bold text-slate-800 dark:text-white text-base leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">{vid.title}</h3>
-                             <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                <Calendar size={12} className="mr-1" /> <span>{vid.uploadDate}</span>
-                            </div>
                         </div>
                     </div>
 
@@ -104,13 +221,10 @@ const Videos: React.FC = () => {
                         </span>
                     </div>
 
-                    {/* Stats */}
+                    {/* Released Date */}
                     <div className="w-2/12 text-xs font-medium text-slate-500 dark:text-slate-400">
-                        <div className="flex items-center mb-1">
-                            <Eye size={12} className="mr-1.5 text-blue-500" /> {vid.views?.toLocaleString()}
-                        </div>
                         <div className="flex items-center">
-                            <Heart size={12} className="mr-1.5 text-red-500" /> {vid.likes?.toLocaleString()}
+                            <Calendar size={12} className="mr-1.5 text-blue-500" /> {vid.uploadDate}
                         </div>
                     </div>
 
@@ -135,7 +249,7 @@ const Videos: React.FC = () => {
 
                  </div>
             ))}
-            {filteredVideos.length === 0 && (
+            {!isLoading && filteredVideos.length === 0 && (
                  <div className="p-4 text-center text-slate-500 dark:text-slate-400">
                     No videos found.
                 </div>
@@ -144,7 +258,7 @@ const Videos: React.FC = () => {
       </div>
 
       <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title="Add New Video">
-        <VideoForm onSubmit={() => setIsFormOpen(false)} onCancel={() => setIsFormOpen(false)} />
+        <VideoForm onSubmit={handleVideoSubmit} onCancel={() => setIsFormOpen(false)} />
       </Modal>
 
       {/* Video Details Modal - Theater Mode */}
@@ -155,10 +269,7 @@ const Videos: React.FC = () => {
              {/* Video Player Container - Reduced Size */}
              <div className="w-full max-w-4xl mx-auto">
                 <div className="bg-black rounded-xl overflow-hidden shadow-2xl relative group" style={{ height: '400px' }}>
-                    <video controls className="w-full h-full object-contain">
-                        <source src={selectedVideo.videoFile} type="video/mp4" />
-                        Your browser does not support the video tag.
-                    </video>
+                    {renderVideoPlayer(selectedVideo.videoFile)}
                 </div>
              </div>
 

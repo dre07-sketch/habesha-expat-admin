@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UploadCloud, Film, Type, Link as LinkIcon, AlignLeft, Tag, Image as ImageIcon, X } from 'lucide-react';
 
 interface VideoFormProps {
@@ -12,10 +12,33 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
     slug: '',
     description: '',
     category: '',
+    videoUrl: '',
     tags: [] as string[],
   });
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<{id: number, name: string}[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/categories/categories/type/video', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -81,18 +104,31 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.videoUrl || !thumbnailFile) {
+        alert('Please provide both a video URL and a thumbnail image.');
+        return;
+    }
+    
     setIsSubmitting(true);
+    
+    const submitData = new FormData();
+    submitData.append('title', formData.title);
+    submitData.append('slug', formData.slug);
+    submitData.append('description', formData.description);
+    submitData.append('category', formData.category);
+    submitData.append('videoUrl', formData.videoUrl);
+    // Convert tags array to string before sending
+    submitData.append('tags', JSON.stringify(formData.tags));
+    submitData.append('thumbnail', thumbnailFile);
 
-    // Simulate network request/upload
-    setTimeout(() => {
-      onSubmit(formData);
-      setIsSubmitting(false);
-    }, 2000);
+    onSubmit(submitData);
+    // After returning from onSubmit we should reset isSubmitting if needed,
+    // but typically the parent will close the modal.
   };
 
   const inputWrapperClass = "relative group";
-  const inputClass = "w-full pl-5 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400";
-  const textAreaClass = "w-full pl-5 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400 resize-none";
+  const inputClass = "w-full pl-10 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400";
+  const textAreaClass = "w-full pl-10 pr-4 py-3 border border-blue-500/30 dark:border-blue-500/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-all placeholder:text-slate-400 resize-none";
   const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 ml-1";
   const iconClass = "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors h-4 w-4 pointer-events-none";
   const iconTextAreaClass = "absolute left-3 top-4 text-slate-400 group-focus-within:text-blue-500 transition-colors h-4 w-4 pointer-events-none";
@@ -143,12 +179,11 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
                 <label className={labelClass}>Category</label>
                 <div className="relative">
                     <Tag className={iconClass} />
-                    <select name="category" onChange={handleChange} className={`${inputClass} appearance-none`}>
+                    <select required name="category" onChange={handleChange} className={`${inputClass} appearance-none`}>
                         <option value="">Select Category...</option>
-                        <option value="Events">Events</option>
-                        <option value="Interviews">Interviews</option>
-                        <option value="Documentary">Documentary</option>
-                        <option value="News">News</option>
+                        {categories.map((cat) => (
+                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
                     </select>
                 </div>
             </div>
@@ -203,22 +238,20 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
                 <p className="text-sm text-slate-500 dark:text-slate-400">Upload video file and thumbnail.</p>
             </div>
 
-            {/* Video File Upload */}
-            <div>
-                <label className={labelClass}>Video File (MP4/MOV)</label>
-                <div className="mt-1 flex justify-center px-3 pt-4 pb-4 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors cursor-pointer group bg-slate-50/30 dark:bg-slate-900/30">
-                    <div className="space-y-2 text-center">
-                        <div className="mx-auto h-12 w-12 text-slate-400 group-hover:text-blue-500 transition-colors bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                            <Film className="h-6 w-6" />
-                        </div>
-                        <div className="flex text-sm text-slate-600 dark:text-slate-400 justify-center">
-                            <label className="relative cursor-pointer bg-transparent rounded-md font-bold text-blue-600 dark:text-blue-400 hover:text-blue-500 focus-within:outline-none">
-                                <span>Upload Video</span>
-                                <input type="file" className="sr-only" accept="video/*" />
-                            </label>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-500">Max 500MB</p>
-                    </div>
+            {/* Video URL Input */}
+            <div className={inputWrapperClass}>
+                <label className={labelClass}>Video URL (YouTube/Vimeo/Direct)</label>
+                <div className="relative mt-1">
+                    <LinkIcon className={iconClass} />
+                    <input 
+                        required 
+                        type="url"
+                        name="videoUrl" 
+                        value={formData.videoUrl}
+                        onChange={handleChange} 
+                        className={inputClass} 
+                        placeholder="https://youtube.com/watch?v=..." 
+                    />
                 </div>
             </div>
 
@@ -230,8 +263,8 @@ const VideoForm: React.FC<VideoFormProps> = ({ onSubmit, onCancel }) => {
                         <ImageIcon size={14} />
                     </div>
                     <div className="flex-1">
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Select Image</p>
-                        <input type="file" accept="image/*" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"/>
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">{thumbnailFile ? thumbnailFile.name : 'Select Image'}</p>
+                        <input type="file" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} accept="image/*" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"/>
                     </div>
                 </div>
             </div>
